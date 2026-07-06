@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "362244352362",
+    "project_id": "nations-2b049",
+    "storage_bucket": "nations-2b049.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:362244352362:android:29c9b457c4fb8fe5c9dd13",
+        "android_client_info": {
+          "package_name": "com.example.senkanations"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBj3YFbtCtULu8LrzzT7wrU-QNSkNDq71I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

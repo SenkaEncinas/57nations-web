@@ -1,0 +1,48 @@
+name: app_57_nations
+description: >-
+  Sitio web profesional de 57 Nations - Soluciones tech integrales
+  (software, hardware, entrenamiento)
+
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Firebase
+  firebase_core: any
+  cloud_firestore: any
+  firebase_auth: any
+
+  # URL Launcher (para abrir WhatsApp)
+  url_launcher: ^6.2.0
+
+  # Iconos de Material Design (ya vienen con Flutter, esto es redundante
+  # pero lo dejamos por si se necesitan íconos extendidos más adelante)
+  cupertino_icons: ^1.0.6
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+
+  # Assets: carpetas para fotos de proyectos, catálogo 3D y logos.
+  # Podés dejarlas vacías por ahora (con un .gitkeep adentro) e ir
+  # cargando imágenes reales más adelante.
+  assets:
+    - assets/images/
+    - assets/logos/
+
+  # NOTA: no declaramos fuentes personalizadas todavía (no tenemos los
+  # archivos .ttf). La app usa la tipografía por defecto de Flutter, que
+  # ya se ve limpia y geométrica. Si más adelante conseguimos una fuente
+  # que combine con el manual de marca, la agregamos acá.
