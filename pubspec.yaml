@@ -31,6 +31,7 @@ dev_dependencies:
     sdk: flutter
 
   flutter_lints: ^3.0.0
+  flutter_launcher_icons: ^0.13.1
 
 flutter:
   uses-material-design: true
@@ -46,3 +47,11 @@ flutter:
   # archivos .ttf). La app usa la tipografía por defecto de Flutter, que
   # ya se ve limpia y geométrica. Si más adelante conseguimos una fuente
   # que combine con el manual de marca, la agregamos acá.
+flutter_launcher_icons:
+  image_path: "assets/logos/logo_57_cuadrado.png"
+  web:
+    generate: true
+    background_color: "#000000"
+    theme_color: "#7F77DD"
+  windows:
+    generate: true
