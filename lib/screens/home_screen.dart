@@ -41,60 +41,100 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildHeroSection(bool isMobile) {
+Widget _buildHeroSection(bool isMobile) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.symmetric(
-        horizontal: isMobile ? 20 : 60,
-        vertical: isMobile ? 80 : 120,
-      ),
+      clipBehavior: Clip.hardEdge,
       decoration: BoxDecoration(
         gradient: AppColors.primaryGradient,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
         children: [
-          Text(
-            '57 NATIONS',
-            style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                  color: Colors.white,
-                  fontSize: isMobile ? 36 : 56,
+          // Decoraciones de circuito en las esquinas (manual, sección 05)
+          if (!isMobile) ...[
+            const Positioned(
+              top: 24,
+              left: 24,
+              child: TechCornerDecoration(),
+            ),
+            const Positioned(
+              top: 24,
+              right: 24,
+              child: TechCornerDecoration(espejado: true),
+            ),
+          ],
+
+          // Glow violeta suave detrás del contenido
+          Positioned(
+            top: -100,
+            left: isMobile ? -80 : 100,
+            child: Container(
+              width: 400,
+              height: 400,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    AppColors.violetaPrincipal.withOpacity(0.25),
+                    AppColors.violetaPrincipal.withOpacity(0),
+                  ],
                 ),
-          ),
-          SizedBox(height: isMobile ? 16 : 24),
-          Text(
-            'Software + Hardware + Entrenamiento = Soluciones Completas',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: Colors.white70,
-                  fontSize: isMobile ? 18 : 24,
-                ),
-          ),
-          SizedBox(height: isMobile ? 12 : 20),
-          SizedBox(
-            width: isMobile ? double.infinity : 600,
-            child: Text(
-              'Transformamos tus ideas en proyectos reales. Especialistas en desarrollo tech integral: desde código hasta electrónica.',
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Colors.white70,
-                    height: 1.6,
               ),
             ),
           ),
-          SizedBox(height: isMobile ? 32 : 48),
-          ElevatedButton(
-            onPressed: () => Navigator.pushNamed(context, '/contacto'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.secondary,
-              padding: const EdgeInsets.symmetric(
-                horizontal: 40,
-                vertical: 18,
-              ),
-              textStyle: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+
+          // Contenido principal
+          Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: isMobile ? 20 : 60,
+              vertical: isMobile ? 80 : 120,
             ),
-            child: const Text('COTIZAR PROYECTO'),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Image.asset(
+                  'assets/logos/logo_57nations.png',
+                  height: isMobile ? 90 : 140,
+                  fit: BoxFit.contain,
+                ),
+                SizedBox(height: isMobile ? 16 : 24),
+                Text(
+                  'Software + Hardware + Entrenamiento = Soluciones Completas',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: Colors.white70,
+                        fontSize: isMobile ? 18 : 24,
+                      ),
+                ),
+                SizedBox(height: isMobile ? 12 : 20),
+                SizedBox(
+                  width: isMobile ? double.infinity : 600,
+                  child: Text(
+                    'Transformamos tus ideas en proyectos reales. Especialistas en desarrollo tech integral: desde código hasta electrónica.',
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: Colors.white70,
+                          height: 1.6,
+                        ),
+                  ),
+                ),
+                SizedBox(height: isMobile ? 32 : 48),
+                ElevatedButton(
+                  onPressed: () => Navigator.pushNamed(context, '/contacto'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.cianTech,
+                    foregroundColor: AppColors.negroProfundo,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 40,
+                      vertical: 18,
+                    ),
+                    textStyle: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  child: const Text('COTIZAR PROYECTO'),
+                ),
+              ],
+            ),
           ),
         ],
       ),

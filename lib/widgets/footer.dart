@@ -91,12 +91,10 @@ class _FooterColumn extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          '57 NATIONS',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
+Image.asset(
+          'assets/logos/logo_57nations.png',
+          height: 36,
+          fit: BoxFit.contain,
         ),
         SizedBox(height: 12),
         Text(

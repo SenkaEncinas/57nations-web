@@ -26,11 +26,23 @@ class NavBar extends StatelessWidget {
               '/',
               (route) => false,
             ),
-            child: Text(
-              '57 NATIONS',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.primary,
+child: Container(
+              height: 40,
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(6),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.violetaPrincipal.withOpacity(0.35),
+                    blurRadius: 16,
+                    spreadRadius: 1,
+                  ),
+                ],
+              ),
+              child: Image.asset(
+                'assets/logos/logo_57nations.png',
+                height: 32,
+                fit: BoxFit.contain,
               ),
             ),
           ),
