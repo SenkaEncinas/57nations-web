@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import '../models/models.dart';
 import '../routes/app_routes.dart';
+import '../services/firebase_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../utils/responsive.dart';
@@ -325,37 +327,99 @@ class _PortfolioSection extends StatelessWidget {
   }
 }
 
-// ==================== EQUIPO (CTA) ====================
-class _EquipoSection extends StatelessWidget {
+// ==================== EQUIPO (datos reales de la colección `equipo`) ====================
+class _EquipoSection extends StatefulWidget {
   const _EquipoSection();
 
   @override
+  State<_EquipoSection> createState() => _EquipoSectionState();
+}
+
+class _EquipoSectionState extends State<_EquipoSection> {
+  final _firebaseService = FirebaseService();
+  List<MiembroEquipo> _equipo = [];
+  bool _cargando = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _cargar();
+  }
+
+  Future<void> _cargar() async {
+    setState(() {
+      _cargando = true;
+      _error = null;
+    });
+    try {
+      final equipo = await _firebaseService.obtenerEquipo();
+      if (!mounted) return;
+      setState(() {
+        _equipo = equipo;
+        _cargando = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = 'No pudimos cargar el equipo.';
+        _cargando = false;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final isMobile = Responsive.isMobile(context);
+    final columnas = Responsive.valor(context, mobile: 1, tablet: 2, desktop: 3);
+
+    Widget contenido;
+    if (_cargando) {
+      contenido = const EstadoCargando(mensaje: 'Cargando equipo...');
+    } else if (_error != null) {
+      contenido = EstadoError(mensaje: _error!, onReintentar: _cargar);
+    } else if (_equipo.isEmpty) {
+      contenido = const EstadoVacio(
+        icon: Icons.groups_outlined,
+        mensaje: 'Estamos preparando las presentaciones del equipo. Ya vuelven.',
+      );
+    } else {
+      // Wrap en vez de GridView: las cards cambian de alto cuando se expande
+      // la biografía ("Ver más"), y un grid de aspect ratio fijo las cortaría.
+      contenido = LayoutBuilder(
+        builder: (context, constraints) {
+          final anchoCard = (constraints.maxWidth - AppSpacing.lg * (columnas - 1)) / columnas;
+          return Wrap(
+            spacing: AppSpacing.lg,
+            runSpacing: AppSpacing.lg,
+            children: _equipo
+                .map((m) => SizedBox(
+                      width: anchoCard,
+                      child: MiembroEquipoCard(miembro: m),
+                    ))
+                .toList(),
+          );
+        },
+      );
+    }
 
     return PageSection(
-      child: Flex(
-        direction: isMobile ? Axis.vertical : Axis.horizontal,
-        crossAxisAlignment: isMobile ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Expanded(
-            flex: 1,
-            child: SectionHeader(
-              overline: 'Equipo',
-              titulo: 'El equipo 57 Nations',
-              subtitulo:
-                  'Desarrollo, diseño 3D y acabado artístico: conocé quién está '
-                  'detrás de cada entrega.',
-            ),
+          const SectionHeader(
+            overline: 'Equipo',
+            titulo: 'El equipo 57 Nations',
+            subtitulo:
+                'Desarrollo, diseño 3D y acabado artístico: conocé quién está '
+                'detrás de cada entrega.',
           ),
-          SizedBox(
-            width: isMobile ? 0 : AppSpacing.xxl,
-            height: isMobile ? AppSpacing.xl : 0,
-          ),
+          const SizedBox(height: AppSpacing.xxl),
+          contenido,
+          const SizedBox(height: AppSpacing.xxl),
           OutlinedButton.icon(
             onPressed: () => Navigator.pushNamed(context, AppRoutes.sobreNosotros),
             icon: const Icon(Icons.groups_outlined, size: 18),
-            label: const Text('CONOCÉ AL EQUIPO'),
+            label: const Text('MÁS SOBRE NOSOTROS'),
           ),
         ],
       ),

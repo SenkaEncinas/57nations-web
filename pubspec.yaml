@@ -25,6 +25,8 @@ dependencies:
   # Iconos de Material Design (ya vienen con Flutter, esto es redundante
   # pero lo dejamos por si se necesitan íconos extendidos más adelante)
   cupertino_icons: ^1.0.6
+  file_picker: ^11.0.2
+  http: ^1.6.0
 
 dev_dependencies:
   flutter_test:

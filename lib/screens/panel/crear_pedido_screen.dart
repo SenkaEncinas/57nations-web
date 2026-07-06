@@ -25,8 +25,13 @@ class _CrearPedidoScreenState extends State<CrearPedidoScreen> {
   final _clienteNombreCtrl = TextEditingController();
   final _clienteTelefonoCtrl = TextEditingController();
   final _descripcionCtrl = TextEditingController();
-  final _fotoUrlCtrl = TextEditingController();
   final _coloresCtrl = TextEditingController();
+
+  /// URLs de fotos ya subidas a Cloudinary vía SelectorFotos.
+  List<String> _fotos = [];
+
+  /// Cambiar la key fuerza a SelectorFotos a resetearse al limpiar el form.
+  int _selectorFotosKey = 0;
 
   // Campos de la calculadora (mismos que Calculadora3DScreen)
   final _precioFilamentoCtrl = TextEditingController(text: '90');
@@ -95,7 +100,7 @@ class _CrearPedidoScreenState extends State<CrearPedidoScreen> {
         clienteNombre: _clienteNombreCtrl.text.trim(),
         clienteTelefono: _clienteTelefonoCtrl.text.trim(),
         descripcionPieza: _descripcionCtrl.text.trim(),
-        fotos: _fotoUrlCtrl.text.trim().isEmpty ? [] : [_fotoUrlCtrl.text.trim()],
+        fotos: _fotos,
         requierePintado: _requierePintado,
         coloresPedidos: _requierePintado
             ? _coloresCtrl.text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList()
@@ -141,9 +146,10 @@ class _CrearPedidoScreenState extends State<CrearPedidoScreen> {
     _clienteNombreCtrl.clear();
     _clienteTelefonoCtrl.clear();
     _descripcionCtrl.clear();
-    _fotoUrlCtrl.clear();
     _coloresCtrl.clear();
     setState(() {
+      _fotos = [];
+      _selectorFotosKey++;
       _requierePintado = false;
       _fechaEntregaImpresion = null;
       _origenPedido = OrigenPedido.senka;
@@ -158,7 +164,6 @@ class _CrearPedidoScreenState extends State<CrearPedidoScreen> {
       _clienteNombreCtrl,
       _clienteTelefonoCtrl,
       _descripcionCtrl,
-      _fotoUrlCtrl,
       _coloresCtrl,
       _precioFilamentoCtrl,
       _pesoCtrl,
@@ -204,7 +209,12 @@ class _CrearPedidoScreenState extends State<CrearPedidoScreen> {
                   _campo('Nombre del cliente', _clienteNombreCtrl, requerido: true),
                   _campo('Teléfono (WhatsApp)', _clienteTelefonoCtrl, requerido: true),
                   _campo('Descripción de la pieza', _descripcionCtrl, lineas: 3, requerido: true),
-                  _campo('URL de foto de referencia (opcional)', _fotoUrlCtrl),
+                  SelectorFotos(
+                    key: ValueKey(_selectorFotosKey),
+                    etiqueta: 'Fotos de referencia (opcional)',
+                    fotosIniciales: _fotos,
+                    onChanged: (urls) => _fotos = urls,
+                  ),
                 ],
               ),
 

@@ -4,5 +4,5 @@ class AppConfig {
   /// Número de WhatsApp de Senka (Admin), en formato internacional SIN "+" ni espacios.
   /// Ejemplo Bolivia: "59171234567"
   /// TODO: reemplazar por el número real antes de publicar.
-  static const String whatsappAdminNumero = '59100000000';
+  static const String whatsappAdminNumero = '59162187563';
 }

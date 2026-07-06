@@ -23,6 +23,12 @@ en cada push a `main` — ver `.github/workflows/firebase-hosting-merge.yml`)
 - **Fifi Oyster**: pinta piezas 3D bajo pedido. Solo ve lo esencial de pedidos
   que requieren pintado (pieza, foto, colores, fecha límite — NUNCA cliente/precio).
   Permiso: `pedidos.ver_pintado`
+- **Moe**: fue CLIENTA de un proyecto puntual (Cosechá), NO es colaboradora
+  interna. No darle acceso al panel, ni cuenta interna, ni documento en `equipo`.
+
+El equipo interno (Senka, Luchin, Fifi y futuros socios) edita su propio
+currículum público desde el panel ("Mi Currículum", permiso
+`equipo.editar_propio`) — ver sección "Equipo / currículums".
 
 ## Sistema de permisos (escalable)
 
@@ -51,6 +57,42 @@ y `ComisionLuchin`) y se usan en `crear_pedido_screen.dart` y
 `pedidos_screen.dart`. El default de comisión hoy es la constante
 `ComisionLuchin.porcentajeDefault` (30%) — queda pendiente moverlo a
 `configuracion/general` en Firestore si se quiere editable sin deploy.
+
+## Fotos: Cloudinary (NO Firebase Storage)
+
+Las fotos (pedidos, proyectos del portfolio, perfiles de equipo) se suben a
+**Cloudinary** con un upload preset **unsigned** — Firebase Storage exigiría
+plan Blaze y el proyecto vive en Spark. Patrón:
+
+- `lib/services/cloudinary_service.dart`: POST multipart al endpoint de
+  upload de Cloudinary, devuelve `secure_url`. Cloud name y preset viven SOLO
+  en ese archivo (un preset unsigned no expone secretos, pero no repetirlos
+  por el código ni documentarlos acá).
+- `lib/widgets/selector_fotos.dart` (`SelectorFotos`): widget único de subida
+  (file_picker con `withData: true` para web). Modo múltiple (default) o
+  `unaSola: true` para fotos de perfil. Muestra thumbnails, progreso,
+  eliminar y reintento; entrega `List<String>` de URLs vía `onChanged`.
+- En Firestore solo se guardan las URLs resultantes (campos `fotos`,
+  `imagenes`, `fotoUrl` siguen siendo strings — el modelo no cambió).
+- Usado en: crear_pedido_screen, portfolio_admin_screen (ahora un proyecto
+  puede tener VARIAS fotos) y mi_curriculum_screen. NUNCA volver a pedir
+  "URL de imagen" a mano en un formulario.
+
+## Equipo / currículums (colección `equipo`)
+
+- Cada socio edita SU PROPIO documento de `equipo` desde el panel:
+  `lib/screens/panel/mi_curriculum_screen.dart` (permiso
+  `equipo.editar_propio`; admin.total también lo tiene implícito).
+- `MiembroEquipo` tiene `username` (enlaza con la cuenta de login; para docs
+  nuevos el id del doc = username) y `biografia` (texto libre multilínea,
+  sin límite — cada uno se presenta como quiere).
+- Reglas de Firestore: lectura pública; create/update solo si
+  `username` del documento == username del solicitante (o admin);
+  delete solo admin. Ver bloque `equipo` en firestore.rules.
+- La web pública muestra el equipo con `MiembroEquipoCard`
+  (`lib/widgets/miembro_equipo_card.dart`): foto, rol, especialidad, bio
+  truncada con "Ver más" expandible y links a redes. Se usa en Home y en
+  Sobre Nosotros — no crear otra card de miembro.
 
 ## Calculadora de costos 3D
 
@@ -141,16 +183,21 @@ Reglas establecidas; cualquier pantalla nueva debe respetarlas:
 - [x] Agregar `origenPedido` y `comisionLuchin` al modelo `Pedido` + pantallas
 - [x] Aplicar la estética de marca a TODO el sitio público y el panel
       (rediseño completo julio 2026 — ver sección "Sistema de diseño UI")
-- [ ] Subida real de fotos a Storage (hoy es URL manual, Storage requiere
-      plan Blaze — evaluar si vale la pena o seguir con URLs)
+- [x] Subida real de fotos — resuelto con Cloudinary (ver sección "Fotos"),
+      Storage/Blaze ya no hace falta
+- [x] Detalle de proyecto del Portfolio: implementado con galería multi-foto,
+      lightbox, tecnologías y contenido detallado
+- [x] Botón "VER" del Catálogo 3D: abre modal de detalle de pieza con specs y
+      botón "Cotizar esta pieza" por WhatsApp
+- [x] Currículums editables por cada socio ("Mi Currículum" en el panel) y
+      sección Equipo del Home mostrando datos reales
+- [ ] **Reemplazar `AppConfig.whatsappAdminNumero`** (sigue siendo el
+      placeholder `59100000000`): TODOS los botones de WhatsApp apuntan a un
+      número falso hasta que Senka pase el real
 - [ ] Pantalla para que Admin cree usuarios sin ir a Firebase Console
 - [ ] Validar/completar contenido real de las 5 páginas de servicios: ya usan
       `ServicioScreenBase` con capacidades derivadas de las descripciones del
       Home, falta que Senka confirme los textos definitivos
-- [ ] Detalle de proyecto del Portfolio: hoy es placeholder con estética de
-      marca, falta mostrar los datos reales del proyecto (`proyectoId` ya llega)
-- [ ] Botón "VER" de las cards del Catálogo 3D no hace nada todavía (falta
-      vista de detalle de pieza)
 - [ ] Si el manual de marca nombra una tipografía oficial (sección 04),
       conseguir el .ttf, declararla en pubspec y usarla en AppTheme
 - [ ] Arreglar `.github/workflows/firebase-hosting-pull-request.yml` (mismo

@@ -259,9 +259,11 @@ class _FormularioProyectoDialogState extends State<_FormularioProyectoDialog> {
   late TextEditingController _tituloCtrl;
   late TextEditingController _clienteCtrl;
   late TextEditingController _descripcionCtrl;
-  late TextEditingController _imagenUrlCtrl;
   late TextEditingController _tecnologiasCtrl;
   late TextEditingController _contenidoCtrl;
+
+  /// URLs de fotos del proyecto (varias), subidas vía SelectorFotos.
+  late List<String> _imagenes;
 
   String _categoria = CategoriasProyecto.web;
   String _estado = 'Completo';
@@ -276,8 +278,7 @@ class _FormularioProyectoDialogState extends State<_FormularioProyectoDialog> {
     _tituloCtrl = TextEditingController(text: p?.titulo ?? '');
     _clienteCtrl = TextEditingController(text: p?.cliente ?? '');
     _descripcionCtrl = TextEditingController(text: p?.descripcion ?? '');
-    _imagenUrlCtrl =
-        TextEditingController(text: p?.imagenes.isNotEmpty == true ? p!.imagenes.first : '');
+    _imagenes = List<String>.from(p?.imagenes ?? []);
     _tecnologiasCtrl = TextEditingController(text: p?.tecnologias.join(', ') ?? '');
     _contenidoCtrl = TextEditingController(text: p?.contenidoDetallado ?? '');
     _categoria = p?.categoria ?? CategoriasProyecto.web;
@@ -289,7 +290,6 @@ class _FormularioProyectoDialogState extends State<_FormularioProyectoDialog> {
     _tituloCtrl.dispose();
     _clienteCtrl.dispose();
     _descripcionCtrl.dispose();
-    _imagenUrlCtrl.dispose();
     _tecnologiasCtrl.dispose();
     _contenidoCtrl.dispose();
     super.dispose();
@@ -305,7 +305,7 @@ class _FormularioProyectoDialogState extends State<_FormularioProyectoDialog> {
         titulo: _tituloCtrl.text.trim(),
         cliente: _clienteCtrl.text.trim(),
         descripcion: _descripcionCtrl.text.trim(),
-        imagenes: _imagenUrlCtrl.text.trim().isEmpty ? [] : [_imagenUrlCtrl.text.trim()],
+        imagenes: _imagenes,
         tecnologias: _tecnologiasCtrl.text
             .split(',')
             .map((e) => e.trim())
@@ -372,7 +372,12 @@ class _FormularioProyectoDialogState extends State<_FormularioProyectoDialog> {
                   _campo('Título', _tituloCtrl, requerido: true),
                   _campo('Cliente', _clienteCtrl),
                   _campo('Descripción corta', _descripcionCtrl, lineas: 2, requerido: true),
-                  _campo('URL de imagen', _imagenUrlCtrl),
+                  SelectorFotos(
+                    etiqueta: 'Fotos del proyecto',
+                    fotosIniciales: _imagenes,
+                    onChanged: (urls) => _imagenes = urls,
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
                   _campo('Tecnologías (separadas por coma)', _tecnologiasCtrl),
                   _campo('Contenido detallado', _contenidoCtrl, lineas: 4),
                   const SizedBox(height: AppSpacing.md),

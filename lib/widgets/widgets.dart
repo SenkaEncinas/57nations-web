@@ -8,3 +8,6 @@ export 'tech_card.dart';
 export 'section_header.dart';
 export 'page_section.dart';
 export 'status_badge.dart';
+export 'selector_fotos.dart';
+export 'miembro_equipo_card.dart';
+export 'galeria_lightbox.dart';

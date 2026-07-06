@@ -110,6 +110,26 @@ class FirebaseService {
     return snapshot.docs.map((doc) => MiembroEquipo.fromFirestore(doc)).toList();
   }
 
+  /// Documento de equipo del usuario logueado ("Mi Currículum").
+  /// Se busca por campo `username` (no por id de documento) para que también
+  /// funcione con documentos viejos creados a mano con otro id.
+  Future<MiembroEquipo?> obtenerMiembroEquipoPorUsername(String username) async {
+    final snapshot = await _firestore
+        .collection('equipo')
+        .where('username', isEqualTo: username)
+        .limit(1)
+        .get();
+    if (snapshot.docs.isEmpty) return null;
+    return MiembroEquipo.fromFirestore(snapshot.docs.first);
+  }
+
+  /// Crea o pisa el documento de equipo del miembro. Las reglas de Firestore
+  /// solo permiten esto si `miembro.username` coincide con el login de quien
+  /// escribe (o si es admin.total).
+  Future<void> crearOActualizarMiembroEquipo(MiembroEquipo miembro) async {
+    await _firestore.collection('equipo').doc(miembro.id).set(miembro.toFirestore());
+  }
+
   // ==================== PEDIDOS ====================
   /// Solo Admin y Luchin pueden llamar a esto (validar permiso 'pedidos.crear'
   /// en la UI antes de invocar). Los clientes nunca crean pedidos directo;

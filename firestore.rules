@@ -39,10 +39,10 @@ service cloud.firestore {
     // ==================== CATÁLOGO PÚBLICO (sin login) ====================
     // Lectura pública porque son las pantallas públicas de la web
     // (Home, Portfolio, Catálogo 3D, Sobre Nosotros). Escritura solo
-    // desde el panel interno (portfolio_admin_screen.dart hoy escribe
-    // "proyectos"; "impresiones3d", "categorias3d" y "equipo" no tienen
-    // pantalla de administración todavía, pero se deja el mismo criterio
-    // listo para cuando la tengan).
+    // desde el panel interno (portfolio_admin_screen.dart escribe
+    // "proyectos"; "impresiones3d" y "categorias3d" no tienen pantalla de
+    // administración todavía, pero se deja el mismo criterio listo).
+    // "equipo" tiene su propio bloque más abajo (escritura por dueño).
     match /proyectos/{id} {
       allow read: if true;
       allow write: if request.auth != null;
@@ -58,9 +58,22 @@ service cloud.firestore {
       allow write: if request.auth != null;
     }
 
+    // Lectura pública (la web muestra al equipo en Home y Sobre Nosotros).
+    // Escritura: cada miembro edita SOLO su propio documento — aquel cuyo
+    // campo `username` coincide con la parte local de su email interno
+    // "{username}@57nations.internal" (pantalla "Mi Currículum", permiso
+    // 'equipo.editar_propio' validado en la UI). Admin puede escribir todo.
+    // Borrar queda reservado a admin para que nadie se auto-elimine por error.
     match /equipo/{id} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow create: if esAdmin() ||
+        (request.auth != null &&
+         request.resource.data.username == usernameDelSolicitante());
+      allow update: if esAdmin() ||
+        (request.auth != null &&
+         resource.data.username == usernameDelSolicitante() &&
+         request.resource.data.username == usernameDelSolicitante());
+      allow delete: if esAdmin();
     }
 
     // ==================== COTIZACIONES ====================

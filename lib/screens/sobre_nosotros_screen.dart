@@ -47,7 +47,7 @@ class _SobreNosotrosScreenState extends State<SobreNosotrosScreen> {
   @override
   Widget build(BuildContext context) {
     final columnasValores = Responsive.valor(context, mobile: 1, tablet: 2, desktop: 3);
-    final columnasEquipo = Responsive.valor(context, mobile: 1, tablet: 2, desktop: 4);
+    final columnasEquipo = Responsive.valor(context, mobile: 1, tablet: 2, desktop: 3);
 
     return Scaffold(
       body: SingleChildScrollView(
@@ -146,17 +146,24 @@ class _SobreNosotrosScreenState extends State<SobreNosotrosScreen> {
                       mensaje: 'Estamos preparando las presentaciones del equipo. Ya vuelven.',
                     )
                   else
-                    GridView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: columnasEquipo,
-                        crossAxisSpacing: AppSpacing.lg,
-                        mainAxisSpacing: AppSpacing.lg,
-                        childAspectRatio: 0.85,
-                      ),
-                      itemCount: _equipo.length,
-                      itemBuilder: (context, index) => _MiembroCard(miembro: _equipo[index]),
+                    // Wrap en vez de GridView: la card compartida cambia de
+                    // alto al expandir la biografía y un grid la cortaría.
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final anchoCard = (constraints.maxWidth -
+                                AppSpacing.lg * (columnasEquipo - 1)) /
+                            columnasEquipo;
+                        return Wrap(
+                          spacing: AppSpacing.lg,
+                          runSpacing: AppSpacing.lg,
+                          children: _equipo
+                              .map((m) => SizedBox(
+                                    width: anchoCard,
+                                    child: MiembroEquipoCard(miembro: m),
+                                  ))
+                              .toList(),
+                        );
+                      },
                     ),
                 ],
               ),
@@ -205,70 +212,3 @@ class _ValorCard extends StatelessWidget {
   }
 }
 
-class _MiembroCard extends StatelessWidget {
-  final MiembroEquipo miembro;
-
-  const _MiembroCard({required this.miembro});
-
-  @override
-  Widget build(BuildContext context) {
-    return TechCard(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(3),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: AppColors.violetaPrincipal.withValues(alpha: 0.5),
-                width: 1.2,
-              ),
-            ),
-            child: CircleAvatar(
-              radius: 36,
-              backgroundColor: AppColors.surface,
-              backgroundImage:
-                  miembro.fotoUrl != null ? NetworkImage(miembro.fotoUrl!) : null,
-              child: miembro.fotoUrl == null
-                  ? const Icon(Icons.person_outline, color: AppColors.textDim, size: 32)
-                  : null,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Text(
-            miembro.nombre,
-            style: const TextStyle(
-              color: AppColors.textLight,
-              fontWeight: FontWeight.w700,
-              fontSize: 14,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            miembro.rol.toUpperCase(),
-            style: const TextStyle(
-              color: AppColors.cianTech,
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 1,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          if (miembro.especialidad.isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              miembro.especialidad,
-              style: const TextStyle(color: AppColors.textDim, fontSize: 12),
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}

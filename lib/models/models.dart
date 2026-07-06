@@ -229,6 +229,8 @@ class Cotizacion {
 ///   - calculadora.usar             → acceso a la calculadora de costos 3D
 ///   - cotizaciones.ver             → puede ver cotizaciones entrantes de la web
 ///   - usuarios.administrar         → puede crear/editar otros usuarios internos
+///   - equipo.editar_propio         → puede editar SU PROPIO currículum público
+///                                    (documento de `equipo` con username == su login)
 class Usuario {
   final String id;
   final String username; // usuario de login (no email)
@@ -568,20 +570,30 @@ class Pedido {
 }
 
 // ==================== MIEMBRO EQUIPO ====================
+/// Miembro del equipo interno (Senka, Luchin, Fifi y futuros socios).
+/// Cada uno edita SU PROPIO documento desde el panel ("Mi Currículum",
+/// permiso 'equipo.editar_propio'). [username] enlaza este documento con la
+/// cuenta de login; para documentos nuevos, el id del doc también es el
+/// username. [biografia] es texto libre multilínea: cada uno se presenta
+/// como quiera, sin campos rígidos.
 class MiembroEquipo {
   final String id;
+  final String username; // enlaza con la cuenta de login (usuarios/{username})
   final String nombre;
   final String rol;
   final String especialidad;
+  final String biografia;
   final String? fotoUrl;
   final String? instagramUrl;
   final String? linkedinUrl;
 
   MiembroEquipo({
     required this.id,
+    this.username = '',
     required this.nombre,
     required this.rol,
     required this.especialidad,
+    this.biografia = '',
     this.fotoUrl,
     this.instagramUrl,
     this.linkedinUrl,
@@ -591,9 +603,11 @@ class MiembroEquipo {
     final data = doc.data() as Map<String, dynamic>;
     return MiembroEquipo(
       id: doc.id,
+      username: data['username'] ?? '',
       nombre: data['nombre'] ?? '',
       rol: data['rol'] ?? '',
       especialidad: data['especialidad'] ?? '',
+      biografia: data['biografia'] ?? '',
       fotoUrl: data['fotoUrl'],
       instagramUrl: data['instagramUrl'],
       linkedinUrl: data['linkedinUrl'],
@@ -602,9 +616,11 @@ class MiembroEquipo {
 
   Map<String, dynamic> toFirestore() {
     return {
+      'username': username,
       'nombre': nombre,
       'rol': rol,
       'especialidad': especialidad,
+      'biografia': biografia,
       'fotoUrl': fotoUrl,
       'instagramUrl': instagramUrl,
       'linkedinUrl': linkedinUrl,

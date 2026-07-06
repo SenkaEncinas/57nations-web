@@ -11,6 +11,7 @@ import 'pedidos_pintado_screen.dart';
 import 'crear_pedido_screen.dart';
 import 'cotizaciones_panel_screen.dart';
 import 'portfolio_admin_screen.dart';
+import 'mi_curriculum_screen.dart';
 
 /// Contenedor principal del panel interno. Arma el menú dinámicamente según
 /// los permisos de [usuario], para que agregar un socio/servicio nuevo en el
@@ -96,6 +97,14 @@ class _PanelShellState extends State<PanelShell> {
         label: 'Cotizaciones Web',
         icon: Icons.mail_outline,
         builder: (u) => const CotizacionesPanelScreen(),
+      ));
+    }
+    if (usuario.tienePermiso('equipo.editar_propio')) {
+      secciones.add(_PanelSeccion(
+        id: 'mi_curriculum',
+        label: 'Mi Currículum',
+        icon: Icons.badge_outlined,
+        builder: (u) => MiCurriculumScreen(usuario: u),
       ));
     }
     if (usuario.tienePermiso('portfolio.administrar')) {
