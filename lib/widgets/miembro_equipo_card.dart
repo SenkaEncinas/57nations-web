@@ -1,180 +1,275 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../models/models.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
-import 'tech_card.dart';
+import '../theme/app_theme.dart';
+import 'page_hero.dart' show CircuitGridPainter;
 
-/// Card pública de un miembro del equipo: foto, nombre, rol, especialidad,
-/// biografía truncada con "Ver más" expandible y links a redes.
-/// Se usa en el Home (sección Equipo) y en Sobre Nosotros — una sola card
-/// para no tener dos versiones desincronizadas.
+/// ¿Este miembro es el admin (Senka)? Se detecta por rol == 'admin'
+/// (case-insensitive) con fallback al username, porque el rol público
+/// visible puede decir "Fundador" u otro texto.
+bool esMiembroAdmin(MiembroEquipo m) =>
+    m.rol.trim().toLowerCase() == 'admin' || m.username.toLowerCase() == 'senka';
+
+/// Reordena el equipo para que el admin quede en la posición CENTRAL de la
+/// lista (índice largo ~/ 2), recalculado según cuántos miembros haya — si
+/// mañana se suma un socio, el admin sigue al centro sin tocar código.
+/// Con [adminPrimero] (mobile, 1 columna) el admin va arriba de todo: en una
+/// lista vertical "el del medio" no se percibe como centro.
+List<MiembroEquipo> ordenarEquipoConAdminAlCentro(
+  List<MiembroEquipo> equipo, {
+  bool adminPrimero = false,
+}) {
+  final indiceAdmin = equipo.indexWhere(esMiembroAdmin);
+  if (indiceAdmin == -1) return equipo;
+
+  final resto = List<MiembroEquipo>.from(equipo)..removeAt(indiceAdmin);
+  final admin = equipo[indiceAdmin];
+  final destino = adminPrimero ? 0 : equipo.length ~/ 2;
+  return resto..insert(destino.clamp(0, resto.length), admin);
+}
+
+/// Card pública de miembro del equipo, estilo "selección de personaje"
+/// (referencia: carrusel vertical tipo Pump It Up): foto GRANDE en formato
+/// retrato 3:4 — todas las cards idénticas en proporción —, nombre y
+/// descripción corta debajo, toda la card clickeable hacia el perfil público.
+/// Compartida entre Home y Sobre Nosotros.
+/// La card del admin ([destacada]) lleva brackets de circuito en las esquinas.
 class MiembroEquipoCard extends StatefulWidget {
   final MiembroEquipo miembro;
+  final VoidCallback onTap;
+  final bool destacada;
 
-  const MiembroEquipoCard({super.key, required this.miembro});
+  const MiembroEquipoCard({
+    super.key,
+    required this.miembro,
+    required this.onTap,
+    this.destacada = false,
+  });
+
+  /// Proporción retrato del área de foto (ancho : alto = 3 : 4), igual en
+  /// todas las cards para que el carrusel se vea uniforme.
+  static const double aspectRatioFoto = 3 / 4;
 
   @override
   State<MiembroEquipoCard> createState() => _MiembroEquipoCardState();
 }
 
 class _MiembroEquipoCardState extends State<MiembroEquipoCard> {
-  bool _bioExpandida = false;
+  bool _hovered = false;
 
-  /// A partir de este largo la bio se trunca y aparece "Ver más".
-  static const int _limiteBio = 140;
-
-  Future<void> _abrirUrl(String url) async {
-    var destino = url.trim();
-    if (destino.isEmpty) return;
-    if (!destino.startsWith('http')) destino = 'https://$destino';
-    final uri = Uri.parse(destino);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+  /// Descripción corta bajo el nombre: la especialidad es una línea curada
+  /// para presentarse; la biografía es texto libre en primera persona que
+  /// truncado a mitad de frase queda mal — solo se usa de fallback.
+  String get _descripcionCorta {
+    final m = widget.miembro;
+    if (m.especialidad.trim().isNotEmpty) return m.especialidad.trim();
+    final bio = m.biografia.trim();
+    if (bio.isNotEmpty) {
+      return bio.length <= 70 ? bio : '${bio.substring(0, 70).trimRight()}…';
     }
+    return 'Equipo 57 Nations';
   }
 
   @override
   Widget build(BuildContext context) {
     final m = widget.miembro;
-    final bioLarga = m.biografia.length > _limiteBio;
-    final bioVisible = _bioExpandida || !bioLarga
-        ? m.biografia
-        : '${m.biografia.substring(0, _limiteBio).trimRight()}…';
 
-    return TechCard(
-      padding: const EdgeInsets.all(AppSpacing.xl),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(3),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: AppColors.violetaPrincipal.withValues(alpha: 0.5),
-                    width: 1.2,
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: Stack(
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeOut,
+              transform: Matrix4.translationValues(0, _hovered ? -4 : 0, 0),
+              clipBehavior: Clip.hardEdge,
+              decoration: ShapeDecoration(
+                color: AppColors.surfaceElevated,
+                shape: AppTheme.cutCorner(
+                  side: BorderSide(
+                    color: _hovered ? AppColors.violetaPrincipal : AppColors.border,
+                    width: _hovered ? 1.4 : 1,
                   ),
                 ),
-                child: CircleAvatar(
-                  radius: 30,
-                  backgroundColor: AppColors.surface,
-                  backgroundImage: m.fotoUrl != null ? NetworkImage(m.fotoUrl!) : null,
-                  child: m.fotoUrl == null
-                      ? const Icon(Icons.person_outline, color: AppColors.textDim, size: 28)
-                      : null,
-                ),
+                shadows: _hovered
+                    ? [
+                        BoxShadow(
+                          color: AppColors.violetaPrincipal.withValues(alpha: 0.22),
+                          blurRadius: 20,
+                          offset: const Offset(0, 8),
+                        ),
+                      ]
+                    : const [],
               ),
-              const SizedBox(width: AppSpacing.lg),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      m.nombre,
-                      style: const TextStyle(
-                        color: AppColors.textLight,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 15,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // FOTO GRANDE en retrato 3:4, con zoom sutil al hover
+                  AspectRatio(
+                    aspectRatio: MiembroEquipoCard.aspectRatioFoto,
+                    child: ClipRect(
+                      child: AnimatedScale(
+                        duration: const Duration(milliseconds: 250),
+                        curve: Curves.easeOut,
+                        scale: _hovered ? 1.05 : 1.0,
+                        child: m.fotoUrl != null
+                            ? Image.network(m.fotoUrl!, fit: BoxFit.cover)
+                            : _PlaceholderFotoMiembro(destacada: widget.destacada),
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      m.rol.toUpperCase(),
-                      style: const TextStyle(
-                        color: AppColors.cianTech,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 1,
-                      ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          m.nombre,
+                          style: const TextStyle(
+                            color: AppColors.textLight,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 16,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (m.rol.isNotEmpty) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            m.rol.toUpperCase(),
+                            style: const TextStyle(
+                              color: AppColors.cianTech,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 1,
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: AppSpacing.sm),
+                        Text(
+                          _descripcionCorta,
+                          style: const TextStyle(
+                            color: AppColors.textMuted,
+                            fontSize: 13,
+                            height: 1.5,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        AnimatedDefaultTextStyle(
+                          duration: const Duration(milliseconds: 180),
+                          style: TextStyle(
+                            color: _hovered ? AppColors.cianTech : AppColors.textDim,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Text('VER PERFIL'),
+                              const SizedBox(width: 6),
+                              Icon(
+                                Icons.arrow_forward,
+                                size: 13,
+                                color: _hovered ? AppColors.cianTech : AppColors.textDim,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                    if (m.especialidad.isNotEmpty) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        m.especialidad,
-                        style: const TextStyle(color: AppColors.textDim, fontSize: 12),
-                      ),
-                    ],
-                  ],
-                ),
+                  ),
+                ],
+              ),
+            ),
+            // Brackets de circuito solo en la card destacada (admin), sin
+            // saturar el resto del grid.
+            if (widget.destacada) ...[
+              const Positioned(top: 6, left: 6, child: _Bracket()),
+              Positioned(
+                bottom: 6,
+                right: 6,
+                child: Transform.rotate(angle: 3.1416, child: const _Bracket()),
               ),
             ],
-          ),
-          if (m.biografia.isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              bioVisible,
-              style: const TextStyle(color: AppColors.textMuted, fontSize: 13, height: 1.6),
-            ),
-            if (bioLarga)
-              Padding(
-                padding: const EdgeInsets.only(top: AppSpacing.xs),
-                child: MouseRegion(
-                  cursor: SystemMouseCursors.click,
-                  child: GestureDetector(
-                    onTap: () => setState(() => _bioExpandida = !_bioExpandida),
-                    child: Text(
-                      _bioExpandida ? 'VER MENOS' : 'VER MÁS',
-                      style: const TextStyle(
-                        color: AppColors.cianTech,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 1,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
           ],
-          if (m.instagramUrl != null || m.linkedinUrl != null) ...[
-            const SizedBox(height: AppSpacing.md),
-            Row(
-              children: [
-                if (m.instagramUrl != null)
-                  _RedSocialBoton(
-                    icon: Icons.camera_alt_outlined,
-                    tooltip: 'Instagram',
-                    onTap: () => _abrirUrl(m.instagramUrl!),
-                  ),
-                if (m.linkedinUrl != null)
-                  _RedSocialBoton(
-                    icon: Icons.work_outline,
-                    tooltip: 'LinkedIn',
-                    onTap: () => _abrirUrl(m.linkedinUrl!),
-                  ),
-              ],
-            ),
-          ],
-        ],
+        ),
       ),
     );
   }
 }
 
-class _RedSocialBoton extends StatelessWidget {
-  final IconData icon;
-  final String tooltip;
-  final VoidCallback onTap;
-
-  const _RedSocialBoton({
-    required this.icon,
-    required this.tooltip,
-    required this.onTap,
-  });
+class _Bracket extends StatelessWidget {
+  const _Bracket();
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(right: AppSpacing.sm),
-      child: IconButton(
-        icon: Icon(icon, size: 18),
-        tooltip: tooltip,
-        color: AppColors.textMuted,
-        hoverColor: AppColors.cianTech.withValues(alpha: 0.1),
-        onPressed: onTap,
+    return CustomPaint(
+      size: const Size(14, 14),
+      painter: _BracketPainter(),
+    );
+  }
+}
+
+class _BracketPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = AppColors.violetaPrincipal.withValues(alpha: 0.6)
+      ..strokeWidth = 1.4
+      ..style = PaintingStyle.stroke;
+    canvas.drawLine(Offset.zero, Offset(size.width, 0), paint);
+    canvas.drawLine(Offset.zero, Offset(0, size.height), paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+/// Placeholder de foto cuando el miembro todavía no subió la suya: fondo con
+/// grid de circuito sutil y silueta enmarcada — nunca una imagen rota.
+class _PlaceholderFotoMiembro extends StatelessWidget {
+  final bool destacada;
+
+  const _PlaceholderFotoMiembro({required this.destacada});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = destacada ? AppColors.cianTech : AppColors.violetaPrincipal;
+
+    return Container(
+      color: AppColors.surface,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          CustomPaint(
+            painter: CircuitGridPainter(
+              color: color.withValues(alpha: 0.06),
+              spacing: 28,
+            ),
+          ),
+          Center(
+            child: Container(
+              width: 64,
+              height: 64,
+              decoration: ShapeDecoration(
+                color: color.withValues(alpha: 0.1),
+                shape: AppTheme.cutCorner(
+                  size: AppTheme.cutSizeSm,
+                  side: BorderSide(color: color.withValues(alpha: 0.4)),
+                ),
+              ),
+              child: Icon(Icons.person_outline, color: color, size: 30),
+            ),
+          ),
+        ],
       ),
     );
   }

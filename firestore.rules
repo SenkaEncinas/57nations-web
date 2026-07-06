@@ -82,9 +82,12 @@ service cloud.firestore {
     // El panel interno (cotizaciones_panel_screen.dart) sí necesita leerlas
     // para que Admin las revise, por eso read/update/delete son solo
     // para usuarios autenticados, no "nadie".
+    // Borrar cotizaciones es solo para admin.total (en la UI, permiso
+    // 'cotizaciones.eliminar'): son el registro histórico de contactos.
     match /cotizaciones/{id} {
       allow create: if true;
-      allow read, update, delete: if request.auth != null;
+      allow read, update: if request.auth != null;
+      allow delete: if esAdmin();
     }
 
     // ==================== SOLO USUARIOS INTERNOS AUTENTICADOS ====================

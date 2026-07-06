@@ -7,6 +7,7 @@ import '../screens/servicios/impresion3d_screen.dart';
 import '../screens/servicios/entrenamiento_screen.dart';
 import '../screens/portfolio/portfolio_screen.dart';
 import '../screens/portfolio/proyecto_detalle_screen.dart';
+import '../screens/equipo/perfil_equipo_screen.dart';
 import '../screens/catalogo/catalogo_3d_screen.dart';
 import '../screens/cotizacion/cotizacion_screen.dart';
 import '../screens/contacto_screen.dart';
@@ -23,6 +24,7 @@ class AppRoutes {
   static const String entrenamientoScreen = '/entrenamiento';
   static const String portfolio = '/portfolio';
   static const String proyectoDetalle = '/proyecto-detalle';
+  static const String perfilEquipo = '/equipo-perfil';
   static const String catalogo3d = '/catalogo-3d';
   static const String cotizacion = '/cotizacion';
   static const String contacto = '/contacto';
@@ -50,6 +52,11 @@ class AppRoutes {
         final args = settings.arguments as String?;
         return MaterialPageRoute(
           builder: (context) => ProyectoDetalleScreen(proyectoId: args ?? ''),
+        );
+      case perfilEquipo:
+        final miembroId = settings.arguments as String?;
+        return MaterialPageRoute(
+          builder: (context) => PerfilEquipoScreen(miembroId: miembroId ?? ''),
         );
       default:
         return MaterialPageRoute(

@@ -90,9 +90,23 @@ plan Blaze y el proyecto vive en Spark. Patrón:
   `username` del documento == username del solicitante (o admin);
   delete solo admin. Ver bloque `equipo` en firestore.rules.
 - La web pública muestra el equipo con `MiembroEquipoCard`
-  (`lib/widgets/miembro_equipo_card.dart`): foto, rol, especialidad, bio
-  truncada con "Ver más" expandible y links a redes. Se usa en Home y en
-  Sobre Nosotros — no crear otra card de miembro.
+  (`lib/widgets/miembro_equipo_card.dart`), estilo "selección de personaje":
+  foto GRANDE, nombre, rol y descripción corta (especialidad; si está vacía,
+  biografía truncada a ~70 chars; si ambas vacías, "Equipo 57 Nations").
+  Toda la card navega al perfil público. Se usa en Home y Sobre Nosotros —
+  no crear otra card de miembro.
+- **Perfil público de miembro**: `lib/screens/equipo/perfil_equipo_screen.dart`,
+  ruta `AppRoutes.perfilEquipo` ('/equipo-perfil') con el id del doc como
+  argumento (mismo patrón que proyecto-detalle). Muestra foto grande, rol,
+  especialidad, redes, biografía completa (el "currículum") y CTA
+  "Hablar con [nombre]" → WhatsApp al número de admin mencionando a la
+  persona. Biografía vacía → card "está preparando su presentación" con CTA,
+  nunca sección vacía. Servicio: `obtenerMiembroEquipo(id)`.
+- **Orden del equipo**: `ordenarEquipoConAdminAlCentro()` + `esMiembroAdmin()`
+  (en miembro_equipo_card.dart). Senka (rol 'admin' o username 'senka') va
+  SIEMPRE al centro de la fila, calculado como `largo ~/ 2` sobre la lista
+  real (nunca un índice hardcodeado); en mobile (1 columna) va primero.
+  Su card lleva `destacada: true` (brackets de circuito).
 
 ## Calculadora de costos 3D
 
@@ -168,7 +182,28 @@ Reglas establecidas; cualquier pantalla nueva debe respetarlas:
   - `ServicioScreenBase` (`lib/screens/servicios/servicio_screen_base.dart`) —
     plantilla única de las 5 páginas de servicio (hero + capacidades + CTA).
 - **Glow siempre sutil y nunca en todo a la vez** (manual): solo en hover de
-  elementos interactivos y en el precio destacado de la calculadora.
+  elementos interactivos, el precio destacado de la calculadora y el glow
+  radial del banner de cierre del Home.
+- **Animaciones de entrada al scroll**: `AparecerAlScroll`
+  (`lib/widgets/aparecer_al_scroll.dart`, usa flutter_animate +
+  visibility_detector): fade-in + slide-up de 350ms, se dispara UNA sola vez
+  cuando la sección entra al viewport. Usado en las secciones del Home
+  (Servicios, Portfolio, Equipo, banner de cierre). NUNCA en el Hero ni en
+  contenido above-the-fold, y siempre sutil (nada de rebotes ni escalas).
+- **Home**: el Hero cubre TODA la pantalla al entrar (minHeight = alto de
+  viewport menos navbar, contenido centrado verticalmente) con el logo
+  grande como protagonista — pedido explícito de Senka, no reducirlo.
+  Las cards de equipo son verticales tipo "carrusel de selección" (foto
+  retrato 3:4 vía `MiembroEquipoCard.aspectRatioFoto`, ancho acotado a
+  300px, todas idénticas). Las secciones se separan con `_TransicionSeccion`
+  (franja de gradiente vertical) para que el cambio de fondo no sea un
+  corte seco;
+  la alternancia de fondos es negro → surface → negro → gradiente (nunca
+  dos tonos iguales seguidos). El preview de Portfolio muestra los 3
+  proyectos más recientes con `ProyectoCard` (widget compartido con la
+  página de Portfolio — no duplicar cards de proyecto); sin proyectos cae
+  a un estado vacío elegante con CTA. La grilla de servicios es Wrap
+  centrado: desktop 3+2, tablet 2+2+1, mobile 1 columna.
 - **Nada de emojis como íconos de datos** en el panel: usar `Icons.*_outlined`
   (patrón `_InfoFila` en `pedidos_screen.dart`).
 - **Navegación**: la Navbar resalta la ruta activa (compara
@@ -191,9 +226,11 @@ Reglas establecidas; cualquier pantalla nueva debe respetarlas:
       botón "Cotizar esta pieza" por WhatsApp
 - [x] Currículums editables por cada socio ("Mi Currículum" en el panel) y
       sección Equipo del Home mostrando datos reales
-- [ ] **Reemplazar `AppConfig.whatsappAdminNumero`** (sigue siendo el
-      placeholder `59100000000`): TODOS los botones de WhatsApp apuntan a un
-      número falso hasta que Senka pase el real
+- [x] `AppConfig.whatsappAdminNumero` ya tiene el número real de Senka —
+      cotizaciones y botones de contacto llegan a su chat
+- [x] Admin puede eliminar cotizaciones desde el panel (permiso
+      `cotizaciones.eliminar`, implícito en admin.total; reglas de Firestore
+      también restringen el delete a admin)
 - [ ] Pantalla para que Admin cree usuarios sin ir a Firebase Console
 - [ ] Validar/completar contenido real de las 5 páginas de servicios: ya usan
       `ServicioScreenBase` con capacidades derivadas de las descripciones del

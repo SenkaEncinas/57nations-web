@@ -228,6 +228,8 @@ class Cotizacion {
 ///   - pedidos.actualizar_pintado   → puede cambiar estado/fecha de la etapa de pintado
 ///   - calculadora.usar             → acceso a la calculadora de costos 3D
 ///   - cotizaciones.ver             → puede ver cotizaciones entrantes de la web
+///   - cotizaciones.eliminar        → puede borrar cotizaciones (solo Admin;
+///                                    admin.total lo incluye implícitamente)
 ///   - usuarios.administrar         → puede crear/editar otros usuarios internos
 ///   - equipo.editar_propio         → puede editar SU PROPIO currículum público
 ///                                    (documento de `equipo` con username == su login)

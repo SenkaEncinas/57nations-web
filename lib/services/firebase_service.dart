@@ -104,10 +104,25 @@ class FirebaseService {
     return snapshot.docs.map((doc) => Cotizacion.fromFirestore(doc)).toList();
   }
 
+  /// Solo Admin (permiso 'cotizaciones.eliminar', implícito en admin.total).
+  /// Las reglas de Firestore también restringen el delete a admin.
+  Future<void> eliminarCotizacion(String id) async {
+    await _firestore.collection('cotizaciones').doc(id).delete();
+  }
+
   // ==================== EQUIPO ====================
   Future<List<MiembroEquipo>> obtenerEquipo() async {
     final snapshot = await _firestore.collection('equipo').orderBy('nombre').get();
     return snapshot.docs.map((doc) => MiembroEquipo.fromFirestore(doc)).toList();
+  }
+
+  /// Un miembro puntual por id de documento (perfil público de equipo).
+  Future<MiembroEquipo?> obtenerMiembroEquipo(String id) async {
+    final doc = await _firestore.collection('equipo').doc(id).get();
+    if (doc.exists) {
+      return MiembroEquipo.fromFirestore(doc);
+    }
+    return null;
   }
 
   /// Documento de equipo del usuario logueado ("Mi Currículum").

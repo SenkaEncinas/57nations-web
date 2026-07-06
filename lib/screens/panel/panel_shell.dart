@@ -96,7 +96,7 @@ class _PanelShellState extends State<PanelShell> {
         id: 'cotizaciones',
         label: 'Cotizaciones Web',
         icon: Icons.mail_outline,
-        builder: (u) => const CotizacionesPanelScreen(),
+        builder: (u) => CotizacionesPanelScreen(usuario: u),
       ));
     }
     if (usuario.tienePermiso('equipo.editar_propio')) {

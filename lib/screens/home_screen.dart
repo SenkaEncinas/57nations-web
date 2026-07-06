@@ -18,12 +18,41 @@ class HomeScreen extends StatelessWidget {
           children: [
             NavBar(),
             _HeroSection(),
-            _ServiciosSection(),
-            _PortfolioSection(),
-            _EquipoSection(),
-            _CotizarBanner(),
+            // Franjas de gradiente entre secciones: el cambio de fondo deja
+            // de ser un corte seco (punto "ritmo" del balance visual).
+            _TransicionSeccion(desde: Color(0x4026215C), hacia: AppColors.background),
+            AparecerAlScroll(id: 'servicios', child: _ServiciosSection()),
+            _TransicionSeccion(desde: AppColors.background, hacia: AppColors.surface),
+            AparecerAlScroll(id: 'portfolio', child: _PortfolioSection()),
+            _TransicionSeccion(desde: AppColors.surface, hacia: AppColors.background),
+            AparecerAlScroll(id: 'equipo', child: _EquipoSection()),
+            AparecerAlScroll(id: 'cierre', child: _CotizarBanner()),
             Footer(),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Franja de gradiente vertical que suaviza el cambio de fondo entre dos
+/// secciones contiguas. Colores siempre de AppColors; alto de la escala.
+class _TransicionSeccion extends StatelessWidget {
+  final Color desde;
+  final Color hacia;
+
+  const _TransicionSeccion({required this.desde, required this.hacia});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      height: AppSpacing.sectionLg,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [desde, hacia],
         ),
       ),
     );
@@ -34,15 +63,23 @@ class HomeScreen extends StatelessWidget {
 class _HeroSection extends StatelessWidget {
   const _HeroSection();
 
+  /// Alto aproximado de la Navbar, para que el hero complete la pantalla.
+  static const double _altoNavbar = 60;
+
   @override
   Widget build(BuildContext context) {
     final isMobile = Responsive.isMobile(context);
+    final altoPantalla = MediaQuery.of(context).size.height;
 
     return Container(
       width: double.infinity,
+      // El hero cubre toda la pantalla al entrar (100vh menos la navbar);
+      // en pantallas muy bajas crece con el contenido en vez de cortarlo.
+      constraints: BoxConstraints(minHeight: altoPantalla - _altoNavbar),
       clipBehavior: Clip.hardEdge,
       decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
       child: Stack(
+        alignment: Alignment.center,
         children: [
           Positioned.fill(
             child: CustomPaint(
@@ -75,12 +112,13 @@ class _HeroSection extends StatelessWidget {
           Padding(
             padding: EdgeInsets.symmetric(
               horizontal: AppSpacing.horizontal(context),
-              vertical: isMobile ? AppSpacing.sectionXl : 120,
+              vertical: AppSpacing.sectionLg,
             ),
             child: Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: AppSpacing.maxContentWidth),
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
@@ -111,9 +149,10 @@ class _HeroSection extends StatelessWidget {
                       ],
                     ),
                     SizedBox(height: isMobile ? AppSpacing.xl : AppSpacing.xxl),
+                    // Logo protagonista, como en la versión inicial del Home
                     Image.asset(
                       'assets/logos/logo_57nations.png',
-                      height: isMobile ? 80 : 130,
+                      height: isMobile ? 110 : 170,
                       fit: BoxFit.contain,
                     ),
                     SizedBox(height: isMobile ? AppSpacing.xl : AppSpacing.xxl),
@@ -215,7 +254,11 @@ class _ServiciosSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final columnas = Responsive.valor(context, mobile: 1, tablet: 3, desktop: 5);
+    // 5 servicios: en desktop, 5 en fila quedaban de ~224px a 1200px (muy
+    // apretados). Wrap centrado con ancho fijo → desktop 3+2 centrado,
+    // tablet 2+2+1 centrado, mobile 1 columna.
+    final columnas = Responsive.valor(context, mobile: 1, tablet: 2, desktop: 3);
+    final isMobile = Responsive.isMobile(context);
 
     return PageSection(
       child: Column(
@@ -229,29 +272,27 @@ class _ServiciosSection extends StatelessWidget {
                 'solución justa y entregarla funcionando.',
           ),
           const SizedBox(height: AppSpacing.section),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: columnas,
-              crossAxisSpacing: AppSpacing.lg,
-              mainAxisSpacing: AppSpacing.lg,
-              childAspectRatio: Responsive.valor(
-                context,
-                mobile: 1.5,
-                tablet: 0.95,
-                desktop: 0.78,
-              ),
-            ),
-            itemCount: _servicios.length,
-            itemBuilder: (context, index) {
-              final s = _servicios[index];
-              return ServiceCard(
-                icon: s.$1,
-                title: s.$2,
-                description: s.$3,
-                color: s.$4,
-                onTap: () => Navigator.pushNamed(context, s.$5),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final anchoCard =
+                  (constraints.maxWidth - AppSpacing.lg * (columnas - 1)) / columnas;
+              return Wrap(
+                alignment: WrapAlignment.center,
+                spacing: AppSpacing.lg,
+                runSpacing: AppSpacing.lg,
+                children: _servicios
+                    .map((s) => SizedBox(
+                          width: anchoCard,
+                          height: isMobile ? null : 248,
+                          child: ServiceCard(
+                            icon: s.$1,
+                            title: s.$2,
+                            description: s.$3,
+                            color: s.$4,
+                            onTap: () => Navigator.pushNamed(context, s.$5),
+                          ),
+                        ))
+                    .toList(),
               );
             },
           ),
@@ -262,12 +303,89 @@ class _ServiciosSection extends StatelessWidget {
 }
 
 // ==================== PORTFOLIO (CTA) ====================
-class _PortfolioSection extends StatelessWidget {
+class _PortfolioSection extends StatefulWidget {
   const _PortfolioSection();
 
   @override
+  State<_PortfolioSection> createState() => _PortfolioSectionState();
+}
+
+class _PortfolioSectionState extends State<_PortfolioSection> {
+  static const int _maxProyectos = 3;
+
+  final _firebaseService = FirebaseService();
+  List<Proyecto> _proyectos = [];
+  bool _cargando = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _cargar();
+  }
+
+  Future<void> _cargar() async {
+    try {
+      // obtenerProyectos() ya viene ordenado por fechaCreacion descendente.
+      final proyectos = await _firebaseService.obtenerProyectos();
+      if (!mounted) return;
+      setState(() {
+        _proyectos = proyectos.take(_maxProyectos).toList();
+        _cargando = false;
+      });
+    } catch (e) {
+      // En el Home no mostramos un bloque de error para un preview:
+      // caemos al mismo estado elegante que "sin proyectos".
+      if (!mounted) return;
+      setState(() => _cargando = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final isMobile = Responsive.isMobile(context);
+    final columnas = Responsive.valor(context, mobile: 1, tablet: 2, desktop: 3);
+
+    Widget contenido;
+    if (_cargando) {
+      contenido = const EstadoCargando(mensaje: 'Cargando proyectos...');
+    } else if (_proyectos.isEmpty) {
+      contenido = _PortfolioVacio(
+        onVerPortfolio: () => Navigator.pushNamed(context, AppRoutes.portfolio),
+      );
+    } else {
+      contenido = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: columnas,
+              crossAxisSpacing: AppSpacing.xl,
+              mainAxisSpacing: AppSpacing.xl,
+              childAspectRatio: Responsive.isMobile(context) ? 1.2 : 0.9,
+            ),
+            itemCount: _proyectos.length,
+            itemBuilder: (context, index) {
+              final proyecto = _proyectos[index];
+              return ProyectoCard(
+                proyecto: proyecto,
+                onTap: () => Navigator.pushNamed(
+                  context,
+                  AppRoutes.proyectoDetalle,
+                  arguments: proyecto.id,
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: AppSpacing.xxl),
+          OutlinedButton.icon(
+            onPressed: () => Navigator.pushNamed(context, AppRoutes.portfolio),
+            icon: const Icon(Icons.arrow_forward, size: 18),
+            label: const Text('VER TODOS LOS PROYECTOS'),
+          ),
+        ],
+      );
+    }
 
     return PageSection(
       alternada: true,
@@ -282,44 +400,59 @@ class _PortfolioSection extends StatelessWidget {
                 'apps publicadas y piezas entregadas.',
           ),
           const SizedBox(height: AppSpacing.xxl),
-          TechCard(
-            showCornerBrackets: true,
-            padding: EdgeInsets.all(isMobile ? AppSpacing.xl : AppSpacing.section),
-            onTap: () => Navigator.pushNamed(context, AppRoutes.portfolio),
-            child: Flex(
-              direction: isMobile ? Axis.vertical : Axis.horizontal,
-              crossAxisAlignment:
-                  isMobile ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+          contenido,
+        ],
+      ),
+    );
+  }
+}
+
+/// Estado vacío elegante del preview de portfolio: invita a ver el portfolio
+/// completo en vez de dejar la sección muerta.
+class _PortfolioVacio extends StatelessWidget {
+  final VoidCallback onVerPortfolio;
+
+  const _PortfolioVacio({required this.onVerPortfolio});
+
+  @override
+  Widget build(BuildContext context) {
+    final isMobile = Responsive.isMobile(context);
+
+    return TechCard(
+      showCornerBrackets: true,
+      padding: EdgeInsets.all(isMobile ? AppSpacing.xl : AppSpacing.section),
+      onTap: onVerPortfolio,
+      child: Flex(
+        direction: isMobile ? Axis.vertical : Axis.horizontal,
+        crossAxisAlignment:
+            isMobile ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            flex: isMobile ? 0 : 1,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  flex: isMobile ? 0 : 1,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Explorá el trabajo terminado',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      const Text(
-                        'Filtrá por categoría — bots, apps, IoT, impresión 3D — y '
-                        'mirá el detalle de cada entrega.',
-                        style: TextStyle(color: AppColors.textMuted, height: 1.6),
-                      ),
-                    ],
-                  ),
+                Text(
+                  'Estamos cargando los proyectos al portfolio',
+                  style: Theme.of(context).textTheme.titleLarge,
                 ),
-                SizedBox(
-                  width: isMobile ? 0 : AppSpacing.xxl,
-                  height: isMobile ? AppSpacing.xl : 0,
-                ),
-                OutlinedButton.icon(
-                  onPressed: () => Navigator.pushNamed(context, AppRoutes.portfolio),
-                  icon: const Icon(Icons.arrow_forward, size: 18),
-                  label: const Text('VER TODOS LOS PROYECTOS'),
+                const SizedBox(height: AppSpacing.sm),
+                const Text(
+                  'Muy pronto vas a poder ver el trabajo terminado, con fotos y '
+                  'detalle de cada entrega.',
+                  style: TextStyle(color: AppColors.textMuted, height: 1.6),
                 ),
               ],
             ),
+          ),
+          SizedBox(
+            width: isMobile ? 0 : AppSpacing.xxl,
+            height: isMobile ? AppSpacing.xl : 0,
+          ),
+          OutlinedButton.icon(
+            onPressed: onVerPortfolio,
+            icon: const Icon(Icons.arrow_forward, size: 18),
+            label: const Text('VER PORTFOLIO COMPLETO'),
           ),
         ],
       ),
@@ -383,18 +516,36 @@ class _EquipoSectionState extends State<_EquipoSection> {
         mensaje: 'Estamos preparando las presentaciones del equipo. Ya vuelven.',
       );
     } else {
-      // Wrap en vez de GridView: las cards cambian de alto cuando se expande
-      // la biografía ("Ver más"), y un grid de aspect ratio fijo las cortaría.
+      // Orden dinámico: Senka (admin) siempre al centro de la fila,
+      // recalculado según cuántos miembros haya. En mobile (1 columna)
+      // va primero, destacado arriba.
+      final equipoOrdenado = ordenarEquipoConAdminAlCentro(
+        _equipo,
+        adminPrimero: columnas == 1,
+      );
       contenido = LayoutBuilder(
         builder: (context, constraints) {
-          final anchoCard = (constraints.maxWidth - AppSpacing.lg * (columnas - 1)) / columnas;
+          // Ancho acotado a 300px: con la foto retrato 3:4, la card queda en
+          // formato vertical tipo carrusel de selección, todas iguales.
+          final anchoCard =
+              ((constraints.maxWidth - AppSpacing.lg * (columnas - 1)) / columnas)
+                  .clamp(0.0, 300.0);
           return Wrap(
+            alignment: WrapAlignment.center,
             spacing: AppSpacing.lg,
             runSpacing: AppSpacing.lg,
-            children: _equipo
+            children: equipoOrdenado
                 .map((m) => SizedBox(
                       width: anchoCard,
-                      child: MiembroEquipoCard(miembro: m),
+                      child: MiembroEquipoCard(
+                        miembro: m,
+                        destacada: esMiembroAdmin(m),
+                        onTap: () => Navigator.pushNamed(
+                          context,
+                          AppRoutes.perfilEquipo,
+                          arguments: m.id,
+                        ),
+                      ),
                     ))
                 .toList(),
           );
@@ -448,6 +599,29 @@ class _CotizarBanner extends StatelessWidget {
               ),
             ),
           ),
+          // Líneas de circuito en las esquinas, como el Hero: abre y cierra
+          // la página con el mismo lenguaje gráfico.
+          if (!isMobile) ...[
+            const Positioned(top: 24, left: 24, child: TechCornerDecoration()),
+            const Positioned(top: 24, right: 24, child: TechCornerDecoration(espejado: true)),
+          ],
+          // Glow violeta radial centrado detrás del contenido
+          Positioned.fill(
+            child: Center(
+              child: Container(
+                width: 480,
+                height: 320,
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    colors: [
+                      AppColors.violetaPrincipal.withValues(alpha: 0.18),
+                      AppColors.violetaPrincipal.withValues(alpha: 0),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
           Padding(
             padding: EdgeInsets.symmetric(
               horizontal: AppSpacing.horizontal(context),
@@ -470,6 +644,7 @@ class _CotizarBanner extends StatelessWidget {
                     style: TextStyle(color: Colors.white70, fontSize: 15, height: 1.6),
                   ),
                   const SizedBox(height: AppSpacing.xxl),
+                  // Mismo CTA que el Hero (mismo texto y estilo, cierre coherente)
                   ElevatedButton(
                     onPressed: () => Navigator.pushNamed(context, AppRoutes.cotizacion),
                     style: ElevatedButton.styleFrom(
@@ -477,7 +652,7 @@ class _CotizarBanner extends StatelessWidget {
                       foregroundColor: AppColors.negroProfundo,
                       padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 18),
                     ),
-                    child: const Text('COTIZAR AHORA'),
+                    child: const Text('COTIZAR PROYECTO'),
                   ),
                 ],
               ),

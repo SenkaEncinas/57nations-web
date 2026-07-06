@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../routes/app_routes.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../models/models.dart';
@@ -146,20 +147,36 @@ class _SobreNosotrosScreenState extends State<SobreNosotrosScreen> {
                       mensaje: 'Estamos preparando las presentaciones del equipo. Ya vuelven.',
                     )
                   else
-                    // Wrap en vez de GridView: la card compartida cambia de
-                    // alto al expandir la biografía y un grid la cortaría.
+                    // Mismo orden que el Home: admin al centro (primero en
+                    // mobile), y cada card navega al perfil público.
                     LayoutBuilder(
                       builder: (context, constraints) {
-                        final anchoCard = (constraints.maxWidth -
-                                AppSpacing.lg * (columnasEquipo - 1)) /
-                            columnasEquipo;
+                        // Mismo ancho acotado que el Home: cards verticales
+                        // uniformes (foto retrato 3:4).
+                        final anchoCard = ((constraints.maxWidth -
+                                    AppSpacing.lg * (columnasEquipo - 1)) /
+                                columnasEquipo)
+                            .clamp(0.0, 300.0);
+                        final equipoOrdenado = ordenarEquipoConAdminAlCentro(
+                          _equipo,
+                          adminPrimero: columnasEquipo == 1,
+                        );
                         return Wrap(
+                          alignment: WrapAlignment.center,
                           spacing: AppSpacing.lg,
                           runSpacing: AppSpacing.lg,
-                          children: _equipo
+                          children: equipoOrdenado
                               .map((m) => SizedBox(
                                     width: anchoCard,
-                                    child: MiembroEquipoCard(miembro: m),
+                                    child: MiembroEquipoCard(
+                                      miembro: m,
+                                      destacada: esMiembroAdmin(m),
+                                      onTap: () => Navigator.pushNamed(
+                                        context,
+                                        AppRoutes.perfilEquipo,
+                                        arguments: m.id,
+                                      ),
+                                    ),
                                   ))
                               .toList(),
                         );

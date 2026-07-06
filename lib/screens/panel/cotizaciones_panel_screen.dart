@@ -8,9 +8,12 @@ import '../../widgets/widgets.dart';
 
 /// Lista de cotizaciones que llegaron desde el formulario público de la web.
 /// Acá Admin revisa, contacta al cliente y decide si conviene convertirla
-/// en un Pedido real (desde la pantalla "Nuevo Pedido").
+/// en un Pedido real (desde la pantalla "Nuevo Pedido"). Borrar cotizaciones
+/// requiere el permiso 'cotizaciones.eliminar' (implícito en admin.total).
 class CotizacionesPanelScreen extends StatefulWidget {
-  const CotizacionesPanelScreen({super.key});
+  final Usuario usuario;
+
+  const CotizacionesPanelScreen({super.key, required this.usuario});
 
   @override
   State<CotizacionesPanelScreen> createState() => _CotizacionesPanelScreenState();
@@ -47,8 +50,48 @@ class _CotizacionesPanelScreenState extends State<CotizacionesPanelScreen> {
     }
   }
 
+  Future<void> _confirmarEliminar(Cotizacion cotizacion) async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('¿Eliminar cotización?',
+            style: TextStyle(color: AppColors.textLight)),
+        content: Text(
+          'Esto borra la cotización de "${cotizacion.nombreCliente}" para siempre. '
+          'No se puede deshacer.',
+          style: const TextStyle(color: AppColors.textMuted),
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancelar')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Eliminar', style: TextStyle(color: AppColors.error)),
+          ),
+        ],
+      ),
+    );
+    if (confirmar != true) return;
+
+    try {
+      await _firebaseService.eliminarCotizacion(cotizacion.id);
+      _cargar();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text('No se pudo eliminar: $e'),
+              backgroundColor: AppColors.error),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final puedeEliminar = widget.usuario.tienePermiso('cotizaciones.eliminar');
+
     return RefreshIndicator(
       onRefresh: _cargar,
       child: SingleChildScrollView(
@@ -76,6 +119,7 @@ class _CotizacionesPanelScreenState extends State<CotizacionesPanelScreen> {
               ..._cotizaciones.map((c) => _CotizacionCard(
                     cotizacion: c,
                     onEscribir: () => WhatsAppHelper.abrirChat(telefono: c.telefono),
+                    onEliminar: puedeEliminar ? () => _confirmarEliminar(c) : null,
                   )),
           ],
         ),
@@ -88,7 +132,14 @@ class _CotizacionCard extends StatelessWidget {
   final Cotizacion cotizacion;
   final VoidCallback onEscribir;
 
-  const _CotizacionCard({required this.cotizacion, required this.onEscribir});
+  /// null = quien mira no tiene permiso para eliminar (no se muestra el botón).
+  final VoidCallback? onEliminar;
+
+  const _CotizacionCard({
+    required this.cotizacion,
+    required this.onEscribir,
+    this.onEliminar,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -126,14 +177,26 @@ class _CotizacionCard extends StatelessWidget {
               style: const TextStyle(color: AppColors.textMuted, fontSize: 13, height: 1.6),
             ),
             const SizedBox(height: AppSpacing.lg),
-            OutlinedButton.icon(
-              onPressed: onEscribir,
-              icon: const Icon(Icons.chat_bubble_outline, size: 16),
-              label: const Text('ESCRIBIRLE POR WHATSAPP'),
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.lg, vertical: AppSpacing.md),
-              ),
+            Row(
+              children: [
+                OutlinedButton.icon(
+                  onPressed: onEscribir,
+                  icon: const Icon(Icons.chat_bubble_outline, size: 16),
+                  label: const Text('ESCRIBIRLE POR WHATSAPP'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.lg, vertical: AppSpacing.md),
+                  ),
+                ),
+                const Spacer(),
+                if (onEliminar != null)
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline,
+                        color: AppColors.error, size: 20),
+                    tooltip: 'Eliminar cotización',
+                    onPressed: onEliminar,
+                  ),
+              ],
             ),
           ],
         ),
