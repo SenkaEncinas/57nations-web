@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
+import '../../theme/app_spacing.dart';
 import '../../models/models.dart';
 import '../../services/firebase_service.dart';
 import '../../utils/whatsapp_helper.dart';
@@ -24,6 +25,14 @@ class _PedidosScreenState extends State<PedidosScreen> {
   bool _cargando = true;
   String? _error;
   String _filtroEstado = 'Todos';
+
+  static const _estados = [
+    EstadoPedido.pendiente,
+    EstadoPedido.imprimiendo,
+    EstadoPedido.enPintado,
+    EstadoPedido.listo,
+    EstadoPedido.entregado,
+  ];
 
   @override
   void initState() {
@@ -54,6 +63,8 @@ class _PedidosScreenState extends State<PedidosScreen> {
     if (_filtroEstado == 'Todos') return _pedidos;
     return _pedidos.where((p) => p.estado == _filtroEstado).toList();
   }
+
+  int _cuenta(String estado) => _pedidos.where((p) => p.estado == estado).length;
 
   Future<void> _avanzarEstado(Pedido pedido) async {
     final flujo = EstadoPedido.flujoPara(pedido.requierePintado);
@@ -93,52 +104,151 @@ class _PedidosScreenState extends State<PedidosScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = MediaQuery.of(context).size.width < 900;
-
     return RefreshIndicator(
       onRefresh: _cargar,
       child: SingleChildScrollView(
-        padding: EdgeInsets.all(isMobile ? 16 : 32),
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.all(AppSpacing.panel(context)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Pedidos', style: Theme.of(context).textTheme.headlineMedium),
-            const SizedBox(height: 16),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: ['Todos', ...[
-                  EstadoPedido.pendiente,
-                  EstadoPedido.imprimiendo,
-                  EstadoPedido.enPintado,
-                  EstadoPedido.listo,
-                  EstadoPedido.entregado,
-                ]]
-                    .map((e) => Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: ChoiceChip(
-                            label: Text(e),
-                            selected: _filtroEstado == e,
-                            onSelected: (_) => setState(() => _filtroEstado = e),
-                          ),
-                        ))
-                    .toList(),
-              ),
+            const SectionHeader(
+              overline: 'Panel',
+              titulo: 'Pedidos',
+              subtitulo: 'Controlá el avance de cada pieza, de Pendiente a Entregado.',
+              compacto: true,
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppSpacing.xl),
+            // Resumen por estado (solo UI, cuenta sobre los pedidos ya cargados)
+            if (!_cargando && _error == null) ...[
+              _ResumenEstados(
+                total: _pedidos.length,
+                cuentas: {for (final e in _estados) e: _cuenta(e)},
+                seleccionado: _filtroEstado,
+                onSeleccionar: (e) => setState(() => _filtroEstado = e),
+              ),
+              const SizedBox(height: AppSpacing.xl),
+            ],
             if (_cargando)
               const EstadoCargando(mensaje: 'Cargando pedidos...')
             else if (_error != null)
               EstadoError(mensaje: _error!, onReintentar: _cargar)
             else if (_pedidosFiltrados.isEmpty)
-              const EstadoVacio(icon: Icons.inventory_2_outlined, mensaje: 'No hay pedidos en este estado.')
+              const EstadoVacio(
+                  icon: Icons.inventory_2_outlined, mensaje: 'No hay pedidos en este estado.')
             else
               ..._pedidosFiltrados.map((p) => _PedidoCard(
                     pedido: p,
                     onAvanzar: () => _avanzarEstado(p),
-                    onEscribirCliente: () => WhatsAppHelper.abrirChat(telefono: p.clienteTelefono),
+                    onEscribirCliente: () =>
+                        WhatsAppHelper.abrirChat(telefono: p.clienteTelefono),
                   )),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Tarjetas-resumen clickeables que además funcionan como filtro.
+class _ResumenEstados extends StatelessWidget {
+  final int total;
+  final Map<String, int> cuentas;
+  final String seleccionado;
+  final ValueChanged<String> onSeleccionar;
+
+  const _ResumenEstados({
+    required this.total,
+    required this.cuentas,
+    required this.seleccionado,
+    required this.onSeleccionar,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          _StatChip(
+            label: 'Todos',
+            cuenta: total,
+            color: AppColors.violetaPrincipal,
+            seleccionado: seleccionado == 'Todos',
+            onTap: () => onSeleccionar('Todos'),
+          ),
+          ...cuentas.entries.map(
+            (e) => _StatChip(
+              label: e.key,
+              cuenta: e.value,
+              color: colorEstadoPedido(e.key),
+              seleccionado: seleccionado == e.key,
+              onTap: () => onSeleccionar(e.key),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatChip extends StatelessWidget {
+  final String label;
+  final int cuenta;
+  final Color color;
+  final bool seleccionado;
+  final VoidCallback onTap;
+
+  const _StatChip({
+    required this.label,
+    required this.cuenta,
+    required this.color,
+    required this.seleccionado,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(right: AppSpacing.sm),
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
+          onTap: onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
+            decoration: ShapeDecoration(
+              color: seleccionado ? color.withValues(alpha: 0.14) : AppColors.surfaceElevated,
+              shape: BeveledRectangleBorder(
+                borderRadius: const BorderRadius.all(Radius.circular(5)),
+                side: BorderSide(color: seleccionado ? color : AppColors.border),
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '$cuenta',
+                  style: TextStyle(
+                    color: seleccionado ? color : AppColors.textLight,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Text(
+                  label.toUpperCase(),
+                  style: TextStyle(
+                    color: seleccionado ? color : AppColors.textMuted,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.8,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -156,119 +266,148 @@ class _PedidoCard extends StatelessWidget {
     required this.onEscribirCliente,
   });
 
-  Color _colorEstado(String estado) {
-    switch (estado) {
-      case EstadoPedido.pendiente:
-        return AppColors.warning;
-      case EstadoPedido.imprimiendo:
-        return AppColors.cianTech;
-      case EstadoPedido.enPintado:
-        return AppColors.categoriaArte;
-      case EstadoPedido.listo:
-        return AppColors.success;
-      case EstadoPedido.entregado:
-        return AppColors.textDim;
-      default:
-        return AppColors.textMuted;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final flujo = EstadoPedido.flujoPara(pedido.requierePintado);
     final esUltimoEstado = pedido.estado == flujo.last;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceElevated,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  pedido.descripcionPieza,
-                  style: const TextStyle(color: AppColors.textLight, fontWeight: FontWeight.w700, fontSize: 16),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+      child: TechCard(
+        accentColor: colorEstadoPedido(pedido.estado),
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Text(
+                    pedido.descripcionPieza,
+                    style: const TextStyle(
+                      color: AppColors.textLight,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                    ),
+                  ),
                 ),
+                const SizedBox(width: AppSpacing.md),
+                StatusBadge.pedido(pedido.estado),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.md),
+            // Stepper visual del flujo del pedido
+            SizedBox(
+              width: 220,
+              child: FlujoPedidoStepper(pedido: pedido),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            _InfoFila(
+              icon: Icons.person_outline,
+              texto: '${pedido.clienteNombre} · ${pedido.clienteTelefono}',
+            ),
+            if (pedido.origenPedido == OrigenPedido.luchin)
+              _InfoFila(
+                icon: Icons.handshake_outlined,
+                color: AppColors.flutterColor,
+                texto: pedido.comisionLuchin?.aplica == true
+                    ? 'Origen: Luchin · Comisión ${pedido.comisionLuchin!.porcentaje.toStringAsFixed(0)}% = Bs ${pedido.comisionLuchin!.monto.toStringAsFixed(2)}'
+                    : 'Origen: Luchin · Sin comisión',
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: _colorEstado(pedido.estado).withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: _colorEstado(pedido.estado)),
+            if (pedido.requierePintado)
+              _InfoFila(
+                icon: Icons.brush_outlined,
+                color: AppColors.categoriaArte,
+                texto: 'Requiere pintado · Colores: ${pedido.coloresPedidos.join(", ")}',
+              ),
+            if (pedido.calculo != null)
+              _InfoFila(
+                icon: Icons.sell_outlined,
+                color: AppColors.impresion3dColor,
+                texto: 'Precio de venta: Bs ${pedido.calculo!.precioVenta.toStringAsFixed(2)}',
+                destacado: true,
+              ),
+            if (pedido.fechaEntregaImpresion != null)
+              _InfoFila(
+                icon: Icons.event_outlined,
+                texto:
+                    'Entrega estimada (impresión): ${_formatFecha(pedido.fechaEntregaImpresion!)}',
+              ),
+            const SizedBox(height: AppSpacing.lg),
+            Wrap(
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.sm,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: onEscribirCliente,
+                  icon: const Icon(Icons.chat_bubble_outline, size: 16),
+                  label: const Text('WHATSAPP CLIENTE'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.lg, vertical: AppSpacing.md),
+                  ),
                 ),
-                child: Text(
-                  pedido.estado,
-                  style: TextStyle(color: _colorEstado(pedido.estado), fontSize: 12, fontWeight: FontWeight.w700),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text('👤 ${pedido.clienteNombre} · 📱 ${pedido.clienteTelefono}',
-              style: const TextStyle(color: AppColors.textMuted, fontSize: 13)),
-          if (pedido.origenPedido == OrigenPedido.luchin)
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Text(
-                pedido.comisionLuchin?.aplica == true
-                    ? '🤝 Origen: Luchin · Comisión ${pedido.comisionLuchin!.porcentaje.toStringAsFixed(0)}% = Bs ${pedido.comisionLuchin!.monto.toStringAsFixed(2)}'
-                    : '🤝 Origen: Luchin · Sin comisión',
-                style: const TextStyle(color: AppColors.flutterColor, fontSize: 12, fontWeight: FontWeight.w600),
-              ),
+                if (!esUltimoEstado)
+                  ElevatedButton.icon(
+                    onPressed: onAvanzar,
+                    icon: const Icon(Icons.arrow_forward, size: 16),
+                    label: Text(
+                        'AVANZAR A "${flujo[flujo.indexOf(pedido.estado) + 1].toUpperCase()}"'),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.lg, vertical: AppSpacing.md),
+                    ),
+                  ),
+              ],
             ),
-          if (pedido.requierePintado)
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Text(
-                '🎨 Requiere pintado · Colores: ${pedido.coloresPedidos.join(", ")}',
-                style: const TextStyle(color: AppColors.categoriaArte, fontSize: 12),
-              ),
-            ),
-          if (pedido.calculo != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(
-                'Precio de venta: Bs ${pedido.calculo!.precioVenta.toStringAsFixed(2)}',
-                style: const TextStyle(color: AppColors.impresion3dColor, fontWeight: FontWeight.w700, fontSize: 14),
-              ),
-            ),
-          if (pedido.fechaEntregaImpresion != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Text(
-                '📅 Entrega estimada (impresión): ${_formatFecha(pedido.fechaEntregaImpresion!)}',
-                style: const TextStyle(color: AppColors.textDim, fontSize: 12),
-              ),
-            ),
-          const SizedBox(height: 14),
-          Wrap(
-            spacing: 8,
-            children: [
-              OutlinedButton.icon(
-                onPressed: onEscribirCliente,
-                icon: const Icon(Icons.chat_bubble_outline, size: 16),
-                label: const Text('WhatsApp cliente'),
-              ),
-              if (!esUltimoEstado)
-                ElevatedButton(
-                  onPressed: onAvanzar,
-                  child: Text('Avanzar a "${flujo[flujo.indexOf(pedido.estado) + 1]}"'),
-                ),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   String _formatFecha(DateTime f) => '${f.day}/${f.month}/${f.year}';
+}
+
+/// Fila de dato con ícono, reemplaza los emojis sueltos de la versión anterior.
+class _InfoFila extends StatelessWidget {
+  final IconData icon;
+  final String texto;
+  final Color? color;
+  final bool destacado;
+
+  const _InfoFila({
+    required this.icon,
+    required this.texto,
+    this.color,
+    this.destacado = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final c = color ?? AppColors.textMuted;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 15, color: c),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              texto,
+              style: TextStyle(
+                color: destacado ? c : AppColors.textMuted,
+                fontSize: 13,
+                height: 1.5,
+                fontWeight: destacado ? FontWeight.w700 : FontWeight.w400,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

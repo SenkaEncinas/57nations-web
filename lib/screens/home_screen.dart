@@ -1,138 +1,320 @@
 import 'package:flutter/material.dart';
+import '../routes/app_routes.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_spacing.dart';
 import '../utils/responsive.dart';
 import '../widgets/widgets.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
-  @override
   Widget build(BuildContext context) {
-    final isMobile = Responsive.isMobile(context);
-
-    return Scaffold(
+    return const Scaffold(
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // NAVBAR
-            const NavBar(),
-
-            // HERO SECTION
-            _buildHeroSection(isMobile),
-
-            // SECCIÓN SERVICIOS
-            _buildServicesSection(isMobile),
-
-            // SECCIÓN PORTFOLIO
-            _buildPortfolioSection(isMobile),
-
-            // SECCIÓN EQUIPO
-            _buildTeamSection(isMobile),
-
-            // FOOTER
-            const Footer(),
+            NavBar(),
+            _HeroSection(),
+            _ServiciosSection(),
+            _PortfolioSection(),
+            _EquipoSection(),
+            _CotizarBanner(),
+            Footer(),
           ],
         ),
       ),
     );
   }
+}
 
-Widget _buildHeroSection(bool isMobile) {
+// ==================== HERO ====================
+class _HeroSection extends StatelessWidget {
+  const _HeroSection();
+
+  @override
+  Widget build(BuildContext context) {
+    final isMobile = Responsive.isMobile(context);
+
     return Container(
       width: double.infinity,
       clipBehavior: Clip.hardEdge,
-      decoration: const BoxDecoration(
-        gradient: AppColors.primaryGradient,
-      ),
+      decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
       child: Stack(
         children: [
-          // Decoraciones de circuito en las esquinas (manual, sección 05)
+          Positioned.fill(
+            child: CustomPaint(
+              painter: CircuitGridPainter(
+                color: AppColors.violetaPrincipal.withValues(alpha: 0.06),
+              ),
+            ),
+          ),
           if (!isMobile) ...[
-            const Positioned(
-              top: 24,
-              left: 24,
-              child: TechCornerDecoration(),
-            ),
-            const Positioned(
-              top: 24,
-              right: 24,
-              child: TechCornerDecoration(espejado: true),
-            ),
+            const Positioned(top: 24, left: 24, child: TechCornerDecoration()),
+            const Positioned(top: 24, right: 24, child: TechCornerDecoration(espejado: true)),
           ],
-
-          // Glow violeta suave detrás del contenido
           Positioned(
-            top: -100,
-            left: isMobile ? -80 : 100,
+            top: -120,
+            right: isMobile ? -100 : 60,
             child: Container(
-              width: 400,
-              height: 400,
+              width: 420,
+              height: 420,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    AppColors.violetaPrincipal.withValues(alpha: 0.25),
+                    AppColors.violetaPrincipal.withValues(alpha: 0.22),
                     AppColors.violetaPrincipal.withValues(alpha: 0),
                   ],
                 ),
               ),
             ),
           ),
-
-          // Contenido principal
           Padding(
             padding: EdgeInsets.symmetric(
-              horizontal: isMobile ? 20 : 60,
-              vertical: isMobile ? 80 : 120,
+              horizontal: AppSpacing.horizontal(context),
+              vertical: isMobile ? AppSpacing.sectionXl : 120,
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Image.asset(
-                  'assets/logos/logo_57nations.png',
-                  height: isMobile ? 90 : 140,
-                  fit: BoxFit.contain,
-                ),
-                SizedBox(height: isMobile ? 16 : 24),
-                Text(
-                  'Software + Hardware + Entrenamiento = Soluciones Completas',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: Colors.white70,
-                        fontSize: isMobile ? 18 : 24,
-                      ),
-                ),
-                SizedBox(height: isMobile ? 12 : 20),
-                SizedBox(
-                  width: isMobile ? double.infinity : 600,
-                  child: Text(
-                    'Transformamos tus ideas en proyectos reales. Especialistas en desarrollo tech integral: desde código hasta electrónica.',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: Colors.white70,
-                          height: 1.6,
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: AppSpacing.maxContentWidth),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: 20,
+                          height: 1.2,
+                          color: AppColors.cianTech.withValues(alpha: 0.7),
                         ),
+                        Container(
+                          width: 4,
+                          height: 4,
+                          margin: const EdgeInsets.symmetric(horizontal: 6),
+                          decoration: const BoxDecoration(
+                            color: AppColors.cianTech,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const Text(
+                          'SANTA CRUZ · BOLIVIA',
+                          style: TextStyle(
+                            color: AppColors.cianTech,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 2.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: isMobile ? AppSpacing.xl : AppSpacing.xxl),
+                    Image.asset(
+                      'assets/logos/logo_57nations.png',
+                      height: isMobile ? 80 : 130,
+                      fit: BoxFit.contain,
+                    ),
+                    SizedBox(height: isMobile ? AppSpacing.xl : AppSpacing.xxl),
+                    Text(
+                      'Software + Hardware + Entrenamiento',
+                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                            fontSize: isMobile ? 20 : 30,
+                            color: AppColors.textLight,
+                          ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    SizedBox(
+                      width: isMobile ? double.infinity : 560,
+                      child: Text(
+                        'Transformamos tus ideas en proyectos reales. Bots, apps, '
+                        'electrónica e impresión 3D — de la idea al producto, todo '
+                        'bajo un mismo techo.',
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                              color: Colors.white70,
+                              height: 1.7,
+                            ),
+                      ),
+                    ),
+                    SizedBox(height: isMobile ? AppSpacing.xxl : AppSpacing.section),
+                    Wrap(
+                      spacing: AppSpacing.lg,
+                      runSpacing: AppSpacing.md,
+                      children: [
+                        ElevatedButton(
+                          onPressed: () => Navigator.pushNamed(context, AppRoutes.cotizacion),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.cianTech,
+                            foregroundColor: AppColors.negroProfundo,
+                            padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 18),
+                          ),
+                          child: const Text('COTIZAR PROYECTO'),
+                        ),
+                        OutlinedButton(
+                          onPressed: () => Navigator.pushNamed(context, AppRoutes.portfolio),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 18),
+                          ),
+                          child: const Text('VER PORTFOLIO'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ==================== SERVICIOS ====================
+class _ServiciosSection extends StatelessWidget {
+  const _ServiciosSection();
+
+  static final _servicios = [
+    (
+      Icons.smart_toy_outlined,
+      'BOTS & SISTEMAS',
+      'Automatización vía WhatsApp, sistemas con base de datos, control inteligente',
+      AppColors.botColor,
+      AppRoutes.botsScreen,
+    ),
+    (
+      Icons.phone_android_outlined,
+      'APPS FLUTTER',
+      'Desarrollo multiplataforma iOS + Android con interfaces intuitivas',
+      AppColors.flutterColor,
+      AppRoutes.flutterScreen,
+    ),
+    (
+      Icons.memory_outlined,
+      'ARDUINO & ESP32',
+      'IoT, automatización, control remoto de dispositivos inteligentes',
+      AppColors.arduinoColor,
+      AppRoutes.arduinoScreen,
+    ),
+    (
+      Icons.view_in_ar_outlined,
+      'IMPRESIÓN 3D',
+      'Piezas decorativas y funcionales, diseño custom, acabado profesional',
+      AppColors.impresion3dColor,
+      AppRoutes.impresion3dScreen,
+    ),
+    (
+      Icons.sports_basketball_outlined,
+      'ENTRENAMIENTO',
+      'Coaching profesional de basketball, técnica, táctica y desarrollo',
+      AppColors.entrenamientoColor,
+      AppRoutes.entrenamientoScreen,
+    ),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final columnas = Responsive.valor(context, mobile: 1, tablet: 3, desktop: 5);
+
+    return PageSection(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SectionHeader(
+            overline: 'Servicios',
+            titulo: 'Lo que hacemos',
+            subtitulo:
+                'Cinco áreas, un mismo estándar: entender el problema, proponer la '
+                'solución justa y entregarla funcionando.',
+          ),
+          const SizedBox(height: AppSpacing.section),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: columnas,
+              crossAxisSpacing: AppSpacing.lg,
+              mainAxisSpacing: AppSpacing.lg,
+              childAspectRatio: Responsive.valor(
+                context,
+                mobile: 1.5,
+                tablet: 0.95,
+                desktop: 0.78,
+              ),
+            ),
+            itemCount: _servicios.length,
+            itemBuilder: (context, index) {
+              final s = _servicios[index];
+              return ServiceCard(
+                icon: s.$1,
+                title: s.$2,
+                description: s.$3,
+                color: s.$4,
+                onTap: () => Navigator.pushNamed(context, s.$5),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ==================== PORTFOLIO (CTA) ====================
+class _PortfolioSection extends StatelessWidget {
+  const _PortfolioSection();
+
+  @override
+  Widget build(BuildContext context) {
+    final isMobile = Responsive.isMobile(context);
+
+    return PageSection(
+      alternada: true,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SectionHeader(
+            overline: 'Portfolio',
+            titulo: 'Proyectos reales, clientes reales',
+            subtitulo:
+                'Cada proyecto del portfolio salió a producción: sistemas en uso, '
+                'apps publicadas y piezas entregadas.',
+          ),
+          const SizedBox(height: AppSpacing.xxl),
+          TechCard(
+            showCornerBrackets: true,
+            padding: EdgeInsets.all(isMobile ? AppSpacing.xl : AppSpacing.section),
+            onTap: () => Navigator.pushNamed(context, AppRoutes.portfolio),
+            child: Flex(
+              direction: isMobile ? Axis.vertical : Axis.horizontal,
+              crossAxisAlignment:
+                  isMobile ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  flex: isMobile ? 0 : 1,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Explorá el trabajo terminado',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      const Text(
+                        'Filtrá por categoría — bots, apps, IoT, impresión 3D — y '
+                        'mirá el detalle de cada entrega.',
+                        style: TextStyle(color: AppColors.textMuted, height: 1.6),
+                      ),
+                    ],
                   ),
                 ),
-                SizedBox(height: isMobile ? 32 : 48),
-                ElevatedButton(
-                  onPressed: () => Navigator.pushNamed(context, '/contacto'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.cianTech,
-                    foregroundColor: AppColors.negroProfundo,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 40,
-                      vertical: 18,
-                    ),
-                    textStyle: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  child: const Text('COTIZAR PROYECTO'),
+                SizedBox(
+                  width: isMobile ? 0 : AppSpacing.xxl,
+                  height: isMobile ? AppSpacing.xl : 0,
+                ),
+                OutlinedButton.icon(
+                  onPressed: () => Navigator.pushNamed(context, AppRoutes.portfolio),
+                  icon: const Icon(Icons.arrow_forward, size: 18),
+                  label: const Text('VER TODOS LOS PROYECTOS'),
                 ),
               ],
             ),
@@ -141,139 +323,101 @@ Widget _buildHeroSection(bool isMobile) {
       ),
     );
   }
+}
 
-  Widget _buildServicesSection(bool isMobile) {
-    final services = [
-      {
-        'icon': Icons.smart_toy,
-        'title': 'BOTS & SISTEMAS',
-        'description': 'Automatización vía WhatsApp, sistemas con base de datos, control inteligente',
-        'color': AppColors.botColor,
-        'route': '/bots',
-      },
-      {
-        'icon': Icons.phone_android,
-        'title': 'APPS FLUTTER',
-        'description': 'Desarrollo multiplataforma iOS + Android con interfaces intuitivas',
-        'color': AppColors.flutterColor,
-        'route': '/flutter',
-      },
-      {
-        'icon': Icons.memory,
-        'title': 'ARDUINO & ESP32',
-        'description': 'IoT, automatización, control remoto de dispositivos inteligentes',
-        'color': AppColors.arduinoColor,
-        'route': '/arduino',
-      },
-      {
-        'icon': Icons.print_outlined,
-        'title': 'IMPRESIÓN 3D',
-        'description': 'Piezas decorativas y funcionales, diseño custom, acabado profesional',
-        'color': AppColors.impresion3dColor,
-        'route': '/impresion3d',
-      },
-      {
-        'icon': Icons.sports_basketball,
-        'title': 'ENTRENAMIENTO',
-        'description': 'Coaching profesional de basketball, técnica, táctica y desarrollo',
-        'color': AppColors.entrenamientoColor,
-        'route': '/entrenamiento',
-      },
-    ];
+// ==================== EQUIPO (CTA) ====================
+class _EquipoSection extends StatelessWidget {
+  const _EquipoSection();
 
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.symmetric(
-        horizontal: isMobile ? 20 : 60,
-        vertical: isMobile ? 60 : 100,
-      ),
-      color: AppColors.background,
-      child: Column(
+  @override
+  Widget build(BuildContext context) {
+    final isMobile = Responsive.isMobile(context);
+
+    return PageSection(
+      child: Flex(
+        direction: isMobile ? Axis.vertical : Axis.horizontal,
+        crossAxisAlignment: isMobile ? CrossAxisAlignment.start : CrossAxisAlignment.center,
         children: [
-          Text(
-            'Nuestros Servicios',
-            style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                  fontSize: isMobile ? 28 : 36,
-                ),
-          ),
-          SizedBox(height: isMobile ? 40 : 60),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: isMobile ? 1 : (Responsive.isTablet(context) ? 3 : 5),
-              crossAxisSpacing: 20,
-              mainAxisSpacing: 20,
-              childAspectRatio: isMobile ? 0.95 : (Responsive.isTablet(context) ? 1.15 : 0.95),
+          const Expanded(
+            flex: 1,
+            child: SectionHeader(
+              overline: 'Equipo',
+              titulo: 'El equipo 57 Nations',
+              subtitulo:
+                  'Desarrollo, diseño 3D y acabado artístico: conocé quién está '
+                  'detrás de cada entrega.',
             ),
-            itemCount: services.length,
-            itemBuilder: (context, index) {
-              final service = services[index];
-              return ServiceCard(
-                icon: service['icon'] as IconData,
-                title: service['title'] as String,
-                description: service['description'] as String,
-                color: service['color'] as Color,
-                onTap: () => Navigator.pushNamed(context, service['route'] as String),
-              );
-            },
+          ),
+          SizedBox(
+            width: isMobile ? 0 : AppSpacing.xxl,
+            height: isMobile ? AppSpacing.xl : 0,
+          ),
+          OutlinedButton.icon(
+            onPressed: () => Navigator.pushNamed(context, AppRoutes.sobreNosotros),
+            icon: const Icon(Icons.groups_outlined, size: 18),
+            label: const Text('CONOCÉ AL EQUIPO'),
           ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildPortfolioSection(bool isMobile) {
+// ==================== BANNER FINAL: COTIZAR ====================
+class _CotizarBanner extends StatelessWidget {
+  const _CotizarBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    final isMobile = Responsive.isMobile(context);
+
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.symmetric(
-        horizontal: isMobile ? 20 : 60,
-        vertical: isMobile ? 60 : 100,
-      ),
-      color: AppColors.surface,
-      child: Column(
+      clipBehavior: Clip.hardEdge,
+      decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
+      child: Stack(
         children: [
-          Text(
-            'Portfolio',
-            style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                  fontSize: isMobile ? 28 : 36,
-                ),
+          Positioned.fill(
+            child: CustomPaint(
+              painter: CircuitGridPainter(
+                color: AppColors.cianTech.withValues(alpha: 0.04),
+              ),
+            ),
           ),
-          SizedBox(height: isMobile ? 40 : 60),
-          // TODO: Implementar carrusel de proyectos
-          const Center(
-            child: Text('Galería de proyectos aquí'),
-          ),
-          SizedBox(height: isMobile ? 32 : 48),
-          OutlinedButton(
-            onPressed: () => Navigator.pushNamed(context, '/portfolio'),
-            child: const Text('VER TODOS LOS PROYECTOS'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTeamSection(bool isMobile) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.symmetric(
-        horizontal: isMobile ? 20 : 60,
-        vertical: isMobile ? 60 : 100,
-      ),
-      color: AppColors.background,
-      child: Column(
-        children: [
-          Text(
-            'El Equipo 57 Nations',
-            style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                  fontSize: isMobile ? 28 : 36,
-                ),
-          ),
-          SizedBox(height: isMobile ? 40 : 60),
-          // TODO: Implementar grid de equipo
-          const Center(
-            child: Text('Grid de integrantes del equipo aquí'),
+          Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: AppSpacing.horizontal(context),
+              vertical: isMobile ? AppSpacing.sectionLg : AppSpacing.sectionXl,
+            ),
+            child: Center(
+              child: Column(
+                children: [
+                  Text(
+                    '¿Tenés un proyecto en mente?',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                          fontSize: isMobile ? 26 : 34,
+                        ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  const Text(
+                    'Contanos qué necesitás y te respondemos por WhatsApp. Sin costo, sin compromiso.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.white70, fontSize: 15, height: 1.6),
+                  ),
+                  const SizedBox(height: AppSpacing.xxl),
+                  ElevatedButton(
+                    onPressed: () => Navigator.pushNamed(context, AppRoutes.cotizacion),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.cianTech,
+                      foregroundColor: AppColors.negroProfundo,
+                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 18),
+                    ),
+                    child: const Text('COTIZAR AHORA'),
+                  ),
+                ],
+              ),
+            ),
           ),
         ],
       ),

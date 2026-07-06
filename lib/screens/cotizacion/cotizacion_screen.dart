@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
+import '../../theme/app_spacing.dart';
 import '../../services/firebase_service.dart';
 import '../../models/models.dart';
 import '../../utils/responsive.dart';
@@ -26,6 +27,21 @@ class _CotizacionScreenState extends State<CotizacionScreen> {
   String _servicioSeleccionado = 'Bots & Sistemas';
   String _presupuestoSeleccionado = 'Sin presupuesto';
   bool _enviando = false;
+
+  static const _servicios = [
+    'Bots & Sistemas',
+    'Apps Flutter',
+    'Arduino & ESP32',
+    'Impresión 3D',
+    'Entrenamiento',
+  ];
+
+  static const _presupuestos = [
+    '\$500 - \$1000',
+    '\$1000 - \$5000',
+    '\$5000+',
+    'Sin presupuesto',
+  ];
 
   @override
   void initState() {
@@ -109,18 +125,19 @@ class _CotizacionScreenState extends State<CotizacionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = Responsive.isMobile(context);
-
     return Scaffold(
       body: SingleChildScrollView(
         child: Column(
           children: [
             const NavBar(),
             const PageHero(
-              titulo: 'Cotiza tu Proyecto',
-              subtitulo: '¿Tenés una idea? Cuéntanos. Sin compromiso, sin costo inicial.',
+              overline: 'Cotización',
+              titulo: 'Cotizá tu proyecto',
+              subtitulo:
+                  '¿Tenés una idea? Contanos. Al enviar, se abre WhatsApp con tu '
+                  'consulta ya redactada — sin compromiso, sin costo inicial.',
             ),
-            _buildFormSection(isMobile),
+            _buildFormSection(),
             const Footer(),
           ],
         ),
@@ -128,157 +145,112 @@ class _CotizacionScreenState extends State<CotizacionScreen> {
     );
   }
 
-  Widget _buildFormSection(bool isMobile) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.symmetric(
-        horizontal: isMobile ? 20 : 60,
-        vertical: isMobile ? 60 : 100,
-      ),
-      color: AppColors.background,
-      child: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Formulario de Cotización',
-              style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                    fontSize: isMobile ? 28 : 36,
-                  ),
-            ),
-            SizedBox(height: isMobile ? 40 : 60),
-            // GRID DE CAMPOS
-            if (!isMobile)
-              Row(
+  Widget _buildFormSection() {
+    final isMobile = Responsive.isMobile(context);
+
+    return PageSection(
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: AppSpacing.maxFormWidth),
+          child: TechCard(
+            showCornerBrackets: true,
+            padding: EdgeInsets.all(isMobile ? AppSpacing.xl : AppSpacing.section),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: _buildTextField(
-                      label: 'Nombre Completo',
-                      controller: _nombreController,
-                      validator: (v) =>
-                          v?.isEmpty ?? true ? 'Campo requerido' : null,
-                    ),
+                  const SectionHeader(
+                    overline: 'Formulario',
+                    titulo: 'Contanos tu idea',
+                    subtitulo:
+                        'Mientras más detalle nos des, más precisa va a ser la cotización.',
+                    compacto: true,
                   ),
-                  const SizedBox(width: 24),
-                  Expanded(
-                    child: _buildTextField(
+                  const SizedBox(height: AppSpacing.xxl),
+                  _filaDoble(
+                    isMobile,
+                    _buildTextField(
+                      label: 'Nombre completo',
+                      controller: _nombreController,
+                      validator: (v) => v?.isEmpty ?? true ? 'Campo requerido' : null,
+                    ),
+                    _buildTextField(
                       label: 'Email',
                       controller: _emailController,
-                      validator: (v) =>
-                          v?.contains('@') ?? false ? null : 'Email inválido',
+                      validator: (v) => v?.contains('@') ?? false ? null : 'Email inválido',
                     ),
                   ),
-                ],
-              )
-            else
-              Column(
-                children: [
-                  _buildTextField(
-                    label: 'Nombre Completo',
-                    controller: _nombreController,
-                    validator: (v) =>
-                        v?.isEmpty ?? true ? 'Campo requerido' : null,
-                  ),
-                  const SizedBox(height: 20),
-                  _buildTextField(
-                    label: 'Email',
-                    controller: _emailController,
-                    validator: (v) =>
-                        v?.contains('@') ?? false ? null : 'Email inválido',
-                  ),
-                ],
-              ),
-            const SizedBox(height: 20),
-            if (!isMobile)
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildTextField(
-                      label: 'Teléfono',
+                  const SizedBox(height: AppSpacing.xl),
+                  _filaDoble(
+                    isMobile,
+                    _buildTextField(
+                      label: 'Teléfono (WhatsApp)',
                       controller: _telefonoController,
                     ),
-                  ),
-                  const SizedBox(width: 24),
-                  Expanded(
-                    child: _buildDropdown(
-                      label: 'Servicio Interesado',
+                    _buildDropdown(
+                      label: 'Servicio de interés',
                       value: _servicioSeleccionado,
-                      items: [
-                        'Bots & Sistemas',
-                        'Apps Flutter',
-                        'Arduino & ESP32',
-                        'Impresión 3D',
-                        'Entrenamiento',
-                      ],
-                      onChanged: (v) =>
-                          setState(() => _servicioSeleccionado = v ?? ''),
+                      items: _servicios,
+                      onChanged: (v) => setState(() => _servicioSeleccionado = v ?? ''),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xl),
+                  _buildTextField(
+                    label: 'Descripción del proyecto',
+                    controller: _descripcionController,
+                    maxLines: 6,
+                    validator: (v) => v?.isEmpty ?? true ? 'Campo requerido' : null,
+                  ),
+                  const SizedBox(height: AppSpacing.xl),
+                  _buildDropdown(
+                    label: 'Presupuesto aproximado',
+                    value: _presupuestoSeleccionado,
+                    items: _presupuestos,
+                    onChanged: (v) => setState(() => _presupuestoSeleccionado = v ?? ''),
+                  ),
+                  const SizedBox(height: AppSpacing.xxl),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: _enviando ? null : _enviarCotizacion,
+                      icon: _enviando
+                          ? const SizedBox(
+                              height: 18,
+                              width: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(AppColors.textLight),
+                              ),
+                            )
+                          : const Icon(Icons.send_outlined, size: 18),
+                      label: Text(_enviando ? 'ENVIANDO...' : 'ENVIAR SOLICITUD'),
                     ),
                   ),
                 ],
-              )
-            else
-              Column(
-                children: [
-                  _buildTextField(
-                    label: 'Teléfono',
-                    controller: _telefonoController,
-                  ),
-                  const SizedBox(height: 20),
-                  _buildDropdown(
-                    label: 'Servicio Interesado',
-                    value: _servicioSeleccionado,
-                    items: [
-                      'Bots & Sistemas',
-                      'Apps Flutter',
-                      'Arduino & ESP32',
-                      'Impresión 3D',
-                      'Entrenamiento',
-                    ],
-                    onChanged: (v) =>
-                        setState(() => _servicioSeleccionado = v ?? ''),
-                  ),
-                ],
               ),
-            const SizedBox(height: 20),
-            _buildTextField(
-              label: 'Descripción del Proyecto',
-              controller: _descripcionController,
-              maxLines: 6,
-              validator: (v) =>
-                  v?.isEmpty ?? true ? 'Campo requerido' : null,
             ),
-            const SizedBox(height: 20),
-            _buildDropdown(
-              label: 'Presupuesto Aproximado',
-              value: _presupuestoSeleccionado,
-              items: [
-                '\$500 - \$1000',
-                '\$1000 - \$5000',
-                '\$5000+',
-                'Sin presupuesto',
-              ],
-              onChanged: (v) =>
-                  setState(() => _presupuestoSeleccionado = v ?? ''),
-            ),
-            SizedBox(height: isMobile ? 32 : 48),
-            ElevatedButton(
-              onPressed: _enviando ? null : _enviarCotizacion,
-              child: _enviando
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor:
-                            AlwaysStoppedAnimation<Color>(AppColors.textLight),
-                      ),
-                    )
-                  : const Text('ENVIAR SOLICITUD'),
-            ),
-          ],
+          ),
         ),
       ),
+    );
+  }
+
+  /// Dos campos lado a lado en desktop, apilados en mobile.
+  Widget _filaDoble(bool isMobile, Widget izquierda, Widget derecha) {
+    if (isMobile) {
+      return Column(
+        children: [izquierda, const SizedBox(height: AppSpacing.xl), derecha],
+      );
+    }
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(child: izquierda),
+        const SizedBox(width: AppSpacing.xl),
+        Expanded(child: derecha),
+      ],
     );
   }
 
@@ -291,15 +263,13 @@ class _CotizacionScreenState extends State<CotizacionScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: Theme.of(context).textTheme.titleSmall,
-        ),
-        const SizedBox(height: 8),
+        Text(label, style: Theme.of(context).textTheme.titleSmall),
+        const SizedBox(height: AppSpacing.sm),
         TextFormField(
           controller: controller,
           maxLines: maxLines,
           validator: validator,
+          style: const TextStyle(color: AppColors.textLight),
           decoration: const InputDecoration(),
         ),
       ],
@@ -315,16 +285,12 @@ class _CotizacionScreenState extends State<CotizacionScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: Theme.of(context).textTheme.titleSmall,
-        ),
-        const SizedBox(height: 8),
+        Text(label, style: Theme.of(context).textTheme.titleSmall),
+        const SizedBox(height: AppSpacing.sm),
         DropdownButtonFormField<String>(
           initialValue: value,
-          items: items
-              .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-              .toList(),
+          dropdownColor: AppColors.surfaceElevated,
+          items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
           onChanged: onChanged,
           decoration: const InputDecoration(),
         ),

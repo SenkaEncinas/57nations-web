@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../theme/app_colors.dart';
+import '../../theme/app_spacing.dart';
 import '../../services/auth_service.dart';
+import '../../widgets/widgets.dart';
 import 'panel_shell.dart';
 
 /// Login del panel interno para Admin, Luchin, Fifi y futuros socios.
@@ -79,112 +81,142 @@ class _PanelLoginScreenState extends State<PanelLoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 400),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    '57 NATIONS',
-                    style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                          color: AppColors.violetaPrincipal,
-                          fontSize: 32,
-                        ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'PANEL INTERNO',
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          letterSpacing: 3,
-                        ),
-                  ),
-                  const SizedBox(height: 40),
-                  Container(
-                    padding: const EdgeInsets.all(28),
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceElevated,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: AppColors.border),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        TextFormField(
-                          controller: _usernameController,
-                          decoration: const InputDecoration(
-                            labelText: 'Usuario',
-                            prefixIcon: Icon(Icons.person_outline, color: AppColors.textMuted),
-                          ),
-                          style: const TextStyle(color: AppColors.textLight),
-                          validator: (v) => (v?.isEmpty ?? true) ? 'Ingresa tu usuario' : null,
-                          onFieldSubmitted: (_) => _iniciarSesion(),
-                        ),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          controller: _passwordController,
-                          obscureText: !_passwordVisible,
-                          decoration: InputDecoration(
-                            labelText: 'Contraseña',
-                            prefixIcon: const Icon(Icons.lock_outline, color: AppColors.textMuted),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _passwordVisible ? Icons.visibility_off : Icons.visibility,
-                                color: AppColors.textMuted,
-                              ),
-                              onPressed: () => setState(() => _passwordVisible = !_passwordVisible),
-                            ),
-                          ),
-                          style: const TextStyle(color: AppColors.textLight),
-                          validator: (v) => (v?.isEmpty ?? true) ? 'Ingresa tu contraseña' : null,
-                          onFieldSubmitted: (_) => _iniciarSesion(),
-                        ),
-                        if (_error != null) ...[
-                          const SizedBox(height: 16),
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: AppColors.error.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(6),
-                              border: Border.all(color: AppColors.error.withValues(alpha: 0.4)),
-                            ),
-                            child: Text(
-                              _error!,
-                              style: const TextStyle(color: AppColors.error, fontSize: 13),
-                            ),
-                          ),
-                        ],
-                        const SizedBox(height: 24),
-                        ElevatedButton(
-                          onPressed: _cargando ? null : _iniciarSesion,
-                          child: _cargando
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.textLight),
-                                  ),
-                                )
-                              : const Text('INGRESAR'),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  TextButton(
-                    onPressed: () => Navigator.pushNamedAndRemoveUntil(context, '/', (r) => false),
-                    child: const Text('← Volver a la web pública'),
-                  ),
-                ],
+      body: Stack(
+        children: [
+          // Fondo con gradiente y grid de circuito sutil, como los heros públicos
+          Positioned.fill(
+            child: Container(
+              decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
+              child: CustomPaint(
+                painter: CircuitGridPainter(
+                  color: AppColors.violetaPrincipal.withValues(alpha: 0.05),
+                ),
               ),
             ),
           ),
-        ),
+          const Positioned(top: 24, left: 24, child: TechCornerDecoration()),
+          const Positioned(top: 24, right: 24, child: TechCornerDecoration(espejado: true)),
+          Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(AppSpacing.xl),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 400),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Image.asset(
+                        'assets/logos/logo_57nations.png',
+                        height: 56,
+                        fit: BoxFit.contain,
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      Text(
+                        'PANEL INTERNO',
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                              letterSpacing: 4,
+                              color: AppColors.cianTech,
+                            ),
+                      ),
+                      const SizedBox(height: AppSpacing.xxl),
+                      TechCard(
+                        showCornerBrackets: true,
+                        padding: const EdgeInsets.all(28),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            TextFormField(
+                              controller: _usernameController,
+                              decoration: const InputDecoration(
+                                labelText: 'Usuario',
+                                prefixIcon: Icon(Icons.person_outline, color: AppColors.textMuted),
+                              ),
+                              style: const TextStyle(color: AppColors.textLight),
+                              validator: (v) => (v?.isEmpty ?? true) ? 'Ingresa tu usuario' : null,
+                              onFieldSubmitted: (_) => _iniciarSesion(),
+                            ),
+                            const SizedBox(height: AppSpacing.lg),
+                            TextFormField(
+                              controller: _passwordController,
+                              obscureText: !_passwordVisible,
+                              decoration: InputDecoration(
+                                labelText: 'Contraseña',
+                                prefixIcon: const Icon(Icons.lock_outline, color: AppColors.textMuted),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _passwordVisible ? Icons.visibility_off : Icons.visibility,
+                                    color: AppColors.textMuted,
+                                  ),
+                                  onPressed: () =>
+                                      setState(() => _passwordVisible = !_passwordVisible),
+                                ),
+                              ),
+                              style: const TextStyle(color: AppColors.textLight),
+                              validator: (v) =>
+                                  (v?.isEmpty ?? true) ? 'Ingresa tu contraseña' : null,
+                              onFieldSubmitted: (_) => _iniciarSesion(),
+                            ),
+                            if (_error != null) ...[
+                              const SizedBox(height: AppSpacing.lg),
+                              Container(
+                                padding: const EdgeInsets.all(AppSpacing.md),
+                                decoration: ShapeDecoration(
+                                  color: AppColors.error.withValues(alpha: 0.1),
+                                  shape: const BeveledRectangleBorder(
+                                    borderRadius: BorderRadius.all(Radius.circular(5)),
+                                    side: BorderSide(color: AppColors.error),
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.error_outline,
+                                        color: AppColors.error, size: 18),
+                                    const SizedBox(width: AppSpacing.sm),
+                                    Expanded(
+                                      child: Text(
+                                        _error!,
+                                        style: const TextStyle(
+                                            color: AppColors.error, fontSize: 13),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                            const SizedBox(height: AppSpacing.xl),
+                            ElevatedButton(
+                              onPressed: _cargando ? null : _iniciarSesion,
+                              child: _cargando
+                                  ? const SizedBox(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(AppColors.textLight),
+                                      ),
+                                    )
+                                  : const Text('INGRESAR'),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.xl),
+                      TextButton.icon(
+                        onPressed: () =>
+                            Navigator.pushNamedAndRemoveUntil(context, '/', (r) => false),
+                        icon: const Icon(Icons.arrow_back, size: 16),
+                        label: const Text('Volver a la web pública'),
+                        style: TextButton.styleFrom(foregroundColor: AppColors.textMuted),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

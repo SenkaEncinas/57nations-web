@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_spacing.dart';
 import '../config/app_config.dart';
 import '../routes/app_routes.dart';
+import '../utils/responsive.dart';
 import '../utils/whatsapp_helper.dart';
 import '../widgets/widgets.dart';
 
@@ -10,7 +12,7 @@ class ContactoScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = MediaQuery.of(context).size.width < 800;
+    final columnas = Responsive.valor(context, mobile: 1, tablet: 3, desktop: 3);
 
     return Scaffold(
       body: SingleChildScrollView(
@@ -18,32 +20,35 @@ class ContactoScreen extends StatelessWidget {
           children: [
             const NavBar(),
             const PageHero(
-              titulo: 'CONTACTO',
-              subtitulo: 'Contanos tu proyecto y te respondemos directamente por WhatsApp.',
+              overline: 'Contacto',
+              titulo: 'Hablemos de tu proyecto',
+              subtitulo:
+                  'Contanos tu idea y te respondemos directamente por WhatsApp, '
+                  'sin formularios eternos ni respuestas automáticas.',
             ),
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.symmetric(
-                horizontal: isMobile ? 20 : 60,
-                vertical: isMobile ? 50 : 80,
-              ),
-              color: AppColors.background,
+            PageSection(
               child: Column(
                 children: [
                   GridView.count(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    crossAxisCount: isMobile ? 1 : 3,
-                    crossAxisSpacing: 20,
-                    mainAxisSpacing: 20,
-                    childAspectRatio: isMobile ? 2.6 : 1.3,
+                    crossAxisCount: columnas,
+                    crossAxisSpacing: AppSpacing.lg,
+                    mainAxisSpacing: AppSpacing.lg,
+                    childAspectRatio: Responsive.valor(
+                      context,
+                      mobile: 2.4,
+                      tablet: 1.15,
+                      desktop: 1.5,
+                    ),
                     children: [
                       _ContactoCard(
                         icon: Icons.chat_bubble_outline,
                         titulo: 'WhatsApp',
                         descripcion: 'Respuesta rápida para consultas y cotizaciones.',
                         accion: 'Escribir ahora',
-                        onTap: () => WhatsAppHelper.abrirChat(telefono: AppConfig.whatsappAdminNumero),
+                        onTap: () =>
+                            WhatsAppHelper.abrirChat(telefono: AppConfig.whatsappAdminNumero),
                       ),
                       const _ContactoCard(
                         icon: Icons.schedule_outlined,
@@ -57,15 +62,10 @@ class ContactoScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                  SizedBox(height: isMobile ? 40 : 56),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(28),
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: AppColors.border),
-                    ),
+                  const SizedBox(height: AppSpacing.section),
+                  TechCard(
+                    showCornerBrackets: true,
+                    padding: const EdgeInsets.all(AppSpacing.xxl),
                     child: Column(
                       children: [
                         Text(
@@ -73,13 +73,13 @@ class ContactoScreen extends StatelessWidget {
                           style: Theme.of(context).textTheme.titleLarge,
                           textAlign: TextAlign.center,
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: AppSpacing.sm),
                         const Text(
                           'Completá el formulario de cotización y te contactamos a la brevedad.',
                           style: TextStyle(color: AppColors.textMuted),
                           textAlign: TextAlign.center,
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: AppSpacing.xl),
                         ElevatedButton(
                           onPressed: () => Navigator.pushNamed(context, AppRoutes.cotizacion),
                           child: const Text('SOLICITAR COTIZACIÓN'),
@@ -115,27 +115,46 @@ class _ContactoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceElevated,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.border),
-      ),
+    return TechCard(
+      onTap: onTap,
+      accentColor: AppColors.cianTech,
+      padding: const EdgeInsets.all(AppSpacing.xl),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(icon, color: AppColors.cianTech, size: 28),
-          const SizedBox(height: 12),
-          Text(titulo, style: const TextStyle(color: AppColors.textLight, fontWeight: FontWeight.w700, fontSize: 16)),
-          const SizedBox(height: 8),
-          Text(descripcion, style: const TextStyle(color: AppColors.textMuted, fontSize: 13, height: 1.5)),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            titulo,
+            style: const TextStyle(
+              color: AppColors.textLight,
+              fontWeight: FontWeight.w700,
+              fontSize: 16,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            descripcion,
+            style: const TextStyle(color: AppColors.textMuted, fontSize: 13, height: 1.5),
+          ),
           if (accion != null) ...[
-            const SizedBox(height: 12),
-            TextButton(
-              onPressed: onTap,
-              style: TextButton.styleFrom(padding: EdgeInsets.zero, alignment: Alignment.centerLeft),
-              child: Text(accion!),
+            const SizedBox(height: AppSpacing.md),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  accion!.toUpperCase(),
+                  style: const TextStyle(
+                    color: AppColors.cianTech,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.8,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                const Icon(Icons.arrow_forward, size: 14, color: AppColors.cianTech),
+              ],
             ),
           ],
         ],

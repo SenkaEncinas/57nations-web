@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
+import '../../theme/app_spacing.dart';
+import '../../theme/app_theme.dart';
 import '../../models/models.dart';
 import '../../services/firebase_service.dart';
 import '../../widgets/widgets.dart';
@@ -82,26 +84,25 @@ class _PedidosPintadoScreenState extends State<PedidosPintadoScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = MediaQuery.of(context).size.width < 900;
     final pendientes = _pedidos.where((p) => p.estado == EstadoPedido.enPintado).toList();
     final terminados = _pedidos.where((p) => p.estado != EstadoPedido.enPintado).toList();
 
     return RefreshIndicator(
       onRefresh: _cargar,
       child: SingleChildScrollView(
-        padding: EdgeInsets.all(isMobile ? 16 : 32),
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.all(AppSpacing.panel(context)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Pendientes de Pintar', style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  color: AppColors.categoriaArte,
-                )),
-            const SizedBox(height: 4),
-            const Text(
-              'Solo se muestra lo necesario: pieza, foto, colores y fecha límite.',
-              style: TextStyle(color: AppColors.textMuted),
+            const SectionHeader(
+              overline: 'Panel',
+              titulo: 'Pendientes de Pintar',
+              subtitulo: 'Solo se muestra lo necesario: pieza, foto, colores y fecha límite.',
+              accentColor: AppColors.categoriaArte,
+              compacto: true,
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppSpacing.xl),
             if (_cargando)
               const EstadoCargando(mensaje: 'Cargando piezas...')
             else if (_error != null)
@@ -109,7 +110,7 @@ class _PedidosPintadoScreenState extends State<PedidosPintadoScreen> {
             else if (pendientes.isEmpty)
               const EstadoVacio(
                 icon: Icons.brush_outlined,
-                mensaje: '🎉 No tenés piezas pendientes de pintar.',
+                mensaje: 'No tenés piezas pendientes de pintar. ¡Buen trabajo!',
               )
             else
               ...pendientes.map((p) => _PiezaPintadoCard(
@@ -118,9 +119,9 @@ class _PedidosPintadoScreenState extends State<PedidosPintadoScreen> {
                     onMarcarListo: () => _marcarPintadoListo(p),
                   )),
             if (terminados.isNotEmpty) ...[
-              const SizedBox(height: 32),
+              const SizedBox(height: AppSpacing.xxl),
               Text('Ya entregadas / terminadas', style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.md),
               ...terminados.map((p) => _PiezaPintadoCard(pedido: p, terminada: true)),
             ],
           ],
@@ -145,81 +146,119 @@ class _PiezaPintadoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceElevated,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: terminada ? AppColors.border : AppColors.categoriaArte.withValues(alpha: 0.4)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // FOTO
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Container(
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+      child: TechCard(
+        accentColor: AppColors.categoriaArte,
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // FOTO en marco recortado
+            Container(
               width: 80,
               height: 80,
-              color: AppColors.surface,
+              clipBehavior: Clip.hardEdge,
+              decoration: ShapeDecoration(
+                color: AppColors.surface,
+                shape: AppTheme.cutCorner(
+                  size: AppTheme.cutSizeSm,
+                  side: BorderSide(
+                    color: terminada
+                        ? AppColors.border
+                        : AppColors.categoriaArte.withValues(alpha: 0.4),
+                  ),
+                ),
+              ),
               child: pedido.fotos.isNotEmpty
                   ? Image.network(pedido.fotos.first, fit: BoxFit.cover)
                   : const Icon(Icons.image_not_supported, color: AppColors.textDim),
             ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  pedido.descripcionPieza,
-                  style: const TextStyle(color: AppColors.textLight, fontWeight: FontWeight.w700, fontSize: 15),
-                ),
-                const SizedBox(height: 6),
-                Wrap(
-                  spacing: 6,
-                  children: pedido.coloresPedidos
-                      .map((c) => Chip(
-                            label: Text(c, style: const TextStyle(fontSize: 11)),
-                            backgroundColor: AppColors.categoriaArte.withValues(alpha: 0.15),
-                            side: BorderSide(color: AppColors.categoriaArte.withValues(alpha: 0.4)),
-                          ))
-                      .toList(),
-                ),
-                const SizedBox(height: 8),
-                if (pedido.fechaEntregaPintado != null)
-                  Text(
-                    '📅 Fecha límite: ${_formatFecha(pedido.fechaEntregaPintado!)}',
-                    style: const TextStyle(color: AppColors.warning, fontSize: 12, fontWeight: FontWeight.w600),
-                  )
-                else if (!terminada)
-                  const Text(
-                    'Sin fecha estimada todavía',
-                    style: TextStyle(color: AppColors.textDim, fontSize: 12),
-                  ),
-                if (!terminada) ...[
-                  const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 8,
+            const SizedBox(width: AppSpacing.lg),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      OutlinedButton(
-                        onPressed: onPonerFecha,
-                        child: const Text('Poner fecha estimada'),
+                      Expanded(
+                        child: Text(
+                          pedido.descripcionPieza,
+                          style: const TextStyle(
+                            color: AppColors.textLight,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 15,
+                          ),
+                        ),
                       ),
-                      ElevatedButton(
-                        onPressed: onMarcarListo,
-                        style: ElevatedButton.styleFrom(backgroundColor: AppColors.success),
-                        child: const Text('Marcar pintado ✓'),
-                      ),
+                      if (terminada)
+                        StatusBadge.pedido(pedido.estado),
                     ],
                   ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Wrap(
+                    spacing: AppSpacing.xs,
+                    runSpacing: AppSpacing.xs,
+                    children: pedido.coloresPedidos
+                        .map((c) => StatusBadge(texto: c, color: AppColors.categoriaArte))
+                        .toList(),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  if (pedido.fechaEntregaPintado != null)
+                    Row(
+                      children: [
+                        const Icon(Icons.event_outlined, size: 14, color: AppColors.warning),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Fecha límite: ${_formatFecha(pedido.fechaEntregaPintado!)}',
+                          style: const TextStyle(
+                            color: AppColors.warning,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    )
+                  else if (!terminada)
+                    const Text(
+                      'Sin fecha estimada todavía',
+                      style: TextStyle(color: AppColors.textDim, fontSize: 12),
+                    ),
+                  if (!terminada) ...[
+                    const SizedBox(height: AppSpacing.md),
+                    Wrap(
+                      spacing: AppSpacing.sm,
+                      runSpacing: AppSpacing.sm,
+                      children: [
+                        OutlinedButton.icon(
+                          onPressed: onPonerFecha,
+                          icon: const Icon(Icons.event_outlined, size: 16),
+                          label: const Text('FECHA ESTIMADA'),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: AppSpacing.lg, vertical: AppSpacing.md),
+                          ),
+                        ),
+                        ElevatedButton.icon(
+                          onPressed: onMarcarListo,
+                          icon: const Icon(Icons.check, size: 16),
+                          label: const Text('MARCAR PINTADO'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.success,
+                            foregroundColor: AppColors.negroProfundo,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: AppSpacing.lg, vertical: AppSpacing.md),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
+import '../../theme/app_spacing.dart';
+import '../../theme/app_theme.dart';
 import '../../services/firebase_service.dart';
 import '../../models/models.dart';
 import '../../utils/responsive.dart';
@@ -66,15 +68,20 @@ class _Catalogo3dScreenState extends State<Catalogo3dScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = Responsive.isMobile(context);
-
     return Scaffold(
       body: SingleChildScrollView(
         child: Column(
           children: [
             const NavBar(),
-            _buildHeroSection(isMobile),
-            _buildFiltersSection(isMobile),
+            const PageHero(
+              overline: 'Impresión 3D',
+              titulo: 'Catálogo de Impresiones 3D',
+              subtitulo:
+                  'Todas las piezas se imprimen bajo pedido: elegís el modelo, el '
+                  'material y los colores, y la fabricamos para vos.',
+              colorAcento: AppColors.impresion3dColor,
+            ),
+            _buildFiltersSection(),
             _buildImpresionesGrid(context),
             const Footer(),
           ],
@@ -83,22 +90,9 @@ class _Catalogo3dScreenState extends State<Catalogo3dScreen> {
     );
   }
 
-  Widget _buildHeroSection(bool isMobile) {
-    return const PageHero(
-      titulo: 'Catálogo de Impresiones 3D',
-      subtitulo: 'Piezas decorativas y funcionales, diseño custom, acabado profesional.',
-      colorAcento: AppColors.impresion3dColor,
-    );
-  }
-
-  Widget _buildFiltersSection(bool isMobile) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.symmetric(
-        horizontal: isMobile ? 20 : 60,
-        vertical: 32,
-      ),
-      color: AppColors.background,
+  Widget _buildFiltersSection() {
+    return PageSection(
+      verticalPadding: AppSpacing.xxl,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -106,7 +100,7 @@ class _Catalogo3dScreenState extends State<Catalogo3dScreen> {
             controller: _searchController,
             style: const TextStyle(color: AppColors.textLight),
             decoration: InputDecoration(
-              hintText: 'Buscar impresiones 3D...',
+              hintText: 'Buscar piezas en el catálogo...',
               prefixIcon: const Icon(Icons.search, color: AppColors.textMuted),
               suffixIcon: _searchController.text.isNotEmpty
                   ? IconButton(
@@ -117,13 +111,13 @@ class _Catalogo3dScreenState extends State<Catalogo3dScreen> {
             ),
             onChanged: (_) => setState(() {}),
           ),
-          SizedBox(height: isMobile ? 24 : 32),
+          const SizedBox(height: AppSpacing.xl),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
               children: ['Todas', 'Decorativa', 'Funcional', 'Accesorio']
                   .map((c) => Padding(
-                        padding: const EdgeInsets.only(right: 8),
+                        padding: const EdgeInsets.only(right: AppSpacing.sm),
                         child: _FilterChip(
                           label: c == 'Todas' ? 'Todas' : '${c}s',
                           selected: _filtroCategoria == c,
@@ -139,9 +133,7 @@ class _Catalogo3dScreenState extends State<Catalogo3dScreen> {
   }
 
   Widget _buildImpresionesGrid(BuildContext context) {
-    final isMobile = Responsive.isMobile(context);
-    final isTablet = Responsive.isTablet(context);
-    final crossAxisCount = isMobile ? 1 : (isTablet ? 2 : 3);
+    final crossAxisCount = Responsive.valor(context, mobile: 1, tablet: 2, desktop: 3);
 
     Widget contenido;
     if (_cargando) {
@@ -161,22 +153,19 @@ class _Catalogo3dScreenState extends State<Catalogo3dScreen> {
         physics: const NeverScrollableScrollPhysics(),
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: crossAxisCount,
-          crossAxisSpacing: 24,
-          mainAxisSpacing: 24,
-          childAspectRatio: isMobile ? 1.1 : 0.75,
+          crossAxisSpacing: AppSpacing.xl,
+          mainAxisSpacing: AppSpacing.xl,
+          childAspectRatio: Responsive.isMobile(context) ? 1.05 : 0.75,
         ),
         itemCount: _impresionesFiltradas.length,
-        itemBuilder: (context, index) => _Impresion3DCard(impresion: _impresionesFiltradas[index]),
+        itemBuilder: (context, index) =>
+            _Impresion3DCard(impresion: _impresionesFiltradas[index]),
       );
     }
 
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.symmetric(
-        horizontal: isMobile ? 20 : 60,
-        vertical: isMobile ? 40 : 60,
-      ),
-      color: AppColors.surface,
+    return PageSection(
+      alternada: true,
+      verticalPadding: AppSpacing.section,
       child: contenido,
     );
   }
@@ -200,8 +189,11 @@ class _FilterChip extends StatelessWidget {
       selected: selected,
       onSelected: (_) => onSelected(),
       backgroundColor: AppColors.surfaceElevated,
-      selectedColor: AppColors.impresion3dColor.withValues(alpha: 0.2),
-      labelStyle: TextStyle(color: selected ? AppColors.impresion3dColor : AppColors.textMuted),
+      selectedColor: AppColors.impresion3dColor.withValues(alpha: 0.18),
+      labelStyle: TextStyle(
+        color: selected ? AppColors.impresion3dColor : AppColors.textMuted,
+        fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
+      ),
       side: BorderSide(
         color: selected ? AppColors.impresion3dColor : AppColors.border,
       ),
@@ -231,15 +223,27 @@ class _Impresion3DCardState extends State<_Impresion3DCard> {
       onExit: (_) => setState(() => _isHovered = false),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceElevated,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: _isHovered ? AppColors.impresion3dColor : AppColors.border,
-            width: _isHovered ? 1.5 : 1,
-          ),
-        ),
+        curve: Curves.easeOut,
+        transform: Matrix4.translationValues(0, _isHovered ? -4 : 0, 0),
         clipBehavior: Clip.hardEdge,
+        decoration: ShapeDecoration(
+          color: AppColors.surfaceElevated,
+          shape: AppTheme.cutCorner(
+            side: BorderSide(
+              color: _isHovered ? AppColors.impresion3dColor : AppColors.border,
+              width: _isHovered ? 1.4 : 1,
+            ),
+          ),
+          shadows: _isHovered
+              ? [
+                  BoxShadow(
+                    color: AppColors.impresion3dColor.withValues(alpha: 0.2),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                  ),
+                ]
+              : const [],
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -250,48 +254,64 @@ class _Impresion3DCardState extends State<_Impresion3DCard> {
                 child: impresion.imagenes.isNotEmpty
                     ? Image.network(impresion.imagenes[0], fit: BoxFit.cover)
                     : const Center(
-                        child: Icon(Icons.image_not_supported_outlined, color: AppColors.textDim, size: 32),
+                        child: Icon(Icons.image_not_supported_outlined,
+                            color: AppColors.textDim, size: 32),
                       ),
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppSpacing.lg),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     impresion.nombre,
-                    style: const TextStyle(color: AppColors.textLight, fontWeight: FontWeight.w700, fontSize: 15),
+                    style: const TextStyle(
+                      color: AppColors.textLight,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15,
+                    ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: AppColors.impresion3dColor.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      impresion.categoria,
-                      style: const TextStyle(color: AppColors.impresion3dColor, fontSize: 12, fontWeight: FontWeight.w600),
-                    ),
+                  const SizedBox(height: AppSpacing.sm),
+                  StatusBadge(
+                    texto: impresion.categoria,
+                    color: AppColors.impresion3dColor,
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.md),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        'Bs ${impresion.precioBase.toStringAsFixed(2)}',
-                        style: const TextStyle(
-                          color: AppColors.impresion3dColor,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 16,
-                        ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'DESDE',
+                            style: TextStyle(
+                              color: AppColors.textDim,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 1,
+                            ),
+                          ),
+                          Text(
+                            'Bs ${impresion.precioBase.toStringAsFixed(2)}',
+                            style: const TextStyle(
+                              color: AppColors.impresion3dColor,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 17,
+                            ),
+                          ),
+                        ],
                       ),
                       OutlinedButton(
                         onPressed: () {},
-                        child: const Text('Ver'),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.lg, vertical: AppSpacing.md),
+                        ),
+                        child: const Text('VER'),
                       ),
                     ],
                   ),

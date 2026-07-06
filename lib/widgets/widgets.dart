@@ -4,3 +4,7 @@ export 'service_card.dart';
 export 'tech_corner_decoration.dart';
 export 'page_hero.dart';
 export 'estado_lista.dart';
+export 'tech_card.dart';
+export 'section_header.dart';
+export 'page_section.dart';
+export 'status_badge.dart';

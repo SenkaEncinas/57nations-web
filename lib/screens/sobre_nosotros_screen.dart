@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_spacing.dart';
 import '../models/models.dart';
 import '../services/firebase_service.dart';
 import '../utils/responsive.dart';
@@ -45,8 +46,8 @@ class _SobreNosotrosScreenState extends State<SobreNosotrosScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = Responsive.isMobile(context);
-    final isTablet = Responsive.isTablet(context);
+    final columnasValores = Responsive.valor(context, mobile: 1, tablet: 2, desktop: 3);
+    final columnasEquipo = Responsive.valor(context, mobile: 1, tablet: 2, desktop: 4);
 
     return Scaffold(
       body: SingleChildScrollView(
@@ -54,84 +55,87 @@ class _SobreNosotrosScreenState extends State<SobreNosotrosScreen> {
           children: [
             const NavBar(),
             const PageHero(
-              titulo: 'SOBRE NOSOTROS',
-              subtitulo:
-                  'Software + Hardware + Entrenamiento = Soluciones Completas.',
+              overline: '57 Nations',
+              titulo: 'Sobre Nosotros',
+              subtitulo: 'Software + Hardware + Entrenamiento = Soluciones Completas.',
             ),
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.symmetric(
-                horizontal: isMobile ? 20 : 60,
-                vertical: isMobile ? 50 : 80,
-              ),
-              color: AppColors.background,
+            PageSection(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Nuestra Misión', style: Theme.of(context).textTheme.headlineMedium),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'En 57 Nations transformamos ideas en proyectos reales. Somos un equipo '
-                    'de Santa Cruz, Bolivia, especializado en desarrollo tech integral: '
-                    'bots y sistemas a medida, apps multiplataforma, electrónica e IoT, '
-                    'impresión 3D y entrenamiento deportivo.',
-                    style: TextStyle(color: AppColors.textMuted, height: 1.7, fontSize: 15),
+                  const SectionHeader(
+                    overline: 'Misión',
+                    titulo: 'Nuestra Misión',
+                  ),
+                  const SizedBox(height: AppSpacing.xl),
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 720),
+                    child: const Text(
+                      'En 57 Nations transformamos ideas en proyectos reales. Somos un equipo '
+                      'de Santa Cruz, Bolivia, especializado en desarrollo tech integral: '
+                      'bots y sistemas a medida, apps multiplataforma, electrónica e IoT, '
+                      'impresión 3D y entrenamiento deportivo.',
+                      style: TextStyle(color: AppColors.textMuted, height: 1.7, fontSize: 15),
+                    ),
                   ),
                 ],
               ),
             ),
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.symmetric(
-                horizontal: isMobile ? 20 : 60,
-                vertical: isMobile ? 50 : 80,
-              ),
-              color: AppColors.surface,
+            PageSection(
+              alternada: true,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Nuestros Valores', style: Theme.of(context).textTheme.headlineMedium),
-                  SizedBox(height: isMobile ? 24 : 32),
+                  const SectionHeader(
+                    overline: 'Valores',
+                    titulo: 'Cómo trabajamos',
+                  ),
+                  const SizedBox(height: AppSpacing.xxl),
                   GridView.count(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    crossAxisCount: isMobile ? 1 : (isTablet ? 2 : 3),
-                    crossAxisSpacing: 20,
-                    mainAxisSpacing: 20,
-                    childAspectRatio: isMobile ? 2.4 : (isTablet ? 1.8 : 1.4),
+                    crossAxisCount: columnasValores,
+                    crossAxisSpacing: AppSpacing.lg,
+                    mainAxisSpacing: AppSpacing.lg,
+                    childAspectRatio: Responsive.valor(
+                      context,
+                      mobile: 2.2,
+                      tablet: 1.7,
+                      desktop: 1.6,
+                    ),
                     children: const [
                       _ValorCard(
                         icon: Icons.verified_outlined,
                         titulo: 'Calidad',
-                        descripcion: 'Cada proyecto se entrega con atención al detalle y control de calidad.',
+                        descripcion:
+                            'Cada proyecto se entrega con atención al detalle y control de calidad.',
                       ),
                       _ValorCard(
                         icon: Icons.bolt_outlined,
                         titulo: 'Compromiso',
-                        descripcion: 'Acompañamos al cliente desde la idea hasta la entrega final.',
+                        descripcion:
+                            'Acompañamos al cliente desde la idea hasta la entrega final.',
                       ),
                       _ValorCard(
                         icon: Icons.handshake_outlined,
                         titulo: 'Cercanía',
-                        descripcion: 'Comunicación directa y trato personalizado en cada etapa.',
+                        descripcion:
+                            'Comunicación directa y trato personalizado en cada etapa.',
                       ),
                     ],
                   ),
                 ],
               ),
             ),
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.symmetric(
-                horizontal: isMobile ? 20 : 60,
-                vertical: isMobile ? 50 : 80,
-              ),
-              color: AppColors.background,
+            PageSection(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('El Equipo', style: Theme.of(context).textTheme.headlineMedium),
-                  SizedBox(height: isMobile ? 24 : 32),
+                  const SectionHeader(
+                    overline: 'Equipo',
+                    titulo: 'El Equipo',
+                  ),
+                  const SizedBox(height: AppSpacing.xxl),
                   if (_cargando)
                     const EstadoCargando(mensaje: 'Cargando equipo...')
                   else if (_error != null)
@@ -146,9 +150,9 @@ class _SobreNosotrosScreenState extends State<SobreNosotrosScreen> {
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: isMobile ? 1 : (isTablet ? 2 : 4),
-                        crossAxisSpacing: 20,
-                        mainAxisSpacing: 20,
+                        crossAxisCount: columnasEquipo,
+                        crossAxisSpacing: AppSpacing.lg,
+                        mainAxisSpacing: AppSpacing.lg,
                         childAspectRatio: 0.85,
                       ),
                       itemCount: _equipo.length,
@@ -174,21 +178,27 @@ class _ValorCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceElevated,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.border),
-      ),
+    return TechCard(
+      padding: const EdgeInsets.all(AppSpacing.xl),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(icon, color: AppColors.violetaPrincipal, size: 28),
-          const SizedBox(height: 12),
-          Text(titulo, style: const TextStyle(color: AppColors.textLight, fontWeight: FontWeight.w700, fontSize: 16)),
-          const SizedBox(height: 8),
-          Text(descripcion, style: const TextStyle(color: AppColors.textMuted, fontSize: 13, height: 1.5)),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            titulo,
+            style: const TextStyle(
+              color: AppColors.textLight,
+              fontWeight: FontWeight.w700,
+              fontSize: 16,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            descripcion,
+            style: const TextStyle(color: AppColors.textMuted, fontSize: 13, height: 1.5),
+          ),
         ],
       ),
     );
@@ -202,35 +212,61 @@ class _MiembroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceElevated,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.border),
-      ),
+    return TechCard(
+      padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircleAvatar(
-            radius: 36,
-            backgroundColor: AppColors.surface,
-            backgroundImage: miembro.fotoUrl != null ? NetworkImage(miembro.fotoUrl!) : null,
-            child: miembro.fotoUrl == null
-                ? const Icon(Icons.person_outline, color: AppColors.textDim, size: 32)
-                : null,
+          Container(
+            padding: const EdgeInsets.all(3),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: AppColors.violetaPrincipal.withValues(alpha: 0.5),
+                width: 1.2,
+              ),
+            ),
+            child: CircleAvatar(
+              radius: 36,
+              backgroundColor: AppColors.surface,
+              backgroundImage:
+                  miembro.fotoUrl != null ? NetworkImage(miembro.fotoUrl!) : null,
+              child: miembro.fotoUrl == null
+                  ? const Icon(Icons.person_outline, color: AppColors.textDim, size: 32)
+                  : null,
+            ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.md),
           Text(
             miembro.nombre,
-            style: const TextStyle(color: AppColors.textLight, fontWeight: FontWeight.w700, fontSize: 14),
+            style: const TextStyle(
+              color: AppColors.textLight,
+              fontWeight: FontWeight.w700,
+              fontSize: 14,
+            ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppSpacing.xs),
           Text(
-            miembro.rol,
-            style: const TextStyle(color: AppColors.accent, fontSize: 12, fontWeight: FontWeight.w600),
+            miembro.rol.toUpperCase(),
+            style: const TextStyle(
+              color: AppColors.cianTech,
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1,
+            ),
             textAlign: TextAlign.center,
           ),
+          if (miembro.especialidad.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              miembro.especialidad,
+              style: const TextStyle(color: AppColors.textDim, fontSize: 12),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
         ],
       ),
     );

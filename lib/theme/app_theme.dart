@@ -5,7 +5,27 @@ import 'app_colors.dart';
 /// Estética: tech futurista, fondo negro/violeta, tipografía geométrica
 /// limpia, glow violeta suave, bordes con esquinas recortadas.
 /// Ver manual de marca secciones 04 (Tipografía) y 05 (Sistema gráfico).
+///
+/// Decisión de sistema: TODOS los contenedores interactivos (botones, inputs,
+/// cards, chips, diálogos) usan [BeveledRectangleBorder] — esquina recortada
+/// en chaflán — en vez de esquinas redondeadas Material default. Es la
+/// traducción directa del sistema de marcos rectos del manual. Si una pantalla
+/// necesita una forma propia, usar [AppTheme.cutCorner].
 class AppTheme {
+  /// Chaflán estándar del sistema (esquinas recortadas).
+  static const double cutSize = 8;
+
+  /// Chaflán chico para elementos compactos (chips, badges, inputs).
+  static const double cutSizeSm = 5;
+
+  /// Forma de esquinas recortadas reutilizable en pantallas.
+  static BeveledRectangleBorder cutCorner({double size = cutSize, BorderSide side = BorderSide.none}) {
+    return BeveledRectangleBorder(
+      borderRadius: BorderRadius.all(Radius.circular(size)),
+      side: side,
+    );
+  }
+
   static ThemeData get darkTheme {
     return ThemeData(
       useMaterial3: true,
@@ -29,68 +49,102 @@ class AppTheme {
         ),
       ),
       textTheme: _buildTextTheme(),
+      // Los inputs exigen InputBorder (no acepta BeveledRectangleBorder),
+      // así que usamos OutlineInputBorder con radio mínimo: esquina
+      // prácticamente recta, coherente con el sistema de marcos del manual.
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.surface,
         hintStyle: const TextStyle(color: AppColors.textDim),
         labelStyle: const TextStyle(color: AppColors.textMuted),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(2),
           borderSide: const BorderSide(color: AppColors.border),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(2),
           borderSide: const BorderSide(color: AppColors.border),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: AppColors.violetaPrincipal, width: 2),
+          borderRadius: BorderRadius.circular(2),
+          borderSide: const BorderSide(color: AppColors.violetaPrincipal, width: 1.5),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(2),
+          borderSide: const BorderSide(color: AppColors.error),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(2),
+          borderSide: const BorderSide(color: AppColors.error, width: 1.5),
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.violetaPrincipal,
-          foregroundColor: AppColors.textLight,
-          elevation: 0,
-          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(6),
+        style: ButtonStyle(
+          backgroundColor: WidgetStateProperty.resolveWith(
+            (states) => states.contains(WidgetState.disabled)
+                ? AppColors.violetaPrincipal.withValues(alpha: 0.35)
+                : states.contains(WidgetState.hovered)
+                    ? const Color(0xFF938BEA) // violeta un paso más claro al hover
+                    : AppColors.violetaPrincipal,
           ),
-          textStyle: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.5,
+          foregroundColor: const WidgetStatePropertyAll(AppColors.textLight),
+          elevation: const WidgetStatePropertyAll(0),
+          padding: const WidgetStatePropertyAll(
+            EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+          ),
+          shape: WidgetStatePropertyAll(cutCorner()),
+          // Glow violeta sutil solo cuando el mouse está encima (manual:
+          // glow nunca excesivo ni en todo a la vez).
+          shadowColor: const WidgetStatePropertyAll(Colors.transparent),
+          overlayColor: WidgetStatePropertyAll(
+            AppColors.blanco.withValues(alpha: 0.06),
+          ),
+          textStyle: const WidgetStatePropertyAll(
+            TextStyle(fontSize: 14, fontWeight: FontWeight.w700, letterSpacing: 1.0),
           ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
-        style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.cianTech,
-          side: const BorderSide(color: AppColors.cianTech, width: 1.5),
-          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(6),
+        style: ButtonStyle(
+          foregroundColor: const WidgetStatePropertyAll(AppColors.cianTech),
+          side: WidgetStateProperty.resolveWith(
+            (states) => BorderSide(
+              color: states.contains(WidgetState.hovered)
+                  ? AppColors.cianTech
+                  : AppColors.cianTech.withValues(alpha: 0.6),
+              width: 1.2,
+            ),
           ),
-          textStyle: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.5,
+          padding: const WidgetStatePropertyAll(
+            EdgeInsets.symmetric(horizontal: 28, vertical: 16),
+          ),
+          shape: WidgetStatePropertyAll(cutCorner()),
+          overlayColor: WidgetStatePropertyAll(
+            AppColors.cianTech.withValues(alpha: 0.08),
+          ),
+          textStyle: const WidgetStatePropertyAll(
+            TextStyle(fontSize: 14, fontWeight: FontWeight.w700, letterSpacing: 1.0),
           ),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(
-          foregroundColor: AppColors.cianTech,
+        style: ButtonStyle(
+          foregroundColor: const WidgetStatePropertyAll(AppColors.cianTech),
+          shape: WidgetStatePropertyAll(cutCorner(size: cutSizeSm)),
+          overlayColor: WidgetStatePropertyAll(
+            AppColors.cianTech.withValues(alpha: 0.08),
+          ),
         ),
       ),
       cardTheme: CardThemeData(
         elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-          side: const BorderSide(color: AppColors.border),
-        ),
+        shape: cutCorner(side: const BorderSide(color: AppColors.border)),
         color: AppColors.surfaceElevated,
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: AppColors.surfaceElevated,
+        shape: cutCorner(side: const BorderSide(color: AppColors.border)),
       ),
       dividerTheme: const DividerThemeData(
         color: AppColors.border,
@@ -99,10 +153,49 @@ class AppTheme {
       iconTheme: const IconThemeData(color: AppColors.textLight),
       chipTheme: ChipThemeData(
         backgroundColor: AppColors.surface,
-        selectedColor: AppColors.violetaPrincipal.withValues(alpha: 0.25),
+        selectedColor: AppColors.violetaPrincipal.withValues(alpha: 0.22),
         labelStyle: const TextStyle(color: AppColors.textLight, fontSize: 13),
         side: const BorderSide(color: AppColors.border),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+        shape: cutCorner(size: cutSizeSm),
+        showCheckmark: false,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      ),
+      snackBarTheme: SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: AppColors.surfaceElevated,
+        contentTextStyle: const TextStyle(color: AppColors.textLight, fontSize: 14),
+        shape: cutCorner(side: const BorderSide(color: AppColors.border)),
+      ),
+      progressIndicatorTheme: const ProgressIndicatorThemeData(
+        color: AppColors.violetaPrincipal,
+      ),
+      listTileTheme: ListTileThemeData(
+        shape: cutCorner(size: cutSizeSm),
+        iconColor: AppColors.textMuted,
+      ),
+      datePickerTheme: DatePickerThemeData(
+        backgroundColor: AppColors.surfaceElevated,
+        shape: cutCorner(side: const BorderSide(color: AppColors.border)),
+        headerBackgroundColor: AppColors.violetaOscuro,
+        headerForegroundColor: AppColors.textLight,
+      ),
+      popupMenuTheme: PopupMenuThemeData(
+        color: AppColors.surfaceElevated,
+        shape: cutCorner(size: cutSizeSm, side: const BorderSide(color: AppColors.border)),
+        textStyle: const TextStyle(color: AppColors.textLight, fontSize: 14),
+      ),
+      drawerTheme: const DrawerThemeData(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(), // sin curvas: marcos rectos de marca
+      ),
+      switchTheme: const SwitchThemeData(
+        trackOutlineColor: WidgetStatePropertyAll(AppColors.border),
+      ),
+      dropdownMenuTheme: DropdownMenuThemeData(
+        menuStyle: MenuStyle(
+          backgroundColor: const WidgetStatePropertyAll(AppColors.surfaceElevated),
+          shape: WidgetStatePropertyAll(cutCorner(size: cutSizeSm)),
+        ),
       ),
     );
   }

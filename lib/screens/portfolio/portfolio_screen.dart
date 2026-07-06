@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
+import '../../theme/app_spacing.dart';
+import '../../theme/app_theme.dart';
 import '../../models/models.dart';
 import '../../services/firebase_service.dart';
 import '../../routes/app_routes.dart';
@@ -52,9 +54,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = Responsive.isMobile(context);
-    final isTablet = Responsive.isTablet(context);
-    final crossAxisCount = isMobile ? 1 : (isTablet ? 2 : 3);
+    final crossAxisCount = Responsive.valor(context, mobile: 1, tablet: 2, desktop: 3);
 
     return Scaffold(
       body: RefreshIndicator(
@@ -65,24 +65,23 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
             children: [
               const NavBar(),
               const PageHero(
-                titulo: 'PORTFOLIO',
-                subtitulo: 'Proyectos reales que llevamos a cabo para nuestros clientes.',
+                overline: '57 Nations',
+                titulo: 'Portfolio',
+                subtitulo:
+                    'Proyectos reales que llevamos a cabo para nuestros clientes: '
+                    'sistemas en producción, apps publicadas y piezas entregadas.',
               ),
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.symmetric(
-                  horizontal: isMobile ? 20 : 60,
-                  vertical: isMobile ? 40 : 60,
-                ),
-                color: AppColors.background,
+              PageSection(
+                verticalPadding: AppSpacing.section,
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: Row(
-                        children: const ['Todas', ...CategoriasProyecto.todas]
+                        children: ['Todas', ...CategoriasProyecto.todas]
                             .map((c) => Padding(
-                                  padding: const EdgeInsets.only(right: 8),
+                                  padding: const EdgeInsets.only(right: AppSpacing.sm),
                                   child: ChoiceChip(
                                     label: Text(c),
                                     selected: _filtroCategoria == c,
@@ -92,7 +91,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
                             .toList(),
                       ),
                     ),
-                    SizedBox(height: isMobile ? 32 : 48),
+                    const SizedBox(height: AppSpacing.xxl),
                     if (_cargando)
                       const EstadoCargando(mensaje: 'Cargando portfolio...')
                     else if (_error != null)
@@ -110,9 +109,9 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
                         physics: const NeverScrollableScrollPhysics(),
                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: crossAxisCount,
-                          crossAxisSpacing: 20,
-                          mainAxisSpacing: 20,
-                          childAspectRatio: isMobile ? 1.3 : 0.9,
+                          crossAxisSpacing: AppSpacing.xl,
+                          mainAxisSpacing: AppSpacing.xl,
+                          childAspectRatio: Responsive.isMobile(context) ? 1.2 : 0.9,
                         ),
                         itemCount: _proyectosFiltrados.length,
                         itemBuilder: (context, index) {
@@ -164,15 +163,27 @@ class _ProyectoCardState extends State<_ProyectoCard> {
         onTap: widget.onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          decoration: BoxDecoration(
-            color: AppColors.surfaceElevated,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: _isHovered ? AppColors.violetaPrincipal : AppColors.border,
-              width: _isHovered ? 1.5 : 1,
-            ),
-          ),
+          curve: Curves.easeOut,
+          transform: Matrix4.translationValues(0, _isHovered ? -4 : 0, 0),
           clipBehavior: Clip.hardEdge,
+          decoration: ShapeDecoration(
+            color: AppColors.surfaceElevated,
+            shape: AppTheme.cutCorner(
+              side: BorderSide(
+                color: _isHovered ? AppColors.violetaPrincipal : AppColors.border,
+                width: _isHovered ? 1.4 : 1,
+              ),
+            ),
+            shadows: _isHovered
+                ? [
+                    BoxShadow(
+                      color: AppColors.violetaPrincipal.withValues(alpha: 0.22),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ]
+                : const [],
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -183,25 +194,41 @@ class _ProyectoCardState extends State<_ProyectoCard> {
                   child: proyecto.imagenes.isNotEmpty
                       ? Image.network(proyecto.imagenes.first, fit: BoxFit.cover)
                       : const Center(
-                          child: Icon(Icons.image_outlined, color: AppColors.textDim, size: 32),
+                          child:
+                              Icon(Icons.image_outlined, color: AppColors.textDim, size: 32),
                         ),
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppSpacing.lg),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       proyecto.titulo,
-                      style: const TextStyle(color: AppColors.textLight, fontWeight: FontWeight.w700, fontSize: 15),
+                      style: const TextStyle(
+                        color: AppColors.textLight,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      proyecto.categoria,
-                      style: const TextStyle(color: AppColors.accent, fontSize: 12, fontWeight: FontWeight.w600),
+                    const SizedBox(height: AppSpacing.sm),
+                    Row(
+                      children: [
+                        StatusBadge(
+                          texto: proyecto.categoria,
+                          color: AppColors.cianTech,
+                        ),
+                        const Spacer(),
+                        AnimatedOpacity(
+                          duration: const Duration(milliseconds: 180),
+                          opacity: _isHovered ? 1 : 0,
+                          child: const Icon(Icons.arrow_forward,
+                              size: 16, color: AppColors.cianTech),
+                        ),
+                      ],
                     ),
                   ],
                 ),

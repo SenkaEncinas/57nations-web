@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
+import '../../theme/app_spacing.dart';
 import '../../models/models.dart';
+import '../../utils/responsive.dart';
+import '../../widgets/widgets.dart';
 
 /// Calculadora de costos de impresión 3D.
 /// Réplica 1:1 de la lógica de `calculadora-3d.html`:
@@ -89,39 +92,27 @@ class _Calculadora3DScreenState extends State<Calculadora3DScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = MediaQuery.of(context).size.width < 900;
+    final isCompact = Responsive.isCompact(context);
 
     return SingleChildScrollView(
-      padding: EdgeInsets.all(isMobile ? 20 : 40),
+      padding: EdgeInsets.all(AppSpacing.panel(context)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Text(
-                'Calculadora de costos',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      color: AppColors.impresion3dColor,
-                    ),
-              ),
-            ],
+          const SectionHeader(
+            overline: 'Ender 3 V3 SE · PLA+',
+            titulo: 'Calculadora de costos',
+            subtitulo:
+                'Cargá los datos de tu pieza y sacá el costo real y el precio de venta sugerido.',
+            accentColor: AppColors.impresion3dColor,
+            compacto: true,
           ),
-          const SizedBox(height: 4),
-          const Text(
-            'Ender 3 V3 SE · PLA+',
-            style: TextStyle(color: AppColors.textDim, fontSize: 12, letterSpacing: 1),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Cargá los datos de tu pieza y sacá el costo real y el precio de venta sugerido.',
-            style: TextStyle(color: AppColors.textMuted),
-          ),
-          const SizedBox(height: 32),
-          isMobile
+          const SizedBox(height: AppSpacing.xxl),
+          isCompact
               ? Column(
                   children: [
                     _buildFormulario(),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: AppSpacing.xl),
                     _buildDesglose(),
                   ],
                 )
@@ -129,7 +120,7 @@ class _Calculadora3DScreenState extends State<Calculadora3DScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(flex: 3, child: _buildFormulario()),
-                    const SizedBox(width: 32),
+                    const SizedBox(width: AppSpacing.xxl),
                     Expanded(flex: 2, child: _buildDesglose()),
                   ],
                 ),
@@ -142,7 +133,7 @@ class _Calculadora3DScreenState extends State<Calculadora3DScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _seccion('MATERIAL', [
+        _seccion('MATERIAL', Icons.polymer_outlined, [
           _campo(
             label: 'Precio del filamento',
             hint: 'Lo que pagaste por el rollo, dividido entre 1 kg. Si el rollo de 1kg te costó 90 Bs, poné 90.',
@@ -156,9 +147,9 @@ class _Calculadora3DScreenState extends State<Calculadora3DScreen> {
             unidad: 'g',
           ),
         ]),
-        _seccion('TIEMPO DE IMPRESIÓN', [
+        _seccion('TIEMPO DE IMPRESIÓN', Icons.timer_outlined, [
           const Padding(
-            padding: EdgeInsets.only(bottom: 8),
+            padding: EdgeInsets.only(bottom: AppSpacing.sm),
             child: Text(
               'También lo ves en el slicer, como tiempo estimado de impresión.',
               style: TextStyle(color: AppColors.textDim, fontSize: 12),
@@ -169,14 +160,14 @@ class _Calculadora3DScreenState extends State<Calculadora3DScreen> {
               Expanded(
                 child: _campo(label: 'Horas', controller: _horasCtrl, unidad: 'h'),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: _campo(label: 'Minutos', controller: _minutosCtrl, unidad: 'min'),
               ),
             ],
           ),
         ]),
-        _seccion('ELECTRICIDAD', [
+        _seccion('ELECTRICIDAD', Icons.bolt_outlined, [
           _campo(
             label: 'Consumo de la impresora',
             hint: 'Cuánta energía usa tu impresora mientras imprime. La Ender 3 V3 SE ronda 120-150W.',
@@ -190,7 +181,7 @@ class _Calculadora3DScreenState extends State<Calculadora3DScreen> {
             unidad: 'Bs/kWh',
           ),
         ]),
-        _seccion('EXTRAS', [
+        _seccion('EXTRAS', Icons.tune_outlined, [
           _campo(
             label: 'Desgaste / mantenimiento',
             hint: 'Un % extra sobre material + luz para cubrir boquillas, correas, cama, etc.',
@@ -215,24 +206,33 @@ class _Calculadora3DScreenState extends State<Calculadora3DScreen> {
     );
   }
 
-  Widget _seccion(String titulo, List<Widget> hijos) {
+  Widget _seccion(String titulo, IconData icon, List<Widget> hijos) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            titulo,
-            style: const TextStyle(
-              color: AppColors.textDim,
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 1.2,
+      padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+      child: TechCard(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, size: 16, color: AppColors.impresion3dColor),
+                const SizedBox(width: AppSpacing.sm),
+                Text(
+                  titulo,
+                  style: const TextStyle(
+                    color: AppColors.textDim,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 10),
-          ...hijos,
-        ],
+            const SizedBox(height: AppSpacing.md),
+            ...hijos,
+          ],
+        ),
       ),
     );
   }
@@ -245,45 +245,44 @@ class _Calculadora3DScreenState extends State<Calculadora3DScreen> {
     bool resaltado = false,
   }) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: AppSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(color: AppColors.textLight, fontSize: 13, fontWeight: FontWeight.w600)),
-          const SizedBox(height: 4),
-          Container(
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(6),
-              border: Border.all(
-                color: resaltado ? AppColors.impresion3dColor.withValues(alpha: 0.5) : AppColors.border,
-              ),
+          Text(
+            label,
+            style: const TextStyle(
+              color: AppColors.textLight,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
             ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: controller,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    style: const TextStyle(color: AppColors.textLight, fontSize: 14),
-                    decoration: const InputDecoration(
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                      filled: false,
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(right: 10),
-                  child: Text(unidad, style: const TextStyle(color: AppColors.textDim, fontSize: 11)),
-                ),
-              ],
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          TextField(
+            controller: controller,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            style: const TextStyle(color: AppColors.textLight, fontSize: 14),
+            decoration: InputDecoration(
+              suffixText: unidad,
+              suffixStyle: const TextStyle(color: AppColors.textDim, fontSize: 12),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              enabledBorder: resaltado
+                  ? OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(2),
+                      borderSide: BorderSide(
+                        color: AppColors.impresion3dColor.withValues(alpha: 0.5),
+                      ),
+                    )
+                  : null,
             ),
           ),
           if (hint != null)
             Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Text(hint, style: const TextStyle(color: AppColors.textDim, fontSize: 11, height: 1.3)),
+              padding: const EdgeInsets.only(top: AppSpacing.xs),
+              child: Text(
+                hint,
+                style: const TextStyle(color: AppColors.textDim, fontSize: 11, height: 1.3),
+              ),
             ),
         ],
       ),
@@ -291,21 +290,29 @@ class _Calculadora3DScreenState extends State<Calculadora3DScreen> {
   }
 
   Widget _buildDesglose() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceElevated,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.border),
-      ),
+    return TechCard(
+      showCornerBrackets: true,
+      accentColor: AppColors.impresion3dColor,
+      padding: const EdgeInsets.all(AppSpacing.xl),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'DESGLOSE',
-            style: TextStyle(color: AppColors.textDim, fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1.2),
+          const Row(
+            children: [
+              Icon(Icons.receipt_long_outlined, size: 16, color: AppColors.impresion3dColor),
+              SizedBox(width: AppSpacing.sm),
+              Text(
+                'DESGLOSE',
+                style: TextStyle(
+                  color: AppColors.textDim,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.2,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: AppSpacing.lg),
           _filaDesglose('Material', _bs(_calculo.costoMaterial)),
           _filaDesglose(
             'Electricidad (${_calculo.tiempoHoras.toStringAsFixed(2)} h)',
@@ -319,29 +326,49 @@ class _Calculadora3DScreenState extends State<Calculadora3DScreen> {
             'Colchón fallos (${_calculo.fallosPorcentaje.toStringAsFixed(0)}%)',
             _bs(_calculo.costoFallos),
           ),
-          const Divider(height: 24),
+          const Divider(height: AppSpacing.xl),
           _filaDesglose('Costo total', _bs(_calculo.costoTotal), destacado: true),
-          const Divider(height: 24),
+          const Divider(height: AppSpacing.xl),
           _filaDesglose(
             'Ganancia (${_calculo.margenPorcentaje.toStringAsFixed(0)}%)',
             _bs(_calculo.ganancia),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.lg),
+          // Precio final destacado con glow sutil
           Container(
-            padding: const EdgeInsets.only(top: 12),
-            decoration: const BoxDecoration(
-              border: Border(top: BorderSide(color: AppColors.border)),
+            width: double.infinity,
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            decoration: ShapeDecoration(
+              color: AppColors.impresion3dColor.withValues(alpha: 0.08),
+              shape: const BeveledRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(6)),
+                side: BorderSide(color: AppColors.impresion3dColor),
+              ),
+              shadows: [
+                BoxShadow(
+                  color: AppColors.impresion3dColor.withValues(alpha: 0.15),
+                  blurRadius: 16,
+                ),
+              ],
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.end,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Precio de venta sugerido', style: TextStyle(color: AppColors.textLight, fontSize: 13)),
+                const Text(
+                  'PRECIO DE VENTA SUGERIDO',
+                  style: TextStyle(
+                    color: AppColors.textMuted,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xs),
                 Text(
                   _bs(_calculo.precioVenta),
                   style: const TextStyle(
                     color: AppColors.impresion3dColor,
-                    fontSize: 26,
+                    fontSize: 30,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
@@ -355,7 +382,7 @@ class _Calculadora3DScreenState extends State<Calculadora3DScreen> {
 
   Widget _filaDesglose(String label, String valor, {bool destacado = false}) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [

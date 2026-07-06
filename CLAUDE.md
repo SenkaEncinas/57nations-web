@@ -45,10 +45,12 @@ Pendiente → Imprimiendo → [En Pintado, solo si aplica] → Listo → Entrega
   público → Firestore + WhatsApp pre-armado a Senka), Senka habla con él, y
   Senka o Luchin cargan el pedido real desde el panel
 
-**Pendiente de implementar**: `origenPedido` ("senka"|"luchin") y
-`comisionLuchin` (porcentaje configurable, default en `configuracion/general`
-en Firestore, editable por pedido) — el modelo `Pedido` en
-`lib/models/models.dart` todavía NO tiene estos campos, hay que agregarlos.
+**Ya implementado**: `origenPedido` ("senka"|"luchin") y `comisionLuchin`
+existen en el modelo `Pedido` (`lib/models/models.dart`, clases `OrigenPedido`
+y `ComisionLuchin`) y se usan en `crear_pedido_screen.dart` y
+`pedidos_screen.dart`. El default de comisión hoy es la constante
+`ComisionLuchin.porcentajeDefault` (30%) — queda pendiente moverlo a
+`configuracion/general` en Firestore si se quiere editable sin deploy.
 
 ## Calculadora de costos 3D
 
@@ -90,16 +92,67 @@ Logos ya extraídos en `assets/logos/`:
 - `logo_57nations.png` — rectangular, para Navbar/Footer
 - `logo_57_cuadrado.png` — cuadrado, para favicon/ícono de app
 
+## Sistema de diseño UI (rediseño julio 2026 — seguir SIEMPRE)
+
+Rediseño completo del sitio público + panel aplicando el manual de marca.
+Reglas establecidas; cualquier pantalla nueva debe respetarlas:
+
+- **Esquinas recortadas, no redondeadas**: el theme global usa
+  `BeveledRectangleBorder` (chaflán) en botones, cards, chips, diálogos,
+  snackbars, etc. Para formas custom usar `AppTheme.cutCorner()`
+  (`lib/theme/app_theme.dart`). Excepción: los inputs usan `OutlineInputBorder`
+  con radio 2 (el framework exige `InputBorder`), que se ve prácticamente recto.
+- **Escala de espaciado** en `lib/theme/app_spacing.dart` (`AppSpacing`):
+  4/8/12/16/24/32/48/64/96. NUNCA valores sueltos tipo 17 o 23.
+  `AppSpacing.horizontal(context)`/`.vertical(context)` = padding estándar de
+  página; `AppSpacing.panel(context)` = padding del área de trabajo del panel;
+  `maxContentWidth = 1200` centra el contenido en monitores anchos.
+- **Breakpoints SOLO vía `Responsive`** (`lib/utils/responsive.dart`):
+  mobile <800, tablet 800-1200, desktop >=1200, e `isCompact` (<900) para el
+  panel interno. Helper `Responsive.valor(context, mobile:…, tablet:…, desktop:…)`.
+  Prohibido comparar `MediaQuery...width` contra números sueltos en pantallas.
+- **Widgets compartidos** en `lib/widgets/` (exportados por `widgets.dart`):
+  - `TechCard` — card estándar: esquinas recortadas + glow violeta sutil al
+    hover; `showCornerBrackets: true` solo en cards destacadas (no saturar).
+  - `SectionHeader` — overline con línea de circuito + título + subtítulo;
+    `compacto: true` dentro del panel.
+  - `PageSection` — sección pública con fondo alternado (negro/surface),
+    padding del sistema y contenido centrado a 1200px.
+  - `StatusBadge` + `colorEstadoPedido()` + `FlujoPedidoStepper`
+    (`status_badge.dart`) — estados de pedido centralizados; nunca duplicar
+    el mapa de colores por pantalla.
+  - `PageHero` — hero de páginas internas: overline, grid de circuito sutil
+    (`CircuitGridPainter`, reutilizable en fondos) y acciones opcionales.
+  - `ServicioScreenBase` (`lib/screens/servicios/servicio_screen_base.dart`) —
+    plantilla única de las 5 páginas de servicio (hero + capacidades + CTA).
+- **Glow siempre sutil y nunca en todo a la vez** (manual): solo en hover de
+  elementos interactivos y en el precio destacado de la calculadora.
+- **Nada de emojis como íconos de datos** en el panel: usar `Icons.*_outlined`
+  (patrón `_InfoFila` en `pedidos_screen.dart`).
+- **Navegación**: la Navbar resalta la ruta activa (compara
+  `ModalRoute.settings.name`), el menú Servicios usa `MenuAnchor` anclado, y
+  el menú mobile es un panel lateral deslizante (no bottom sheet).
+- **Tipografía**: sigue la default de Flutter (no hay .ttf del manual todavía).
+  Jerarquía por peso/tamaño/letter-spacing en `AppTheme._buildTextTheme`.
+  Overlines siempre en MAYÚSCULAS con letterSpacing 2+.
+
 ## Estado actual (qué falta)
 
-- [ ] Agregar `origenPedido` y `comisionLuchin` al modelo `Pedido` + pantallas
-- [ ] Terminar de aplicar la estética de marca al resto del sitio público
-      (Servicios, Portfolio, Contacto, Sobre Nosotros — el Home/Navbar/Footer
-      ya están al día)
+- [x] Agregar `origenPedido` y `comisionLuchin` al modelo `Pedido` + pantallas
+- [x] Aplicar la estética de marca a TODO el sitio público y el panel
+      (rediseño completo julio 2026 — ver sección "Sistema de diseño UI")
 - [ ] Subida real de fotos a Storage (hoy es URL manual, Storage requiere
       plan Blaze — evaluar si vale la pena o seguir con URLs)
 - [ ] Pantalla para que Admin cree usuarios sin ir a Firebase Console
-- [ ] Completar contenido real de las 5 páginas de servicios (hoy son stubs)
+- [ ] Validar/completar contenido real de las 5 páginas de servicios: ya usan
+      `ServicioScreenBase` con capacidades derivadas de las descripciones del
+      Home, falta que Senka confirme los textos definitivos
+- [ ] Detalle de proyecto del Portfolio: hoy es placeholder con estética de
+      marca, falta mostrar los datos reales del proyecto (`proyectoId` ya llega)
+- [ ] Botón "VER" de las cards del Catálogo 3D no hace nada todavía (falta
+      vista de detalle de pieza)
+- [ ] Si el manual de marca nombra una tipografía oficial (sección 04),
+      conseguir el .ttf, declararla en pubspec y usarla en AppTheme
 - [ ] Arreglar `.github/workflows/firebase-hosting-pull-request.yml` (mismo
       fix que se hizo en `firebase-hosting-merge.yml`: agregar pasos de
       Flutter en vez de `npm ci && npm run build`)

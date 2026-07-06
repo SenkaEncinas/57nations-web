@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
+import '../../theme/app_spacing.dart';
 import '../../models/models.dart';
 import '../../services/auth_service.dart';
+import '../../utils/responsive.dart';
 import 'login_screen.dart';
 import 'calculadora_screen.dart';
 import 'pedidos_screen.dart';
@@ -9,6 +11,7 @@ import 'pedidos_pintado_screen.dart';
 import 'crear_pedido_screen.dart';
 import 'cotizaciones_panel_screen.dart';
 import 'portfolio_admin_screen.dart';
+
 /// Contenedor principal del panel interno. Arma el menú dinámicamente según
 /// los permisos de [usuario], para que agregar un socio/servicio nuevo en el
 /// futuro sea solo cuestión de datos (Firestore), no de código.
@@ -118,7 +121,7 @@ class _PanelShellState extends State<PanelShell> {
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = MediaQuery.of(context).size.width < 900;
+    final isCompact = Responsive.isCompact(context);
     final seccionActual = _secciones.firstWhere(
       (s) => s.id == _seccionActiva,
       orElse: () => _PanelSeccion(
@@ -131,19 +134,20 @@ class _PanelShellState extends State<PanelShell> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: isMobile
+      appBar: isCompact
           ? AppBar(
               title: Text(seccionActual.label),
               actions: [
                 IconButton(
                   icon: const Icon(Icons.logout),
+                  tooltip: 'Cerrar sesión',
                   onPressed: _cerrarSesion,
                 ),
               ],
             )
           : null,
-      drawer: isMobile ? _buildDrawer() : null,
-      body: isMobile
+      drawer: isCompact ? _buildDrawer() : null,
+      body: isCompact
           ? seccionActual.builder(widget.usuario)
           : Row(
               children: [
@@ -157,53 +161,47 @@ class _PanelShellState extends State<PanelShell> {
   Widget _buildSidebar() {
     return Container(
       width: 260,
-      color: AppColors.surface,
+      decoration: const BoxDecoration(
+        color: AppColors.surface,
+        border: Border(right: BorderSide(color: AppColors.border)),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Container(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(AppSpacing.xl),
             decoration: const BoxDecoration(
               border: Border(bottom: BorderSide(color: AppColors.border)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  '57 NATIONS',
-                  style: TextStyle(
-                    color: AppColors.violetaPrincipal,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 18,
-                  ),
+                Image.asset(
+                  'assets/logos/logo_57nations.png',
+                  height: 28,
+                  fit: BoxFit.contain,
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  widget.usuario.nombre,
-                  style: const TextStyle(color: AppColors.textLight, fontSize: 14),
-                ),
-                Text(
-                  widget.usuario.rol.toUpperCase(),
-                  style: const TextStyle(color: AppColors.textDim, fontSize: 11, letterSpacing: 1),
-                ),
+                const SizedBox(height: AppSpacing.lg),
+                _UsuarioChip(usuario: widget.usuario),
               ],
             ),
           ),
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.symmetric(vertical: 12),
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
               children: _secciones.map((s) => _buildNavItem(s)).toList(),
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             child: OutlinedButton.icon(
               onPressed: _cerrarSesion,
               icon: const Icon(Icons.logout, size: 18),
-              label: const Text('Cerrar sesión'),
+              label: const Text('CERRAR SESIÓN'),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.textMuted,
                 side: const BorderSide(color: AppColors.border),
+                padding: const EdgeInsets.symmetric(vertical: 14),
               ),
             ),
           ),
@@ -214,19 +212,32 @@ class _PanelShellState extends State<PanelShell> {
 
   Widget _buildDrawer() {
     return Drawer(
-      backgroundColor: AppColors.surface,
       child: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Padding(
-              padding: const EdgeInsets.all(20),
-              child: Text(
-                widget.usuario.nombre,
-                style: const TextStyle(color: AppColors.textLight, fontSize: 16),
+              padding: const EdgeInsets.all(AppSpacing.xl),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Image.asset(
+                    'assets/logos/logo_57nations.png',
+                    height: 26,
+                    fit: BoxFit.contain,
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  _UsuarioChip(usuario: widget.usuario),
+                ],
               ),
             ),
-            ..._secciones.map((s) => _buildNavItem(s)),
+            const Divider(height: 1),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                children: _secciones.map((s) => _buildNavItem(s)).toList(),
+              ),
+            ),
           ],
         ),
       ),
@@ -235,23 +246,91 @@ class _PanelShellState extends State<PanelShell> {
 
   Widget _buildNavItem(_PanelSeccion s) {
     final activo = s.id == _seccionActiva;
-    return ListTile(
-      leading: Icon(s.icon, color: activo ? AppColors.cianTech : AppColors.textMuted),
-      title: Text(
-        s.label,
-        style: TextStyle(
-          color: activo ? AppColors.textLight : AppColors.textMuted,
-          fontWeight: activo ? FontWeight.w700 : FontWeight.w400,
-        ),
-      ),
-      selected: activo,
-      selectedTileColor: AppColors.violetaPrincipal.withValues(alpha: 0.12),
+
+    return InkWell(
       onTap: () {
         setState(() => _seccionActiva = s.id);
-        if (MediaQuery.of(context).size.width < 900) {
+        if (Responsive.isCompact(context)) {
           Navigator.pop(context);
         }
       },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: 14),
+        decoration: BoxDecoration(
+          color: activo ? AppColors.violetaPrincipal.withValues(alpha: 0.1) : null,
+          border: Border(
+            left: BorderSide(
+              color: activo ? AppColors.cianTech : Colors.transparent,
+              width: 2,
+            ),
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(s.icon, size: 20, color: activo ? AppColors.cianTech : AppColors.textMuted),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Text(
+                s.label,
+                style: TextStyle(
+                  color: activo ? AppColors.textLight : AppColors.textMuted,
+                  fontSize: 14,
+                  fontWeight: activo ? FontWeight.w700 : FontWeight.w400,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Nombre + rol del usuario logueado, con indicador de sesión activa.
+class _UsuarioChip extends StatelessWidget {
+  final Usuario usuario;
+
+  const _UsuarioChip({required this.usuario});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: const BoxDecoration(
+            color: AppColors.success,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                usuario.nombre,
+                style: const TextStyle(
+                  color: AppColors.textLight,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+              Text(
+                usuario.rol.toUpperCase(),
+                style: const TextStyle(
+                  color: AppColors.textDim,
+                  fontSize: 10,
+                  letterSpacing: 1.2,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
@@ -262,10 +341,17 @@ class _SinPermisosView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Center(
-      child: Text(
-        'Tu usuario no tiene módulos habilitados.\nContacta a Admin.',
-        textAlign: TextAlign.center,
-        style: TextStyle(color: AppColors.textMuted),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.lock_person_outlined, color: AppColors.textDim, size: 40),
+          SizedBox(height: AppSpacing.lg),
+          Text(
+            'Tu usuario no tiene módulos habilitados.\nContacta a Admin.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: AppColors.textMuted),
+          ),
+        ],
       ),
     );
   }

@@ -1,59 +1,41 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
-import '../../routes/app_routes.dart';
-import '../../widgets/widgets.dart';
+import 'servicio_screen_base.dart';
 
 class ArduinoScreen extends StatelessWidget {
   const ArduinoScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = MediaQuery.of(context).size.width < 800;
-
-    return Scaffold(
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            const NavBar(),
-            const PageHero(
-              titulo: 'ARDUINO & ESP32',
-              subtitulo:
-                  'IoT, automatización y control remoto de dispositivos inteligentes.',
-              colorAcento: AppColors.arduinoColor,
-            ),
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.symmetric(
-                horizontal: isMobile ? 20 : 60,
-                vertical: isMobile ? 50 : 80,
-              ),
-              color: AppColors.background,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(Icons.memory, color: AppColors.arduinoColor, size: 40),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Estamos terminando de armar el contenido detallado de este servicio.',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Mientras tanto, contanos tu proyecto y te asesoramos directamente.',
-                    style: TextStyle(color: AppColors.textMuted, height: 1.6),
-                  ),
-                  const SizedBox(height: 28),
-                  ElevatedButton(
-                    onPressed: () => Navigator.pushNamed(context, AppRoutes.cotizacion),
-                    child: const Text('SOLICITAR COTIZACIÓN'),
-                  ),
-                ],
-              ),
-            ),
-            const Footer(),
-          ],
+    return const ServicioScreenBase(
+      titulo: 'Arduino & ESP32',
+      subtitulo:
+          'IoT, automatización y control remoto de dispositivos inteligentes: '
+          'electrónica que conecta el mundo físico con tu teléfono.',
+      colorAcento: AppColors.arduinoColor,
+      capacidades: [
+        CapacidadServicio(
+          icon: Icons.sensors_outlined,
+          titulo: 'IoT y sensores',
+          descripcion:
+              'Medición de temperatura, humedad, movimiento o consumo, con '
+              'datos visibles desde cualquier lugar.',
         ),
-      ),
+        CapacidadServicio(
+          icon: Icons.settings_remote_outlined,
+          titulo: 'Control remoto',
+          descripcion:
+              'Encendé, apagá y programá dispositivos desde el celular: luces, '
+              'riego, portones, lo que necesites.',
+        ),
+        CapacidadServicio(
+          icon: Icons.precision_manufacturing_outlined,
+          titulo: 'Automatización física',
+          descripcion:
+              'Procesos del mundo real automatizados con ESP32 y Arduino, '
+              'integrados con tus sistemas.',
+        ),
+      ],
     );
   }
 }

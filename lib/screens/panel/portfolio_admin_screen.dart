@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
+import '../../theme/app_spacing.dart';
+import '../../theme/app_theme.dart';
 import '../../models/models.dart';
 import '../../services/firebase_service.dart';
+import '../../utils/responsive.dart';
 import '../../widgets/widgets.dart';
 
 /// Pantalla de administración del Portfolio (permiso 'portfolio.administrar').
@@ -61,14 +64,14 @@ class _PortfolioAdminScreenState extends State<PortfolioAdminScreen> {
     final confirmar = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surfaceElevated,
         title: const Text('¿Eliminar proyecto?', style: TextStyle(color: AppColors.textLight)),
         content: Text(
           'Esto borra "${proyecto.titulo}" de la web pública. No se puede deshacer.',
           style: const TextStyle(color: AppColors.textMuted),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
+          TextButton(
+              onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             child: const Text('Eliminar', style: TextStyle(color: AppColors.error)),
@@ -84,7 +87,8 @@ class _PortfolioAdminScreenState extends State<PortfolioAdminScreen> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('No se pudo eliminar: $e'), backgroundColor: AppColors.error),
+            SnackBar(
+                content: Text('No se pudo eliminar: $e'), backgroundColor: AppColors.error),
           );
         }
       }
@@ -93,38 +97,44 @@ class _PortfolioAdminScreenState extends State<PortfolioAdminScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = MediaQuery.of(context).size.width < 900;
+    final isCompact = Responsive.isCompact(context);
 
     return RefreshIndicator(
       onRefresh: _cargar,
       child: SingleChildScrollView(
-        padding: EdgeInsets.all(isMobile ? 16 : 32),
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.all(AppSpacing.panel(context)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Administrar Portfolio', style: Theme.of(context).textTheme.headlineMedium),
+                const Expanded(
+                  child: SectionHeader(
+                    overline: 'Panel',
+                    titulo: 'Administrar Portfolio',
+                    subtitulo: 'Estos proyectos aparecen en la página pública de Portfolio.',
+                    compacto: true,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.lg),
                 ElevatedButton.icon(
                   onPressed: () => _abrirFormulario(),
                   icon: const Icon(Icons.add, size: 18),
-                  label: Text(isMobile ? 'Nuevo' : 'Nuevo Proyecto'),
+                  label: Text(isCompact ? 'NUEVO' : 'NUEVO PROYECTO'),
                 ),
               ],
             ),
-            const SizedBox(height: 4),
-            const Text(
-              'Estos proyectos aparecen en la página pública de Portfolio.',
-              style: TextStyle(color: AppColors.textMuted),
-            ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppSpacing.xl),
             if (_cargando)
               const EstadoCargando(mensaje: 'Cargando proyectos...')
             else if (_error != null)
               EstadoError(mensaje: _error!, onReintentar: _cargar)
             else if (_proyectos.isEmpty)
-              const EstadoVacio(icon: Icons.collections_bookmark_outlined, mensaje: 'Todavía no hay proyectos cargados.')
+              const EstadoVacio(
+                  icon: Icons.collections_bookmark_outlined,
+                  mensaje: 'Todavía no hay proyectos cargados.')
             else
               ..._proyectos.map((p) => _ProyectoAdminCard(
                     proyecto: p,
@@ -151,72 +161,79 @@ class _ProyectoAdminCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceElevated,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Container(
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+      child: TechCard(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
               width: 72,
               height: 72,
-              color: AppColors.surface,
+              clipBehavior: Clip.hardEdge,
+              decoration: ShapeDecoration(
+                color: AppColors.surface,
+                shape: AppTheme.cutCorner(
+                  size: AppTheme.cutSizeSm,
+                  side: const BorderSide(color: AppColors.border),
+                ),
+              ),
               child: proyecto.imagenes.isNotEmpty
                   ? Image.network(proyecto.imagenes.first, fit: BoxFit.cover)
                   : const Icon(Icons.image_not_supported, color: AppColors.textDim),
             ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            const SizedBox(width: AppSpacing.lg),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    proyecto.titulo,
+                    style: const TextStyle(
+                        color: AppColors.textLight, fontWeight: FontWeight.w700, fontSize: 15),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Wrap(
+                    spacing: AppSpacing.sm,
+                    runSpacing: AppSpacing.xs,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      StatusBadge(texto: proyecto.categoria, color: AppColors.violetaPrincipal),
+                      StatusBadge(
+                        texto: proyecto.estado,
+                        color: proyecto.estado == 'Completo'
+                            ? AppColors.success
+                            : AppColors.warning,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    proyecto.descripcion,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+                  ),
+                ],
+              ),
+            ),
+            Column(
               children: [
-                Text(proyecto.titulo,
-                    style: const TextStyle(color: AppColors.textLight, fontWeight: FontWeight.w700, fontSize: 15)),
-                const SizedBox(height: 4),
-                Wrap(
-                  spacing: 8,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    Chip(
-                      label: Text(proyecto.categoria, style: const TextStyle(fontSize: 11)),
-                      backgroundColor: AppColors.violetaPrincipal.withValues(alpha: 0.15),
-                      side: BorderSide(color: AppColors.violetaPrincipal.withValues(alpha: 0.4)),
-                      visualDensity: VisualDensity.compact,
-                    ),
-                    Text(proyecto.estado, style: const TextStyle(color: AppColors.textDim, fontSize: 12)),
-                  ],
+                IconButton(
+                  icon: const Icon(Icons.edit_outlined, color: AppColors.cianTech, size: 20),
+                  tooltip: 'Editar',
+                  onPressed: onEditar,
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  proyecto.descripcion,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+                IconButton(
+                  icon: const Icon(Icons.delete_outline, color: AppColors.error, size: 20),
+                  tooltip: 'Eliminar',
+                  onPressed: onEliminar,
                 ),
               ],
             ),
-          ),
-          Column(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.edit_outlined, color: AppColors.cianTech, size: 20),
-                onPressed: onEditar,
-              ),
-              IconButton(
-                icon: const Icon(Icons.delete_outline, color: AppColors.error, size: 20),
-                onPressed: onEliminar,
-              ),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -259,7 +276,8 @@ class _FormularioProyectoDialogState extends State<_FormularioProyectoDialog> {
     _tituloCtrl = TextEditingController(text: p?.titulo ?? '');
     _clienteCtrl = TextEditingController(text: p?.cliente ?? '');
     _descripcionCtrl = TextEditingController(text: p?.descripcion ?? '');
-    _imagenUrlCtrl = TextEditingController(text: p?.imagenes.isNotEmpty == true ? p!.imagenes.first : '');
+    _imagenUrlCtrl =
+        TextEditingController(text: p?.imagenes.isNotEmpty == true ? p!.imagenes.first : '');
     _tecnologiasCtrl = TextEditingController(text: p?.tecnologias.join(', ') ?? '');
     _contenidoCtrl = TextEditingController(text: p?.contenidoDetallado ?? '');
     _categoria = p?.categoria ?? CategoriasProyecto.web;
@@ -288,7 +306,11 @@ class _FormularioProyectoDialogState extends State<_FormularioProyectoDialog> {
         cliente: _clienteCtrl.text.trim(),
         descripcion: _descripcionCtrl.text.trim(),
         imagenes: _imagenUrlCtrl.text.trim().isEmpty ? [] : [_imagenUrlCtrl.text.trim()],
-        tecnologias: _tecnologiasCtrl.text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
+        tecnologias: _tecnologiasCtrl.text
+            .split(',')
+            .map((e) => e.trim())
+            .where((e) => e.isNotEmpty)
+            .toList(),
         categoria: _categoria,
         estado: _estado,
         fechaCreacion: widget.proyectoExistente?.fechaCreacion ?? DateTime.now(),
@@ -318,51 +340,62 @@ class _FormularioProyectoDialogState extends State<_FormularioProyectoDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = MediaQuery.of(context).size.width < 600;
+    final isMobile = Responsive.isMobile(context);
 
     return Dialog(
-      backgroundColor: AppColors.surfaceElevated,
       insetPadding: EdgeInsets.symmetric(horizontal: isMobile ? 16 : 80, vertical: 24),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 600, maxHeight: 700),
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(AppSpacing.xl),
           child: Form(
             key: _formKey,
             child: SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    _esEdicion ? 'Editar Proyecto' : 'Nuevo Proyecto',
-                    style: Theme.of(context).textTheme.titleLarge,
+                  Row(
+                    children: [
+                      Icon(
+                        _esEdicion ? Icons.edit_outlined : Icons.add_circle_outline,
+                        color: AppColors.violetaPrincipal,
+                        size: 20,
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Text(
+                        _esEdicion ? 'Editar Proyecto' : 'Nuevo Proyecto',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: AppSpacing.xl),
                   _campo('Título', _tituloCtrl, requerido: true),
                   _campo('Cliente', _clienteCtrl),
                   _campo('Descripción corta', _descripcionCtrl, lineas: 2, requerido: true),
                   _campo('URL de imagen', _imagenUrlCtrl),
                   _campo('Tecnologías (separadas por coma)', _tecnologiasCtrl),
                   _campo('Contenido detallado', _contenidoCtrl, lineas: 4),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.md),
                   DropdownButtonFormField<String>(
                     initialValue: _categoria,
                     decoration: const InputDecoration(labelText: 'Categoría'),
+                    dropdownColor: AppColors.surfaceElevated,
                     items: CategoriasProyecto.todas
                         .map((c) => DropdownMenuItem(value: c, child: Text(c)))
                         .toList(),
                     onChanged: (v) => setState(() => _categoria = v ?? _categoria),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.md),
                   DropdownButtonFormField<String>(
                     initialValue: _estado,
                     decoration: const InputDecoration(labelText: 'Estado'),
+                    dropdownColor: AppColors.surfaceElevated,
                     items: ['Completo', 'En progreso']
                         .map((c) => DropdownMenuItem(value: c, child: Text(c)))
                         .toList(),
                     onChanged: (v) => setState(() => _estado = v ?? _estado),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: AppSpacing.xl),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
@@ -370,16 +403,18 @@ class _FormularioProyectoDialogState extends State<_FormularioProyectoDialog> {
                         onPressed: () => Navigator.pop(context),
                         child: const Text('Cancelar'),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppSpacing.sm),
                       ElevatedButton(
                         onPressed: _guardando ? null : _guardar,
                         child: _guardando
                             ? const SizedBox(
                                 height: 18,
                                 width: 18,
-                                child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation(AppColors.textLight)),
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation(AppColors.textLight)),
                               )
-                            : const Text('Guardar'),
+                            : const Text('GUARDAR'),
                       ),
                     ],
                   ),
@@ -392,15 +427,17 @@ class _FormularioProyectoDialogState extends State<_FormularioProyectoDialog> {
     );
   }
 
-  Widget _campo(String label, TextEditingController ctrl, {int lineas = 1, bool requerido = false}) {
+  Widget _campo(String label, TextEditingController ctrl,
+      {int lineas = 1, bool requerido = false}) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.only(bottom: AppSpacing.lg),
       child: TextFormField(
         controller: ctrl,
         maxLines: lineas,
         style: const TextStyle(color: AppColors.textLight),
         decoration: InputDecoration(labelText: label),
-        validator: requerido ? (v) => (v?.isEmpty ?? true) ? 'Campo requerido' : null : null,
+        validator:
+            requerido ? (v) => (v?.isEmpty ?? true) ? 'Campo requerido' : null : null,
       ),
     );
   }

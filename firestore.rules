@@ -1,0 +1,108 @@
+rules_version = '2';
+
+// Reglas de seguridad de Firestore — 57 Nations
+//
+// Colecciones confirmadas en el código (auditoría completa de
+// `.collection(...)` en lib/services/*.dart, julio 2026):
+//   proyectos, impresiones3d, categorias3d, cotizaciones, equipo,
+//   pedidos, usuarios
+// "configuracion" y "actividades" NO existen todavía en el código
+// (no hay un solo `.collection('configuracion')` ni `.collection('actividades')`
+// en el proyecto). Se dejan sus bloques ya preparados para cuando se creen.
+//
+// Importante sobre cómo lee Firestore estas reglas: si dos bloques `match`
+// coinciden con la misma ruta, Firestore evalúa TODOS y permite el acceso
+// si CUALQUIERA de ellos lo permite (es un OR, no "gana el más específico").
+// Por eso este archivo NO usa un catch-all `match /{document=**}` genérico:
+// un catch-all así habilitaría escritura a "usuarios" o lectura anónima a
+// "cotizaciones" aunque sus bloques específicos digan que no. En vez de eso,
+// cada colección nueva que agregues en código debe sumar su propio bloque acá
+// antes de escribir en ella (si no tiene bloque, Firestore la deniega por
+// defecto — más seguro que quedar afuera).
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Username del usuario autenticado, a partir de su email interno
+    // "{username}@57nations.internal" (ver auth_service.dart).
+    function usernameDelSolicitante() {
+      return request.auth.token.email.split('@')[0];
+    }
+
+    // True si quien hace la petición está logueado Y su propio documento
+    // en `usuarios` tiene el permiso 'admin.total'.
+    function esAdmin() {
+      return request.auth != null &&
+        get(/databases/$(database)/documents/usuarios/$(usernameDelSolicitante()))
+          .data.permisos.hasAny(['admin.total']);
+    }
+
+    // ==================== CATÁLOGO PÚBLICO (sin login) ====================
+    // Lectura pública porque son las pantallas públicas de la web
+    // (Home, Portfolio, Catálogo 3D, Sobre Nosotros). Escritura solo
+    // desde el panel interno (portfolio_admin_screen.dart hoy escribe
+    // "proyectos"; "impresiones3d", "categorias3d" y "equipo" no tienen
+    // pantalla de administración todavía, pero se deja el mismo criterio
+    // listo para cuando la tengan).
+    match /proyectos/{id} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    match /impresiones3d/{id} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    match /categorias3d/{id} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    match /equipo/{id} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // ==================== COTIZACIONES ====================
+    // Cualquiera (sin login) puede CREAR una cotización desde el
+    // formulario público — nunca leer, editar ni borrar las de otros.
+    // El panel interno (cotizaciones_panel_screen.dart) sí necesita leerlas
+    // para que Admin las revise, por eso read/update/delete son solo
+    // para usuarios autenticados, no "nadie".
+    match /cotizaciones/{id} {
+      allow create: if true;
+      allow read, update, delete: if request.auth != null;
+    }
+
+    // ==================== SOLO USUARIOS INTERNOS AUTENTICADOS ====================
+    match /pedidos/{id} {
+      allow read, write: if request.auth != null;
+    }
+
+    // No hay `.collection('configuracion')` en el código todavía
+    // (CLAUDE.md la menciona como pendiente para el % default de comisión
+    // de Luchin). Bloque listo para cuando se implemente.
+    match /configuracion/{id} {
+      allow read, write: if request.auth != null;
+    }
+
+    // No existe en el código actual. Bloque preparado por si se agrega
+    // una colección de auditoría/actividad interna más adelante.
+    match /actividades/{id} {
+      allow read, write: if request.auth != null;
+    }
+
+    // ==================== USUARIOS ====================
+    // Cada usuario lee SOLO su propio documento (comparando su email
+    // interno con el id del documento, que es el username — ver
+    // Usuario.emailInterno en models.dart). Nadie escribe desde el
+    // cliente salvo un admin.total (crearUsuarioInterno() y
+    // actualizarPermisosUsuario() en el código actual escriben directo
+    // desde Flutter, no vía Cloud Function).
+    match /usuarios/{username} {
+      allow read: if request.auth != null
+                  && request.auth.token.email == username + '@57nations.internal';
+      allow write: if esAdmin();
+    }
+  }
+}
