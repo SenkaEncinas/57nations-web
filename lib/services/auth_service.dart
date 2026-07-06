@@ -45,13 +45,9 @@ class AuthService {
   /// documento con id = username). Este documento NO tiene la contraseña
   /// (eso lo maneja Firebase Auth); solo guarda rol y permisos.
   Future<Usuario?> obtenerPerfilUsuario(String username) async {
-    try {
-      final doc = await _firestore.collection('usuarios').doc(username).get();
-      if (doc.exists) {
-        return Usuario.fromFirestore(doc);
-      }
-    } catch (e) {
-      print('Error al obtener perfil de usuario: $e');
+    final doc = await _firestore.collection('usuarios').doc(username).get();
+    if (doc.exists) {
+      return Usuario.fromFirestore(doc);
     }
     return null;
   }

@@ -355,6 +355,59 @@ class CalculoCostos3D {
   }
 }
 
+// ==================== ORIGEN DE PEDIDO Y COMISIÓN LUCHIN ====================
+class OrigenPedido {
+  static const String senka = 'senka';
+  static const String luchin = 'luchin';
+}
+
+/// Comisión de Luchin sobre la utilidad de los pedidos que él origina.
+/// `monto` se calcula como `ganancia * (porcentaje / 100)` y se guarda ya
+/// resuelto (mismo patrón que [CalculoCostos3D]) para no recalcular en listados.
+class ComisionLuchin {
+  /// Porcentaje default sugerido al cargar un pedido de origen Luchin.
+  /// Editable por pedido individual desde el formulario.
+  static const double porcentajeDefault = 30;
+
+  final bool aplica;
+  final double porcentaje; // %
+  final double monto; // Bs, ya calculado sobre la ganancia del pedido
+
+  const ComisionLuchin({
+    required this.aplica,
+    required this.porcentaje,
+    required this.monto,
+  });
+
+  factory ComisionLuchin.calcular({
+    required bool aplica,
+    required double porcentaje,
+    required double ganancia,
+  }) {
+    return ComisionLuchin(
+      aplica: aplica,
+      porcentaje: porcentaje,
+      monto: aplica ? ganancia * (porcentaje / 100) : 0,
+    );
+  }
+
+  factory ComisionLuchin.fromMap(Map<String, dynamic> data) {
+    return ComisionLuchin(
+      aplica: data['aplica'] ?? false,
+      porcentaje: (data['porcentaje'] ?? 0).toDouble(),
+      monto: (data['monto'] ?? 0).toDouble(),
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'aplica': aplica,
+      'porcentaje': porcentaje,
+      'monto': monto,
+    };
+  }
+}
+
 // ==================== PEDIDO ====================
 /// Estados posibles. No todos los pedidos pasan por "enPintado":
 /// eso depende de [requierePintado].
@@ -399,6 +452,9 @@ class Pedido {
   final String? cotizacionOrigenId; // referencia opcional a la cotización web
   final DateTime fechaCreacion;
 
+  final String origenPedido; // OrigenPedido.senka | OrigenPedido.luchin
+  final ComisionLuchin? comisionLuchin; // solo relevante si origenPedido == luchin
+
   Pedido({
     required this.id,
     required this.clienteNombre,
@@ -417,6 +473,8 @@ class Pedido {
     required this.creadoPorUsername,
     this.cotizacionOrigenId,
     required this.fechaCreacion,
+    this.origenPedido = OrigenPedido.senka,
+    this.comisionLuchin,
   });
 
   factory Pedido.fromFirestore(DocumentSnapshot doc) {
@@ -441,6 +499,10 @@ class Pedido {
       creadoPorUsername: data['creadoPorUsername'] ?? '',
       cotizacionOrigenId: data['cotizacionOrigenId'],
       fechaCreacion: (data['fechaCreacion'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      origenPedido: data['origenPedido'] ?? OrigenPedido.senka,
+      comisionLuchin: data['comisionLuchin'] != null
+          ? ComisionLuchin.fromMap(Map<String, dynamic>.from(data['comisionLuchin']))
+          : null,
     );
   }
 
@@ -466,6 +528,8 @@ class Pedido {
       'creadoPorUsername': creadoPorUsername,
       'cotizacionOrigenId': cotizacionOrigenId,
       'fechaCreacion': Timestamp.fromDate(fechaCreacion),
+      'origenPedido': origenPedido,
+      'comisionLuchin': comisionLuchin?.toMap(),
     };
   }
 
@@ -476,6 +540,8 @@ class Pedido {
     DateTime? fechaEntregaPintado,
     DateTime? fechaPintadoCompletado,
     String? notasPintado,
+    String? origenPedido,
+    ComisionLuchin? comisionLuchin,
   }) {
     return Pedido(
       id: id,
@@ -495,6 +561,8 @@ class Pedido {
       creadoPorUsername: creadoPorUsername,
       cotizacionOrigenId: cotizacionOrigenId,
       fechaCreacion: fechaCreacion,
+      origenPedido: origenPedido ?? this.origenPedido,
+      comisionLuchin: comisionLuchin ?? this.comisionLuchin,
     );
   }
 }

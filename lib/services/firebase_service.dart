@@ -1,179 +1,113 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/models.dart';
 
+/// Todos los métodos de lectura dejan que las excepciones se propaguen
+/// (sin capturarlas ni devolver listas vacías silenciosamente): así cada
+/// pantalla puede distinguir "no hay datos" de "falló la conexión" y
+/// mostrarle al usuario un estado de error real en vez de una lista vacía
+/// sin explicación.
 class FirebaseService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // ==================== PROYECTOS ====================
   Future<List<Proyecto>> obtenerProyectos() async {
-    try {
-      final snapshot = await _firestore
-          .collection('proyectos')
-          .orderBy('fechaCreacion', descending: true)
-          .get();
-      return snapshot.docs.map((doc) => Proyecto.fromFirestore(doc)).toList();
-    } catch (e) {
-      print('Error al obtener proyectos: $e');
-      return [];
-    }
+    final snapshot = await _firestore
+        .collection('proyectos')
+        .orderBy('fechaCreacion', descending: true)
+        .get();
+    return snapshot.docs.map((doc) => Proyecto.fromFirestore(doc)).toList();
   }
 
   Future<Proyecto?> obtenerProyecto(String id) async {
-    try {
-      final doc = await _firestore.collection('proyectos').doc(id).get();
-      if (doc.exists) {
-        return Proyecto.fromFirestore(doc);
-      }
-    } catch (e) {
-      print('Error al obtener proyecto: $e');
+    final doc = await _firestore.collection('proyectos').doc(id).get();
+    if (doc.exists) {
+      return Proyecto.fromFirestore(doc);
     }
     return null;
   }
 
-Future<void> crearProyecto(Proyecto proyecto) async {
-    try {
-      await _firestore.collection('proyectos').doc(proyecto.id).set(
-            proyecto.toFirestore(),
-          );
-    } catch (e) {
-      print('Error al crear proyecto: $e');
-      rethrow;
-    }
+  Future<void> crearProyecto(Proyecto proyecto) async {
+    await _firestore.collection('proyectos').doc(proyecto.id).set(
+          proyecto.toFirestore(),
+        );
   }
 
   Future<void> actualizarProyecto(String id, Proyecto proyecto) async {
-    try {
-      await _firestore.collection('proyectos').doc(id).update(
-            proyecto.toFirestore(),
-          );
-    } catch (e) {
-      print('Error al actualizar proyecto: $e');
-      rethrow;
-    }
+    await _firestore.collection('proyectos').doc(id).update(
+          proyecto.toFirestore(),
+        );
   }
 
   Future<void> eliminarProyecto(String id) async {
-    try {
-      await _firestore.collection('proyectos').doc(id).delete();
-    } catch (e) {
-      print('Error al eliminar proyecto: $e');
-      rethrow;
-    }
+    await _firestore.collection('proyectos').doc(id).delete();
   }
 
   // ==================== IMPRESIONES 3D ====================
   Future<List<Impresion3D>> obtenerImpresiones3D() async {
-    try {
-      final snapshot = await _firestore
-          .collection('impresiones3d')
-          .where('disponible', isEqualTo: true)
-          .orderBy('fechaCreacion', descending: true)
-          .get();
-      return snapshot.docs.map((doc) => Impresion3D.fromFirestore(doc)).toList();
-    } catch (e) {
-      print('Error al obtener impresiones 3D: $e');
-      return [];
-    }
+    final snapshot = await _firestore
+        .collection('impresiones3d')
+        .where('disponible', isEqualTo: true)
+        .orderBy('fechaCreacion', descending: true)
+        .get();
+    return snapshot.docs.map((doc) => Impresion3D.fromFirestore(doc)).toList();
   }
 
   Future<List<Impresion3D>> obtenerImpresiones3DPorCategoria(String categoria) async {
-    try {
-      final snapshot = await _firestore
-          .collection('impresiones3d')
-          .where('categoria', isEqualTo: categoria)
-          .where('disponible', isEqualTo: true)
-          .orderBy('fechaCreacion', descending: true)
-          .get();
-      return snapshot.docs.map((doc) => Impresion3D.fromFirestore(doc)).toList();
-    } catch (e) {
-      print('Error al obtener impresiones 3D por categoría: $e');
-      return [];
-    }
+    final snapshot = await _firestore
+        .collection('impresiones3d')
+        .where('categoria', isEqualTo: categoria)
+        .where('disponible', isEqualTo: true)
+        .orderBy('fechaCreacion', descending: true)
+        .get();
+    return snapshot.docs.map((doc) => Impresion3D.fromFirestore(doc)).toList();
   }
 
   Future<Impresion3D?> obtenerImpresion3D(String id) async {
-    try {
-      final doc = await _firestore.collection('impresiones3d').doc(id).get();
-      if (doc.exists) {
-        return Impresion3D.fromFirestore(doc);
-      }
-    } catch (e) {
-      print('Error al obtener impresión 3D: $e');
+    final doc = await _firestore.collection('impresiones3d').doc(id).get();
+    if (doc.exists) {
+      return Impresion3D.fromFirestore(doc);
     }
     return null;
   }
 
   Future<void> crearImpresion3D(Impresion3D impresion) async {
-    try {
-      await _firestore.collection('impresiones3d').doc(impresion.id).set(
-            impresion.toFirestore(),
-          );
-    } catch (e) {
-      print('Error al crear impresión 3D: $e');
-    }
+    await _firestore.collection('impresiones3d').doc(impresion.id).set(
+          impresion.toFirestore(),
+        );
   }
 
   Future<List<String>> obtenerCategoriasImpresion3D() async {
-    try {
-      final snapshot = await _firestore.collection('categorias3d').get();
-      return snapshot.docs
-          .map((doc) => doc['nombre'] as String)
-          .toList();
-    } catch (e) {
-      print('Error al obtener categorías: $e');
-      return [];
-    }
+    final snapshot = await _firestore.collection('categorias3d').get();
+    return snapshot.docs.map((doc) => doc['nombre'] as String).toList();
   }
 
   // ==================== COTIZACIONES ====================
   Future<void> crearCotizacion(Cotizacion cotizacion) async {
-    try {
-      await _firestore.collection('cotizaciones').doc(cotizacion.id).set(
-            cotizacion.toFirestore(),
-          );
-    } catch (e) {
-      print('Error al crear cotización: $e');
-      rethrow;
-    }
+    await _firestore.collection('cotizaciones').doc(cotizacion.id).set(
+          cotizacion.toFirestore(),
+        );
   }
 
   Future<Cotizacion?> obtenerCotizacion(String id) async {
-    try {
-      final doc = await _firestore.collection('cotizaciones').doc(id).get();
-      if (doc.exists) {
-        return Cotizacion.fromFirestore(doc);
-      }
-    } catch (e) {
-      print('Error al obtener cotización: $e');
+    final doc = await _firestore.collection('cotizaciones').doc(id).get();
+    if (doc.exists) {
+      return Cotizacion.fromFirestore(doc);
     }
     return null;
   }
 
   Future<List<Cotizacion>> obtenerCotizaciones() async {
-    try {
-      final snapshot = await _firestore
-          .collection('cotizaciones')
-          .orderBy('fechaCreacion', descending: true)
-          .get();
-      return snapshot.docs.map((doc) => Cotizacion.fromFirestore(doc)).toList();
-    } catch (e) {
-      print('Error al obtener cotizaciones: $e');
-      return [];
-    }
+    final snapshot = await _firestore
+        .collection('cotizaciones')
+        .orderBy('fechaCreacion', descending: true)
+        .get();
+    return snapshot.docs.map((doc) => Cotizacion.fromFirestore(doc)).toList();
   }
 
   // ==================== EQUIPO ====================
   Future<List<MiembroEquipo>> obtenerEquipo() async {
-    try {
-      final snapshot = await _firestore
-          .collection('equipo')
-          .orderBy('nombre')
-          .get();
-      return snapshot.docs.map((doc) => MiembroEquipo.fromFirestore(doc)).toList();
-    } catch (e) {
-      print('Error al obtener equipo: $e');
-      return [];
-    }
+    final snapshot = await _firestore.collection('equipo').orderBy('nombre').get();
+    return snapshot.docs.map((doc) => MiembroEquipo.fromFirestore(doc)).toList();
   }
 
   // ==================== PEDIDOS ====================
@@ -181,65 +115,41 @@ Future<void> crearProyecto(Proyecto proyecto) async {
   /// en la UI antes de invocar). Los clientes nunca crean pedidos directo;
   /// siempre pasan primero por una Cotización que Admin revisa por WhatsApp.
   Future<void> crearPedido(Pedido pedido) async {
-    try {
-      await _firestore.collection('pedidos').doc(pedido.id).set(
-            pedido.toFirestore(),
-          );
-    } catch (e) {
-      print('Error al crear pedido: $e');
-      rethrow;
-    }
+    await _firestore.collection('pedidos').doc(pedido.id).set(
+          pedido.toFirestore(),
+        );
   }
 
   Future<List<Pedido>> obtenerPedidos() async {
-    try {
-      final snapshot = await _firestore
-          .collection('pedidos')
-          .orderBy('fechaCreacion', descending: true)
-          .get();
-      return snapshot.docs.map((doc) => Pedido.fromFirestore(doc)).toList();
-    } catch (e) {
-      print('Error al obtener pedidos: $e');
-      return [];
-    }
+    final snapshot = await _firestore
+        .collection('pedidos')
+        .orderBy('fechaCreacion', descending: true)
+        .get();
+    return snapshot.docs.map((doc) => Pedido.fromFirestore(doc)).toList();
   }
 
   /// Pedidos visibles para Fifi: solo los que requieren pintado y ya
   /// terminaron la etapa de impresión (estado >= 'En Pintado').
   Future<List<Pedido>> obtenerPedidosParaPintado() async {
-    try {
-      final snapshot = await _firestore
-          .collection('pedidos')
-          .where('requierePintado', isEqualTo: true)
-          .where('estado', whereIn: [EstadoPedido.enPintado, EstadoPedido.listo, EstadoPedido.entregado])
-          .orderBy('fechaCreacion', descending: true)
-          .get();
-      return snapshot.docs.map((doc) => Pedido.fromFirestore(doc)).toList();
-    } catch (e) {
-      print('Error al obtener pedidos para pintado: $e');
-      return [];
-    }
+    final snapshot = await _firestore
+        .collection('pedidos')
+        .where('requierePintado', isEqualTo: true)
+        .where('estado', whereIn: [EstadoPedido.enPintado, EstadoPedido.listo, EstadoPedido.entregado])
+        .orderBy('fechaCreacion', descending: true)
+        .get();
+    return snapshot.docs.map((doc) => Pedido.fromFirestore(doc)).toList();
   }
 
   Future<Pedido?> obtenerPedido(String id) async {
-    try {
-      final doc = await _firestore.collection('pedidos').doc(id).get();
-      if (doc.exists) {
-        return Pedido.fromFirestore(doc);
-      }
-    } catch (e) {
-      print('Error al obtener pedido: $e');
+    final doc = await _firestore.collection('pedidos').doc(id).get();
+    if (doc.exists) {
+      return Pedido.fromFirestore(doc);
     }
     return null;
   }
 
   Future<void> actualizarPedido(String id, Map<String, dynamic> cambios) async {
-    try {
-      await _firestore.collection('pedidos').doc(id).update(cambios);
-    } catch (e) {
-      print('Error al actualizar pedido: $e');
-      rethrow;
-    }
+    await _firestore.collection('pedidos').doc(id).update(cambios);
   }
 
   /// Avanza el estado del pedido. Solo válido si el nuevo estado pertenece
@@ -250,39 +160,21 @@ Future<void> crearProyecto(Proyecto proyecto) async {
 
   // ==================== USUARIOS INTERNOS ====================
   Future<List<Usuario>> obtenerUsuarios() async {
-    try {
-      final snapshot = await _firestore.collection('usuarios').orderBy('nombre').get();
-      return snapshot.docs.map((doc) => Usuario.fromFirestore(doc)).toList();
-    } catch (e) {
-      print('Error al obtener usuarios: $e');
-      return [];
-    }
+    final snapshot = await _firestore.collection('usuarios').orderBy('nombre').get();
+    return snapshot.docs.map((doc) => Usuario.fromFirestore(doc)).toList();
   }
 
   Future<void> actualizarPermisosUsuario(String username, List<String> permisos) async {
-    try {
-      await _firestore.collection('usuarios').doc(username).update({'permisos': permisos});
-    } catch (e) {
-      print('Error al actualizar permisos: $e');
-      rethrow;
-    }
+    await _firestore.collection('usuarios').doc(username).update({'permisos': permisos});
   }
 
   // ==================== BÚSQUEDA ====================
   Future<List<Impresion3D>> buscarImpresiones3D(String query) async {
-    try {
-      final snapshot = await _firestore
-          .collection('impresiones3d')
-          .where('nombre', isGreaterThanOrEqualTo: query)
-          .where('nombre', isLessThan: query + 'z')
-          .get();
-      return snapshot.docs.map((doc) => Impresion3D.fromFirestore(doc)).toList();
-    } catch (e) {
-      print('Error al buscar impresiones 3D: $e');
-      return [];
-    }
+    final snapshot = await _firestore
+        .collection('impresiones3d')
+        .where('nombre', isGreaterThanOrEqualTo: query)
+        .where('nombre', isLessThan: '${query}z')
+        .get();
+    return snapshot.docs.map((doc) => Impresion3D.fromFirestore(doc)).toList();
   }
-
-  
 }
-

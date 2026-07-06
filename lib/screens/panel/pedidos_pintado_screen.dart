@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 import '../../models/models.dart';
 import '../../services/firebase_service.dart';
+import '../../widgets/widgets.dart';
 
 /// Vista de Fifi (permiso 'pedidos.ver_pintado').
 /// A propósito NO muestra cliente, teléfono ni precio — solo lo que necesita
@@ -9,7 +10,7 @@ import '../../services/firebase_service.dart';
 class PedidosPintadoScreen extends StatefulWidget {
   final Usuario usuario;
 
-  const PedidosPintadoScreen({Key? key, required this.usuario}) : super(key: key);
+  const PedidosPintadoScreen({super.key, required this.usuario});
 
   @override
   State<PedidosPintadoScreen> createState() => _PedidosPintadoScreenState();
@@ -19,6 +20,7 @@ class _PedidosPintadoScreenState extends State<PedidosPintadoScreen> {
   final _firebaseService = FirebaseService();
   List<Pedido> _pedidos = [];
   bool _cargando = true;
+  String? _error;
 
   @override
   void initState() {
@@ -27,12 +29,22 @@ class _PedidosPintadoScreenState extends State<PedidosPintadoScreen> {
   }
 
   Future<void> _cargar() async {
-    setState(() => _cargando = true);
-    final pedidos = await _firebaseService.obtenerPedidosParaPintado();
     setState(() {
-      _pedidos = pedidos;
-      _cargando = false;
+      _cargando = true;
+      _error = null;
     });
+    try {
+      final pedidos = await _firebaseService.obtenerPedidosParaPintado();
+      setState(() {
+        _pedidos = pedidos;
+        _cargando = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = 'No pudimos cargar las piezas. Revisá tu conexión.';
+        _cargando = false;
+      });
+    }
   }
 
   Future<void> _marcarPintadoListo(Pedido pedido) async {
@@ -91,11 +103,13 @@ class _PedidosPintadoScreenState extends State<PedidosPintadoScreen> {
             ),
             const SizedBox(height: 24),
             if (_cargando)
-              const Center(child: Padding(padding: EdgeInsets.all(40), child: CircularProgressIndicator()))
+              const EstadoCargando(mensaje: 'Cargando piezas...')
+            else if (_error != null)
+              EstadoError(mensaje: _error!, onReintentar: _cargar)
             else if (pendientes.isEmpty)
-              const Padding(
-                padding: EdgeInsets.all(24),
-                child: Text('🎉 No tenés piezas pendientes de pintar.', style: TextStyle(color: AppColors.textMuted)),
+              const EstadoVacio(
+                icon: Icons.brush_outlined,
+                mensaje: '🎉 No tenés piezas pendientes de pintar.',
               )
             else
               ...pendientes.map((p) => _PiezaPintadoCard(
@@ -137,7 +151,7 @@ class _PiezaPintadoCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surfaceElevated,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: terminada ? AppColors.border : AppColors.categoriaArte.withOpacity(0.4)),
+        border: Border.all(color: terminada ? AppColors.border : AppColors.categoriaArte.withValues(alpha: 0.4)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -169,8 +183,8 @@ class _PiezaPintadoCard extends StatelessWidget {
                   children: pedido.coloresPedidos
                       .map((c) => Chip(
                             label: Text(c, style: const TextStyle(fontSize: 11)),
-                            backgroundColor: AppColors.categoriaArte.withOpacity(0.15),
-                            side: BorderSide(color: AppColors.categoriaArte.withOpacity(0.4)),
+                            backgroundColor: AppColors.categoriaArte.withValues(alpha: 0.15),
+                            side: BorderSide(color: AppColors.categoriaArte.withValues(alpha: 0.4)),
                           ))
                       .toList(),
                 ),

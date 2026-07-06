@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 import '../../services/firebase_service.dart';
 import '../../models/models.dart';
+import '../../utils/responsive.dart';
 import '../../widgets/widgets.dart';
 import '../../utils/whatsapp_helper.dart';
 
 class CotizacionScreen extends StatefulWidget {
-  const CotizacionScreen({Key? key}) : super(key: key);
+  const CotizacionScreen({super.key});
 
   @override
   State<CotizacionScreen> createState() => _CotizacionScreenState();
@@ -86,7 +87,7 @@ class _CotizacionScreenState extends State<CotizacionScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error: ${e.toString()}'),
-            backgroundColor: Colors.red,
+            backgroundColor: AppColors.error,
           ),
         );
       }
@@ -108,51 +109,21 @@ class _CotizacionScreenState extends State<CotizacionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = MediaQuery.of(context).size.width < 800;
+    final isMobile = Responsive.isMobile(context);
 
     return Scaffold(
       body: SingleChildScrollView(
         child: Column(
           children: [
             const NavBar(),
-            _buildHeroSection(isMobile),
+            const PageHero(
+              titulo: 'Cotiza tu Proyecto',
+              subtitulo: '¿Tenés una idea? Cuéntanos. Sin compromiso, sin costo inicial.',
+            ),
             _buildFormSection(isMobile),
             const Footer(),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildHeroSection(bool isMobile) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.symmetric(
-        horizontal: isMobile ? 20 : 60,
-        vertical: isMobile ? 60 : 100,
-      ),
-      decoration: BoxDecoration(
-        gradient: AppColors.primaryGradient,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Cotiza tu Proyecto',
-            style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                  color: Colors.white,
-                  fontSize: isMobile ? 32 : 44,
-                ),
-          ),
-          SizedBox(height: isMobile ? 16 : 24),
-          Text(
-            '¿Tenés una idea? Cuéntanos. Sin compromiso, sin costo inicial.',
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Colors.white70,
-                  fontSize: isMobile ? 14 : 16,
-                ),
-          ),
-        ],
       ),
     );
   }
@@ -164,7 +135,7 @@ class _CotizacionScreenState extends State<CotizacionScreen> {
         horizontal: isMobile ? 20 : 60,
         vertical: isMobile ? 60 : 100,
       ),
-      color: Colors.white,
+      color: AppColors.background,
       child: Form(
         key: _formKey,
         child: Column(
@@ -189,7 +160,7 @@ class _CotizacionScreenState extends State<CotizacionScreen> {
                           v?.isEmpty ?? true ? 'Campo requerido' : null,
                     ),
                   ),
-                  SizedBox(width: 24),
+                  const SizedBox(width: 24),
                   Expanded(
                     child: _buildTextField(
                       label: 'Email',
@@ -209,7 +180,7 @@ class _CotizacionScreenState extends State<CotizacionScreen> {
                     validator: (v) =>
                         v?.isEmpty ?? true ? 'Campo requerido' : null,
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                   _buildTextField(
                     label: 'Email',
                     controller: _emailController,
@@ -218,7 +189,7 @@ class _CotizacionScreenState extends State<CotizacionScreen> {
                   ),
                 ],
               ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             if (!isMobile)
               Row(
                 children: [
@@ -228,7 +199,7 @@ class _CotizacionScreenState extends State<CotizacionScreen> {
                       controller: _telefonoController,
                     ),
                   ),
-                  SizedBox(width: 24),
+                  const SizedBox(width: 24),
                   Expanded(
                     child: _buildDropdown(
                       label: 'Servicio Interesado',
@@ -253,7 +224,7 @@ class _CotizacionScreenState extends State<CotizacionScreen> {
                     label: 'Teléfono',
                     controller: _telefonoController,
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                   _buildDropdown(
                     label: 'Servicio Interesado',
                     value: _servicioSeleccionado,
@@ -269,7 +240,7 @@ class _CotizacionScreenState extends State<CotizacionScreen> {
                   ),
                 ],
               ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             _buildTextField(
               label: 'Descripción del Proyecto',
               controller: _descripcionController,
@@ -277,7 +248,7 @@ class _CotizacionScreenState extends State<CotizacionScreen> {
               validator: (v) =>
                   v?.isEmpty ?? true ? 'Campo requerido' : null,
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             _buildDropdown(
               label: 'Presupuesto Aproximado',
               value: _presupuestoSeleccionado,
@@ -300,7 +271,7 @@ class _CotizacionScreenState extends State<CotizacionScreen> {
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
                         valueColor:
-                            AlwaysStoppedAnimation<Color>(Colors.white),
+                            AlwaysStoppedAnimation<Color>(AppColors.textLight),
                       ),
                     )
                   : const Text('ENVIAR SOLICITUD'),
@@ -324,7 +295,7 @@ class _CotizacionScreenState extends State<CotizacionScreen> {
           label,
           style: Theme.of(context).textTheme.titleSmall,
         ),
-        SizedBox(height: 8),
+        const SizedBox(height: 8),
         TextFormField(
           controller: controller,
           maxLines: maxLines,
@@ -348,9 +319,9 @@ class _CotizacionScreenState extends State<CotizacionScreen> {
           label,
           style: Theme.of(context).textTheme.titleSmall,
         ),
-        SizedBox(height: 8),
+        const SizedBox(height: 8),
         DropdownButtonFormField<String>(
-          value: value,
+          initialValue: value,
           items: items
               .map((e) => DropdownMenuItem(value: e, child: Text(e)))
               .toList(),

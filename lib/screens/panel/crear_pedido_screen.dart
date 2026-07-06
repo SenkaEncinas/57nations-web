@@ -10,7 +10,7 @@ import '../../services/firebase_service.dart';
 class CrearPedidoScreen extends StatefulWidget {
   final Usuario usuario;
 
-  const CrearPedidoScreen({Key? key, required this.usuario}) : super(key: key);
+  const CrearPedidoScreen({super.key, required this.usuario});
 
   @override
   State<CrearPedidoScreen> createState() => _CrearPedidoScreenState();
@@ -40,6 +40,11 @@ class _CrearPedidoScreenState extends State<CrearPedidoScreen> {
   bool _requierePintado = false;
   DateTime? _fechaEntregaImpresion;
   bool _guardando = false;
+
+  String _origenPedido = OrigenPedido.senka;
+  bool _aplicaComisionLuchin = true;
+  final _comisionPorcentajeCtrl =
+      TextEditingController(text: ComisionLuchin.porcentajeDefault.toString());
 
   double _num(TextEditingController c) => double.tryParse(c.text) ?? 0;
 
@@ -86,6 +91,15 @@ class _CrearPedidoScreenState extends State<CrearPedidoScreen> {
         fechaEntregaImpresion: _fechaEntregaImpresion,
         creadoPorUsername: widget.usuario.username,
         fechaCreacion: DateTime.now(),
+        origenPedido: _origenPedido,
+        comisionLuchin: _origenPedido == OrigenPedido.luchin
+            ? ComisionLuchin.calcular(
+                aplica: _aplicaComisionLuchin,
+                porcentaje: double.tryParse(_comisionPorcentajeCtrl.text) ??
+                    ComisionLuchin.porcentajeDefault,
+                ganancia: _calculo.ganancia,
+              )
+            : null,
       );
 
       await _firebaseService.crearPedido(pedido);
@@ -116,6 +130,9 @@ class _CrearPedidoScreenState extends State<CrearPedidoScreen> {
     setState(() {
       _requierePintado = false;
       _fechaEntregaImpresion = null;
+      _origenPedido = OrigenPedido.senka;
+      _aplicaComisionLuchin = true;
+      _comisionPorcentajeCtrl.text = ComisionLuchin.porcentajeDefault.toString();
     });
   }
 
@@ -136,6 +153,7 @@ class _CrearPedidoScreenState extends State<CrearPedidoScreen> {
       _desgasteCtrl,
       _fallosCtrl,
       _margenCtrl,
+      _comisionPorcentajeCtrl,
     ]) {
       c.dispose();
     }
@@ -175,11 +193,91 @@ class _CrearPedidoScreenState extends State<CrearPedidoScreen> {
                   'Si se activa, el pedido pasará por la etapa "En Pintado" con Fifi.',
                   style: TextStyle(color: AppColors.textMuted, fontSize: 12),
                 ),
-                activeColor: AppColors.categoriaArte,
+                activeThumbColor: AppColors.categoriaArte,
                 contentPadding: EdgeInsets.zero,
               ),
               if (_requierePintado)
                 _campo('Colores pedidos (separados por coma)', _coloresCtrl),
+              const SizedBox(height: 20),
+              const Text(
+                'ORIGEN DEL PEDIDO',
+                style: TextStyle(color: AppColors.textDim, fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 12,
+                children: [
+                  ChoiceChip(
+                    label: const Text('Senka'),
+                    selected: _origenPedido == OrigenPedido.senka,
+                    onSelected: (_) => setState(() => _origenPedido = OrigenPedido.senka),
+                  ),
+                  ChoiceChip(
+                    label: const Text('Luchin'),
+                    selected: _origenPedido == OrigenPedido.luchin,
+                    onSelected: (_) => setState(() => _origenPedido = OrigenPedido.luchin),
+                  ),
+                ],
+              ),
+              if (_origenPedido == OrigenPedido.luchin) ...[
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SwitchListTile(
+                        value: _aplicaComisionLuchin,
+                        onChanged: (v) => setState(() => _aplicaComisionLuchin = v),
+                        title: const Text('¿Aplica comisión?', style: TextStyle(color: AppColors.textLight)),
+                        activeThumbColor: AppColors.flutterColor,
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                      if (_aplicaComisionLuchin) ...[
+                        _campoNumero('Comisión Luchin (%)', _comisionPorcentajeCtrl),
+                        AnimatedBuilder(
+                          animation: Listenable.merge([
+                            _comisionPorcentajeCtrl,
+                            _precioFilamentoCtrl,
+                            _pesoCtrl,
+                            _horasCtrl,
+                            _minutosCtrl,
+                            _potenciaCtrl,
+                            _precioKwhCtrl,
+                            _desgasteCtrl,
+                            _fallosCtrl,
+                            _margenCtrl,
+                          ]),
+                          builder: (context, _) {
+                            final porcentaje = double.tryParse(_comisionPorcentajeCtrl.text) ??
+                                ComisionLuchin.porcentajeDefault;
+                            final monto = _calculo.ganancia * (porcentaje / 100);
+                            return Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text('Comisión estimada', style: TextStyle(color: AppColors.textLight)),
+                                Text(
+                                  'Bs ${monto.toStringAsFixed(2)}',
+                                  style: const TextStyle(
+                                    color: AppColors.flutterColor,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
               const SizedBox(height: 20),
               ListTile(
                 contentPadding: EdgeInsets.zero,
@@ -271,7 +369,7 @@ class _CrearPedidoScreenState extends State<CrearPedidoScreen> {
                     ? const SizedBox(
                         height: 20,
                         width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation(Colors.white)),
+                        child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation(AppColors.textLight)),
                       )
                     : const Text('CREAR PEDIDO'),
               ),

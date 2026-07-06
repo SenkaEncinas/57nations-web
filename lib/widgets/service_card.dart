@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 
 class ServiceCard extends StatefulWidget {
   final IconData icon;
@@ -8,13 +9,13 @@ class ServiceCard extends StatefulWidget {
   final VoidCallback onTap;
 
   const ServiceCard({
-    Key? key,
+    super.key,
     required this.icon,
     required this.title,
     required this.description,
     required this.color,
     required this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   State<ServiceCard> createState() => _ServiceCardState();
@@ -26,24 +27,25 @@ class _ServiceCardState extends State<ServiceCard> {
   @override
   Widget build(BuildContext context) {
     return MouseRegion(
+      cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       child: GestureDetector(
         onTap: widget.onTap,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
+          duration: const Duration(milliseconds: 250),
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.surfaceElevated,
             border: Border.all(
-              color: _isHovered ? widget.color : const Color(0xFFE5E7EB),
+              color: _isHovered ? widget.color : AppColors.border,
               width: _isHovered ? 2 : 1,
             ),
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               if (_isHovered)
                 BoxShadow(
-                  color: widget.color.withOpacity(0.2),
+                  color: widget.color.withValues(alpha: 0.25),
                   blurRadius: 16,
                   offset: const Offset(0, 8),
                 ),
@@ -56,7 +58,7 @@ class _ServiceCardState extends State<ServiceCard> {
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
-                  color: widget.color.withOpacity(0.1),
+                  color: widget.color.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -65,26 +67,26 @@ class _ServiceCardState extends State<ServiceCard> {
                   size: 32,
                 ),
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               // TÍTULO
               Text(
                 widget.title,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
-                ),
+                    ),
                 textAlign: TextAlign.center,
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               // DESCRIPCIÓN
               Text(
                 widget.description,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.grey.shade600,
+                      color: AppColors.textMuted,
                       height: 1.5,
-                ),
+                    ),
                 textAlign: TextAlign.center,
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               // BOTÓN
               TextButton(
                 onPressed: widget.onTap,
@@ -95,7 +97,7 @@ class _ServiceCardState extends State<ServiceCard> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Text('Ver más'),
-                    SizedBox(width: 8),
+                    const SizedBox(width: 8),
                     Icon(
                       Icons.arrow_forward,
                       size: 16,

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
+import '../utils/responsive.dart';
 import '../widgets/widgets.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -12,7 +13,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
-    final isMobile = MediaQuery.of(context).size.width < 800;
+    final isMobile = Responsive.isMobile(context);
 
     return Scaffold(
       body: SingleChildScrollView(
@@ -45,7 +46,7 @@ Widget _buildHeroSection(bool isMobile) {
     return Container(
       width: double.infinity,
       clipBehavior: Clip.hardEdge,
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         gradient: AppColors.primaryGradient,
       ),
       child: Stack(
@@ -75,8 +76,8 @@ Widget _buildHeroSection(bool isMobile) {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    AppColors.violetaPrincipal.withOpacity(0.25),
-                    AppColors.violetaPrincipal.withOpacity(0),
+                    AppColors.violetaPrincipal.withValues(alpha: 0.25),
+                    AppColors.violetaPrincipal.withValues(alpha: 0),
                   ],
                 ),
               ),
@@ -200,10 +201,10 @@ Widget _buildHeroSection(bool isMobile) {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: isMobile ? 1 : 5,
+              crossAxisCount: isMobile ? 1 : (Responsive.isTablet(context) ? 3 : 5),
               crossAxisSpacing: 20,
               mainAxisSpacing: 20,
-              childAspectRatio: 0.95,
+              childAspectRatio: isMobile ? 0.95 : (Responsive.isTablet(context) ? 1.15 : 0.95),
             ),
             itemCount: services.length,
             itemBuilder: (context, index) {
@@ -240,7 +241,7 @@ Widget _buildHeroSection(bool isMobile) {
           ),
           SizedBox(height: isMobile ? 40 : 60),
           // TODO: Implementar carrusel de proyectos
-          Center(
+          const Center(
             child: Text('Galería de proyectos aquí'),
           ),
           SizedBox(height: isMobile ? 32 : 48),
@@ -271,7 +272,7 @@ Widget _buildHeroSection(bool isMobile) {
           ),
           SizedBox(height: isMobile ? 40 : 60),
           // TODO: Implementar grid de equipo
-          Center(
+          const Center(
             child: Text('Grid de integrantes del equipo aquí'),
           ),
         ],

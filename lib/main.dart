@@ -15,7 +15,7 @@ void main() async {
 }
 
 class App57Nations extends StatelessWidget {
-  const App57Nations({Key? key}) : super(key: key);
+  const App57Nations({super.key});
 
   @override
   Widget build(BuildContext context) {

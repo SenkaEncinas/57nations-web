@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
+import '../utils/responsive.dart';
 
 class NavBar extends StatelessWidget {
-  const NavBar({Key? key}) : super(key: key);
+  const NavBar({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = MediaQuery.of(context).size.width < 800;
+    final isMobile = Responsive.isMobile(context);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppColors.background,
-        border: const Border(
+        border: Border(
           bottom: BorderSide(color: AppColors.border, width: 1),
         ),
       ),
@@ -20,29 +21,32 @@ class NavBar extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           // LOGO
-          GestureDetector(
-            onTap: () => Navigator.pushNamedAndRemoveUntil(
-              context,
-              '/',
-              (route) => false,
-            ),
-child: Container(
-              height: 40,
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(6),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.violetaPrincipal.withOpacity(0.35),
-                    blurRadius: 16,
-                    spreadRadius: 1,
-                  ),
-                ],
+          MouseRegion(
+            cursor: SystemMouseCursors.click,
+            child: GestureDetector(
+              onTap: () => Navigator.pushNamedAndRemoveUntil(
+                context,
+                '/',
+                (route) => false,
               ),
-              child: Image.asset(
-                'assets/logos/logo_57nations.png',
-                height: 32,
-                fit: BoxFit.contain,
+              child: Container(
+                height: 40,
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(6),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.violetaPrincipal.withValues(alpha: 0.35),
+                      blurRadius: 16,
+                      spreadRadius: 1,
+                    ),
+                  ],
+                ),
+                child: Image.asset(
+                  'assets/logos/logo_57nations.png',
+                  height: 32,
+                  fit: BoxFit.contain,
+                ),
               ),
             ),
           ),
@@ -71,7 +75,7 @@ child: Container(
                   label: 'Sobre Nosotros',
                   onTap: () => Navigator.pushNamed(context, '/sobre-nosotros'),
                 ),
-                SizedBox(width: 24),
+                const SizedBox(width: 24),
                 ElevatedButton(
                   onPressed: () => Navigator.pushNamed(context, '/contacto'),
                   child: const Text('CONTACTO'),
@@ -187,6 +191,7 @@ class _NavItemState extends State<_NavItem> {
   @override
   Widget build(BuildContext context) {
     return MouseRegion(
+      cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       child: GestureDetector(
@@ -195,21 +200,22 @@ class _NavItemState extends State<_NavItem> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Column(
             children: [
-              Text(
-                widget.label,
+              AnimatedDefaultTextStyle(
+                duration: const Duration(milliseconds: 200),
                 style: TextStyle(
                   color: _isHovered ? AppColors.accent : AppColors.textLight,
                   fontWeight: FontWeight.w500,
                   fontSize: 14,
                 ),
+                child: Text(widget.label),
               ),
-              if (_isHovered)
-                Container(
-                  height: 2,
-                  width: 30,
-                  color: AppColors.accent,
-                  margin: const EdgeInsets.only(top: 4),
-                ),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                height: 2,
+                width: _isHovered ? 30 : 0,
+                color: AppColors.accent,
+                margin: const EdgeInsets.only(top: 4),
+              ),
             ],
           ),
         ),

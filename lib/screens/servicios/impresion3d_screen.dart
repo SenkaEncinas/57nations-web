@@ -2,22 +2,22 @@ import 'package:flutter/material.dart';
 import '../../widgets/widgets.dart';
 
 class Impresion3dScreen extends StatelessWidget {
-  const Impresion3dScreen({Key? key}) : super(key: key);
+  const Impresion3dScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return const Scaffold(
       body: SingleChildScrollView(
         child: Column(
           children: [
-            const NavBar(),
+            NavBar(),
             Center(
               child: Padding(
-                padding: const EdgeInsets.all(60),
+                padding: EdgeInsets.all(60),
                 child: Text('Pantalla Impresión 3D - EN CONSTRUCCIÓN'),
               ),
             ),
-            const Footer(),
+            Footer(),
           ],
         ),
       ),

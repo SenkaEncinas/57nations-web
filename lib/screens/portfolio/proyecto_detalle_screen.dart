@@ -5,24 +5,24 @@ class ProyectoDetalleScreen extends StatelessWidget {
   final String proyectoId;
 
   const ProyectoDetalleScreen({
-    Key? key,
+    super.key,
     required this.proyectoId,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return const Scaffold(
       body: SingleChildScrollView(
         child: Column(
           children: [
-            const NavBar(),
+            NavBar(),
             Center(
               child: Padding(
-                padding: const EdgeInsets.all(60),
+                padding: EdgeInsets.all(60),
                 child: Text('Pantalla Detalle de Proyecto - EN CONSTRUCCIÓN'),
               ),
             ),
-            const Footer(),
+            Footer(),
           ],
         ),
       ),

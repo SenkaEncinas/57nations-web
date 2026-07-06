@@ -99,7 +99,7 @@ class AppTheme {
       iconTheme: const IconThemeData(color: AppColors.textLight),
       chipTheme: ChipThemeData(
         backgroundColor: AppColors.surface,
-        selectedColor: AppColors.violetaPrincipal.withOpacity(0.25),
+        selectedColor: AppColors.violetaPrincipal.withValues(alpha: 0.25),
         labelStyle: const TextStyle(color: AppColors.textLight, fontSize: 13),
         side: const BorderSide(color: AppColors.border),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),

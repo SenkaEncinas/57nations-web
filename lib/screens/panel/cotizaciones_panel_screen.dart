@@ -3,12 +3,13 @@ import '../../theme/app_colors.dart';
 import '../../models/models.dart';
 import '../../services/firebase_service.dart';
 import '../../utils/whatsapp_helper.dart';
+import '../../widgets/widgets.dart';
 
 /// Lista de cotizaciones que llegaron desde el formulario público de la web.
 /// Acá Admin revisa, contacta al cliente y decide si conviene convertirla
 /// en un Pedido real (desde la pantalla "Nuevo Pedido").
 class CotizacionesPanelScreen extends StatefulWidget {
-  const CotizacionesPanelScreen({Key? key}) : super(key: key);
+  const CotizacionesPanelScreen({super.key});
 
   @override
   State<CotizacionesPanelScreen> createState() => _CotizacionesPanelScreenState();
@@ -18,6 +19,7 @@ class _CotizacionesPanelScreenState extends State<CotizacionesPanelScreen> {
   final _firebaseService = FirebaseService();
   List<Cotizacion> _cotizaciones = [];
   bool _cargando = true;
+  String? _error;
 
   @override
   void initState() {
@@ -26,12 +28,22 @@ class _CotizacionesPanelScreenState extends State<CotizacionesPanelScreen> {
   }
 
   Future<void> _cargar() async {
-    setState(() => _cargando = true);
-    final cotizaciones = await _firebaseService.obtenerCotizaciones();
     setState(() {
-      _cotizaciones = cotizaciones;
-      _cargando = false;
+      _cargando = true;
+      _error = null;
     });
+    try {
+      final cotizaciones = await _firebaseService.obtenerCotizaciones();
+      setState(() {
+        _cotizaciones = cotizaciones;
+        _cargando = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = 'No pudimos cargar las cotizaciones. Revisá tu conexión.';
+        _cargando = false;
+      });
+    }
   }
 
   @override
@@ -53,12 +65,11 @@ class _CotizacionesPanelScreenState extends State<CotizacionesPanelScreen> {
             ),
             const SizedBox(height: 24),
             if (_cargando)
-              const Center(child: Padding(padding: EdgeInsets.all(40), child: CircularProgressIndicator()))
+              const EstadoCargando(mensaje: 'Cargando cotizaciones...')
+            else if (_error != null)
+              EstadoError(mensaje: _error!, onReintentar: _cargar)
             else if (_cotizaciones.isEmpty)
-              const Padding(
-                padding: EdgeInsets.all(24),
-                child: Text('No hay cotizaciones todavía.', style: TextStyle(color: AppColors.textMuted)),
-              )
+              const EstadoVacio(icon: Icons.mail_outline, mensaje: 'No hay cotizaciones todavía.')
             else
               ..._cotizaciones.map((c) => _CotizacionCard(
                     cotizacion: c,
@@ -97,7 +108,7 @@ class _CotizacionCard extends StatelessWidget {
                   style: const TextStyle(color: AppColors.textLight, fontWeight: FontWeight.w700, fontSize: 16)),
               Chip(
                 label: Text(cotizacion.servicio, style: const TextStyle(fontSize: 11)),
-                backgroundColor: AppColors.violetaPrincipal.withOpacity(0.15),
+                backgroundColor: AppColors.violetaPrincipal.withValues(alpha: 0.15),
               ),
             ],
           ),

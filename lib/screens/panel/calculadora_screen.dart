@@ -15,7 +15,7 @@ import '../../models/models.dart';
 ///   ganancia        = precioVenta - costoTotal
 /// Moneda: Bolivianos (Bs).
 class Calculadora3DScreen extends StatefulWidget {
-  const Calculadora3DScreen({Key? key}) : super(key: key);
+  const Calculadora3DScreen({super.key});
 
   @override
   State<Calculadora3DScreen> createState() => _Calculadora3DScreenState();
@@ -256,7 +256,7 @@ class _Calculadora3DScreenState extends State<Calculadora3DScreen> {
               color: AppColors.surface,
               borderRadius: BorderRadius.circular(6),
               border: Border.all(
-                color: resaltado ? AppColors.impresion3dColor.withOpacity(0.5) : AppColors.border,
+                color: resaltado ? AppColors.impresion3dColor.withValues(alpha: 0.5) : AppColors.border,
               ),
             ),
             child: Row(

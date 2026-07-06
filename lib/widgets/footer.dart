@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
+import '../utils/responsive.dart';
 
 class Footer extends StatelessWidget {
-  const Footer({Key? key}) : super(key: key);
+  const Footer({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = MediaQuery.of(context).size.width < 800;
+    final isMobile = Responsive.isMobile(context);
 
     return Container(
       width: double.infinity,
@@ -34,45 +35,52 @@ class Footer extends StatelessWidget {
             Column(
               children: [
                 _FooterColumn(),
-                SizedBox(height: 32),
+                const SizedBox(height: 32),
                 _FooterLinksColumn(),
-                SizedBox(height: 32),
+                const SizedBox(height: 32),
                 _FooterContactColumn(),
               ],
             ),
-          SizedBox(height: 40),
-          Divider(
-            color: Colors.white12,
+          const SizedBox(height: 40),
+          const Divider(
+            color: AppColors.border,
             height: 1,
           ),
-          SizedBox(height: 24),
+          const SizedBox(height: 24),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
                 '© 2025 57 Nations | Todos los derechos reservados',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.white70,
-                ),
+                style: Theme.of(context).textTheme.bodySmall,
               ),
               Row(
                 children: [
-                  _SocialIcon(
+                  const _SocialIcon(
                     icon: Icons.camera_alt,
                     url: 'https://instagram.com/57nations_',
                   ),
-                  SizedBox(width: 16),
-                  _SocialIcon(
+                  const SizedBox(width: 16),
+                  const _SocialIcon(
                     icon: Icons.language,
                     url: 'https://linkedin.com',
                   ),
-                  SizedBox(width: 16),
-                  GestureDetector(
-                    onTap: () => Navigator.pushNamed(context, '/panel'),
-                    child: Icon(
-                      Icons.lock_outline,
-                      color: Colors.white24,
-                      size: 16,
+                  const SizedBox(width: 16),
+                  MouseRegion(
+                    cursor: SystemMouseCursors.click,
+                    child: GestureDetector(
+                      onTap: () => Navigator.pushNamed(context, '/panel'),
+                      child: const SizedBox(
+                        width: 44,
+                        height: 44,
+                        child: Center(
+                          child: Icon(
+                            Icons.lock_outline,
+                            color: AppColors.textDim,
+                            size: 16,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -96,19 +104,15 @@ Image.asset(
           height: 36,
           fit: BoxFit.contain,
         ),
-        SizedBox(height: 12),
+        const SizedBox(height: 12),
         Text(
           'Soluciones Tech Integrales',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.white70,
-              ),
+          style: Theme.of(context).textTheme.bodySmall,
         ),
-        SizedBox(height: 16),
+        const SizedBox(height: 16),
         Text(
           'Santa Cruz, Bolivia',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.white70,
-              ),
+          style: Theme.of(context).textTheme.bodySmall,
         ),
       ],
     );
@@ -124,11 +128,11 @@ class _FooterLinksColumn extends StatelessWidget {
         Text(
           'Enlaces Rápidos',
           style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                color: Colors.white,
+                color: AppColors.textLight,
                 fontWeight: FontWeight.bold,
               ),
         ),
-        SizedBox(height: 16),
+        const SizedBox(height: 16),
         _FooterLink(label: 'Inicio', onTap: () {}),
         _FooterLink(label: 'Servicios', onTap: () {}),
         _FooterLink(label: 'Portfolio', onTap: () {}),
@@ -148,31 +152,16 @@ class _FooterContactColumn extends StatelessWidget {
         Text(
           'Contacto',
           style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                color: Colors.white,
+                color: AppColors.textLight,
                 fontWeight: FontWeight.bold,
               ),
         ),
-        SizedBox(height: 16),
-        Text(
-          '📱 WhatsApp',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.white70,
-              ),
-        ),
-        SizedBox(height: 8),
-        Text(
-          '📧 Email',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.white70,
-              ),
-        ),
-        SizedBox(height: 8),
-        Text(
-          '⏰ Lunes-Viernes 9am-6pm',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.white70,
-              ),
-        ),
+        const SizedBox(height: 16),
+        Text('📱 WhatsApp', style: Theme.of(context).textTheme.bodySmall),
+        const SizedBox(height: 8),
+        Text('📧 Email', style: Theme.of(context).textTheme.bodySmall),
+        const SizedBox(height: 8),
+        Text('⏰ Lunes-Viernes 9am-6pm', style: Theme.of(context).textTheme.bodySmall),
       ],
     );
   }
@@ -197,19 +186,23 @@ class _FooterLinkState extends State<_FooterLink> {
   @override
   Widget build(BuildContext context) {
     return MouseRegion(
+      cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       child: GestureDetector(
         onTap: widget.onTap,
-        child: Padding(
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 44),
+          alignment: Alignment.centerLeft,
           padding: const EdgeInsets.symmetric(vertical: 6),
-          child: Text(
-            widget.label,
+          child: AnimatedDefaultTextStyle(
+            duration: const Duration(milliseconds: 200),
             style: TextStyle(
-              color: _isHovered ? AppColors.accent : Colors.white70,
+              color: _isHovered ? AppColors.accent : AppColors.textLight,
               fontSize: 14,
               decoration: _isHovered ? TextDecoration.underline : null,
             ),
+            child: Text(widget.label),
           ),
         ),
       ),
@@ -236,16 +229,27 @@ class _SocialIconState extends State<_SocialIcon> {
   @override
   Widget build(BuildContext context) {
     return MouseRegion(
+      cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       child: GestureDetector(
         onTap: () {
           // TODO: Abrir URL en navegador
         },
-        child: Icon(
-          widget.icon,
-          color: _isHovered ? AppColors.accent : Colors.white70,
-          size: 20,
+        child: SizedBox(
+          width: 44,
+          height: 44,
+          child: Center(
+            child: AnimatedScale(
+              duration: const Duration(milliseconds: 200),
+              scale: _isHovered ? 1.15 : 1.0,
+              child: Icon(
+                widget.icon,
+                color: _isHovered ? AppColors.accent : AppColors.textLight,
+                size: 20,
+              ),
+            ),
+          ),
         ),
       ),
     );

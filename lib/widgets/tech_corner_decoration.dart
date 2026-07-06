@@ -15,12 +15,12 @@ class TechCornerDecoration extends StatelessWidget {
   final Color color;
 
   const TechCornerDecoration({
-    Key? key,
+    super.key,
     this.width = 160,
     this.height = 80,
     this.espejado = false,
     this.color = AppColors.violetaPrincipal,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -47,17 +47,17 @@ class _TechCornerPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final linea = Paint()
-      ..color = color.withOpacity(0.45)
+      ..color = color.withValues(alpha: 0.45)
       ..strokeWidth = 1.2
       ..style = PaintingStyle.stroke;
 
     final punto = Paint()
-      ..color = color.withOpacity(0.7)
+      ..color = color.withValues(alpha: 0.7)
       ..style = PaintingStyle.fill;
 
     // Línea horizontal superior (borde en L)
-    canvas.drawLine(Offset(0, 0), Offset(size.width * 0.7, 0), linea);
-    canvas.drawLine(Offset(0, 0), Offset(0, size.height * 0.6), linea);
+    canvas.drawLine(const Offset(0, 0), Offset(size.width * 0.7, 0), linea);
+    canvas.drawLine(const Offset(0, 0), Offset(0, size.height * 0.6), linea);
 
     // Líneas horizontales cortas decorativas (como en el manual)
     canvas.drawLine(
@@ -72,7 +72,7 @@ class _TechCornerPainter extends CustomPainter {
     );
 
     // Puntos en los extremos (como circuitos)
-    canvas.drawCircle(Offset(0, 0), 2.5, punto);
+    canvas.drawCircle(const Offset(0, 0), 2.5, punto);
     canvas.drawCircle(Offset(size.width * 0.7, 0), 2.5, punto);
     canvas.drawCircle(Offset(0, size.height * 0.6), 2.5, punto);
     canvas.drawCircle(Offset(size.width * 0.55, size.height * 0.25), 2, punto);

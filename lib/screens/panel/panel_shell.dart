@@ -15,7 +15,7 @@ import 'portfolio_admin_screen.dart';
 class PanelShell extends StatefulWidget {
   final Usuario usuario;
 
-  const PanelShell({Key? key, required this.usuario}) : super(key: key);
+  const PanelShell({super.key, required this.usuario});
 
   @override
   State<PanelShell> createState() => _PanelShellState();
@@ -245,7 +245,7 @@ class _PanelShellState extends State<PanelShell> {
         ),
       ),
       selected: activo,
-      selectedTileColor: AppColors.violetaPrincipal.withOpacity(0.12),
+      selectedTileColor: AppColors.violetaPrincipal.withValues(alpha: 0.12),
       onTap: () {
         setState(() => _seccionActiva = s.id);
         if (MediaQuery.of(context).size.width < 900) {

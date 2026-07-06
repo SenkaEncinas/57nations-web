@@ -2,22 +2,22 @@ import 'package:flutter/material.dart';
 import '../../widgets/widgets.dart';
 
 class FlutterScreen extends StatelessWidget {
-  const FlutterScreen({Key? key}) : super(key: key);
+  const FlutterScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return const Scaffold(
       body: SingleChildScrollView(
         child: Column(
           children: [
-            const NavBar(),
+            NavBar(),
             Center(
               child: Padding(
-                padding: const EdgeInsets.all(60),
+                padding: EdgeInsets.all(60),
                 child: Text('Pantalla Apps Flutter - EN CONSTRUCCIÓN'),
               ),
             ),
-            const Footer(),
+            Footer(),
           ],
         ),
       ),

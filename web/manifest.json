@@ -1,11 +1,11 @@
 {
-    "name": "senkanations",
-    "short_name": "senkanations",
+    "name": "57 Nations - Soluciones Tech Integrales",
+    "short_name": "57 Nations",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#000000",
     "theme_color": "#7F77DD",
-    "description": "A new Flutter project.",
+    "description": "Bots de WhatsApp y sistemas a medida, apps Flutter, electrónica Arduino/ESP32, impresión 3D y entrenamiento de basketball en Santa Cruz, Bolivia.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

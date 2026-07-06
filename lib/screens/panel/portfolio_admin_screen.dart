@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 import '../../models/models.dart';
 import '../../services/firebase_service.dart';
+import '../../widgets/widgets.dart';
 
 /// Pantalla de administración del Portfolio (permiso 'portfolio.administrar').
 /// Permite crear, editar y borrar proyectos que se muestran públicamente
@@ -9,7 +10,7 @@ import '../../services/firebase_service.dart';
 class PortfolioAdminScreen extends StatefulWidget {
   final Usuario usuario;
 
-  const PortfolioAdminScreen({Key? key, required this.usuario}) : super(key: key);
+  const PortfolioAdminScreen({super.key, required this.usuario});
 
   @override
   State<PortfolioAdminScreen> createState() => _PortfolioAdminScreenState();
@@ -19,6 +20,7 @@ class _PortfolioAdminScreenState extends State<PortfolioAdminScreen> {
   final _firebaseService = FirebaseService();
   List<Proyecto> _proyectos = [];
   bool _cargando = true;
+  String? _error;
 
   @override
   void initState() {
@@ -27,12 +29,22 @@ class _PortfolioAdminScreenState extends State<PortfolioAdminScreen> {
   }
 
   Future<void> _cargar() async {
-    setState(() => _cargando = true);
-    final proyectos = await _firebaseService.obtenerProyectos();
     setState(() {
-      _proyectos = proyectos;
-      _cargando = false;
+      _cargando = true;
+      _error = null;
     });
+    try {
+      final proyectos = await _firebaseService.obtenerProyectos();
+      setState(() {
+        _proyectos = proyectos;
+        _cargando = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = 'No pudimos cargar los proyectos. Revisá tu conexión.';
+        _cargando = false;
+      });
+    }
   }
 
   void _abrirFormulario({Proyecto? proyectoExistente}) {
@@ -66,8 +78,16 @@ class _PortfolioAdminScreenState extends State<PortfolioAdminScreen> {
     );
 
     if (confirmar == true) {
-      await _firebaseService.eliminarProyecto(proyecto.id);
-      _cargar();
+      try {
+        await _firebaseService.eliminarProyecto(proyecto.id);
+        _cargar();
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('No se pudo eliminar: $e'), backgroundColor: AppColors.error),
+          );
+        }
+      }
     }
   }
 
@@ -100,12 +120,11 @@ class _PortfolioAdminScreenState extends State<PortfolioAdminScreen> {
             ),
             const SizedBox(height: 24),
             if (_cargando)
-              const Center(child: Padding(padding: EdgeInsets.all(40), child: CircularProgressIndicator()))
+              const EstadoCargando(mensaje: 'Cargando proyectos...')
+            else if (_error != null)
+              EstadoError(mensaje: _error!, onReintentar: _cargar)
             else if (_proyectos.isEmpty)
-              const Padding(
-                padding: EdgeInsets.all(24),
-                child: Text('Todavía no hay proyectos cargados.', style: TextStyle(color: AppColors.textMuted)),
-              )
+              const EstadoVacio(icon: Icons.collections_bookmark_outlined, mensaje: 'Todavía no hay proyectos cargados.')
             else
               ..._proyectos.map((p) => _ProyectoAdminCard(
                     proyecto: p,
@@ -168,8 +187,8 @@ class _ProyectoAdminCard extends StatelessWidget {
                   children: [
                     Chip(
                       label: Text(proyecto.categoria, style: const TextStyle(fontSize: 11)),
-                      backgroundColor: AppColors.violetaPrincipal.withOpacity(0.15),
-                      side: BorderSide(color: AppColors.violetaPrincipal.withOpacity(0.4)),
+                      backgroundColor: AppColors.violetaPrincipal.withValues(alpha: 0.15),
+                      side: BorderSide(color: AppColors.violetaPrincipal.withValues(alpha: 0.4)),
                       visualDensity: VisualDensity.compact,
                     ),
                     Text(proyecto.estado, style: const TextStyle(color: AppColors.textDim, fontSize: 12)),
@@ -327,7 +346,7 @@ class _FormularioProyectoDialogState extends State<_FormularioProyectoDialog> {
                   _campo('Contenido detallado', _contenidoCtrl, lineas: 4),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: _categoria,
+                    initialValue: _categoria,
                     decoration: const InputDecoration(labelText: 'Categoría'),
                     items: CategoriasProyecto.todas
                         .map((c) => DropdownMenuItem(value: c, child: Text(c)))
@@ -336,7 +355,7 @@ class _FormularioProyectoDialogState extends State<_FormularioProyectoDialog> {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: _estado,
+                    initialValue: _estado,
                     decoration: const InputDecoration(labelText: 'Estado'),
                     items: ['Completo', 'En progreso']
                         .map((c) => DropdownMenuItem(value: c, child: Text(c)))
@@ -358,7 +377,7 @@ class _FormularioProyectoDialogState extends State<_FormularioProyectoDialog> {
                             ? const SizedBox(
                                 height: 18,
                                 width: 18,
-                                child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation(Colors.white)),
+                                child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation(AppColors.textLight)),
                               )
                             : const Text('Guardar'),
                       ),

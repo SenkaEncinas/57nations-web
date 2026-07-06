@@ -3,6 +3,7 @@ import '../../theme/app_colors.dart';
 import '../../models/models.dart';
 import '../../services/firebase_service.dart';
 import '../../utils/whatsapp_helper.dart';
+import '../../widgets/widgets.dart';
 
 /// Vista completa de pedidos: para Admin y Luchin (permiso 'pedidos.ver_todos').
 /// Acá se ve todo: cliente, teléfono, costos, y se controla el avance de
@@ -11,7 +12,7 @@ import '../../utils/whatsapp_helper.dart';
 class PedidosScreen extends StatefulWidget {
   final Usuario usuario;
 
-  const PedidosScreen({Key? key, required this.usuario}) : super(key: key);
+  const PedidosScreen({super.key, required this.usuario});
 
   @override
   State<PedidosScreen> createState() => _PedidosScreenState();
@@ -21,6 +22,7 @@ class _PedidosScreenState extends State<PedidosScreen> {
   final _firebaseService = FirebaseService();
   List<Pedido> _pedidos = [];
   bool _cargando = true;
+  String? _error;
   String _filtroEstado = 'Todos';
 
   @override
@@ -30,12 +32,22 @@ class _PedidosScreenState extends State<PedidosScreen> {
   }
 
   Future<void> _cargar() async {
-    setState(() => _cargando = true);
-    final pedidos = await _firebaseService.obtenerPedidos();
     setState(() {
-      _pedidos = pedidos;
-      _cargando = false;
+      _cargando = true;
+      _error = null;
     });
+    try {
+      final pedidos = await _firebaseService.obtenerPedidos();
+      setState(() {
+        _pedidos = pedidos;
+        _cargando = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = 'No pudimos cargar los pedidos. Revisá tu conexión.';
+        _cargando = false;
+      });
+    }
   }
 
   List<Pedido> get _pedidosFiltrados {
@@ -115,12 +127,11 @@ class _PedidosScreenState extends State<PedidosScreen> {
             ),
             const SizedBox(height: 20),
             if (_cargando)
-              const Center(child: Padding(padding: EdgeInsets.all(40), child: CircularProgressIndicator()))
+              const EstadoCargando(mensaje: 'Cargando pedidos...')
+            else if (_error != null)
+              EstadoError(mensaje: _error!, onReintentar: _cargar)
             else if (_pedidosFiltrados.isEmpty)
-              const Padding(
-                padding: EdgeInsets.all(40),
-                child: Text('No hay pedidos en este estado.', style: TextStyle(color: AppColors.textMuted)),
-              )
+              const EstadoVacio(icon: Icons.inventory_2_outlined, mensaje: 'No hay pedidos en este estado.')
             else
               ..._pedidosFiltrados.map((p) => _PedidoCard(
                     pedido: p,
@@ -190,7 +201,7 @@ class _PedidoCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: _colorEstado(pedido.estado).withOpacity(0.15),
+                  color: _colorEstado(pedido.estado).withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(color: _colorEstado(pedido.estado)),
                 ),
@@ -204,6 +215,16 @@ class _PedidoCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text('👤 ${pedido.clienteNombre} · 📱 ${pedido.clienteTelefono}',
               style: const TextStyle(color: AppColors.textMuted, fontSize: 13)),
+          if (pedido.origenPedido == OrigenPedido.luchin)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
+                pedido.comisionLuchin?.aplica == true
+                    ? '🤝 Origen: Luchin · Comisión ${pedido.comisionLuchin!.porcentaje.toStringAsFixed(0)}% = Bs ${pedido.comisionLuchin!.monto.toStringAsFixed(2)}'
+                    : '🤝 Origen: Luchin · Sin comisión',
+                style: const TextStyle(color: AppColors.flutterColor, fontSize: 12, fontWeight: FontWeight.w600),
+              ),
+            ),
           if (pedido.requierePintado)
             Padding(
               padding: const EdgeInsets.only(top: 4),

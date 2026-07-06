@@ -7,7 +7,7 @@ import 'panel_shell.dart';
 /// Login del panel interno para Admin, Luchin, Fifi y futuros socios.
 /// El usuario ve "Usuario" y "Contraseña" — nunca un campo de email.
 class PanelLoginScreen extends StatefulWidget {
-  const PanelLoginScreen({Key? key}) : super(key: key);
+  const PanelLoginScreen({super.key});
 
   @override
   State<PanelLoginScreen> createState() => _PanelLoginScreenState();
@@ -69,7 +69,7 @@ class _PanelLoginScreenState extends State<PanelLoginScreen> {
         }
       });
     } catch (e) {
-      setState(() => _error = 'Ocurrió un error inesperado.');
+      setState(() => _error = 'No pudimos conectar con el servidor. Revisá tu conexión e intentá de nuevo.');
     } finally {
       if (mounted) setState(() => _cargando = false);
     }
@@ -148,9 +148,9 @@ class _PanelLoginScreenState extends State<PanelLoginScreen> {
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: AppColors.error.withOpacity(0.1),
+                              color: AppColors.error.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(6),
-                              border: Border.all(color: AppColors.error.withOpacity(0.4)),
+                              border: Border.all(color: AppColors.error.withValues(alpha: 0.4)),
                             ),
                             child: Text(
                               _error!,
@@ -167,7 +167,7 @@ class _PanelLoginScreenState extends State<PanelLoginScreen> {
                                   width: 20,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.textLight),
                                   ),
                                 )
                               : const Text('INGRESAR'),
