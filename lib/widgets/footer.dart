@@ -69,7 +69,7 @@ class Footer extends StatelessWidget {
                       const _SocialIcon(
                         icon: Icons.camera_alt_outlined,
                         tooltip: 'Instagram',
-                        url: 'https://instagram.com/57nations_',
+                        url: 'https://www.instagram.com/nations_57_?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==',
                       ),
                       const SizedBox(width: AppSpacing.sm),
                       _SocialIcon(
