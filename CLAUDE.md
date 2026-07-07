@@ -193,9 +193,15 @@ Reglas establecidas; cualquier pantalla nueva debe respetarlas:
 - **Home**: el Hero cubre TODA la pantalla al entrar (minHeight = alto de
   viewport menos navbar, contenido centrado verticalmente) con el logo
   grande como protagonista — pedido explícito de Senka, no reducirlo.
-  Las cards de equipo son verticales tipo "carrusel de selección" (foto
-  retrato 3:4 vía `MiembroEquipoCard.aspectRatioFoto`, ancho acotado a
-  300px, todas idénticas). Las secciones se separan con `_TransicionSeccion`
+  El equipo se muestra con `EquipoCarrusel`
+  (`lib/widgets/equipo_carrusel.dart`): carrusel tipo song-select de Pump It
+  Up — card central grande y seleccionada, vecinas chicas y atenuadas,
+  flechas con rotación infinita, indicador de posición, click al centro →
+  perfil público. Senka (admin) es SIEMPRE el seleccionado inicial (vía
+  `esMiembroAdmin`, nunca índice fijo). Las cards son verticales (foto
+  retrato 3:4 vía `MiembroEquipoCard.aspectRatioFoto`, todas idénticas);
+  Sobre Nosotros usa las mismas cards en grilla con
+  `ordenarEquipoConAdminAlCentro()`. Las secciones se separan con `_TransicionSeccion`
   (franja de gradiente vertical) para que el cambio de fondo no sea un
   corte seco;
   la alternancia de fondos es negro → surface → negro → gradiente (nunca

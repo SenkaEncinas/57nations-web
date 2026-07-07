@@ -503,8 +503,6 @@ class _EquipoSectionState extends State<_EquipoSection> {
 
   @override
   Widget build(BuildContext context) {
-    final columnas = Responsive.valor(context, mobile: 1, tablet: 2, desktop: 3);
-
     Widget contenido;
     if (_cargando) {
       contenido = const EstadoCargando(mensaje: 'Cargando equipo...');
@@ -516,40 +514,17 @@ class _EquipoSectionState extends State<_EquipoSection> {
         mensaje: 'Estamos preparando las presentaciones del equipo. Ya vuelven.',
       );
     } else {
-      // Orden dinámico: Senka (admin) siempre al centro de la fila,
-      // recalculado según cuántos miembros haya. En mobile (1 columna)
-      // va primero, destacado arriba.
-      final equipoOrdenado = ordenarEquipoConAdminAlCentro(
-        _equipo,
-        adminPrimero: columnas == 1,
-      );
-      contenido = LayoutBuilder(
-        builder: (context, constraints) {
-          // Ancho acotado a 300px: con la foto retrato 3:4, la card queda en
-          // formato vertical tipo carrusel de selección, todas iguales.
-          final anchoCard =
-              ((constraints.maxWidth - AppSpacing.lg * (columnas - 1)) / columnas)
-                  .clamp(0.0, 300.0);
-          return Wrap(
-            alignment: WrapAlignment.center,
-            spacing: AppSpacing.lg,
-            runSpacing: AppSpacing.lg,
-            children: equipoOrdenado
-                .map((m) => SizedBox(
-                      width: anchoCard,
-                      child: MiembroEquipoCard(
-                        miembro: m,
-                        destacada: esMiembroAdmin(m),
-                        onTap: () => Navigator.pushNamed(
-                          context,
-                          AppRoutes.perfilEquipo,
-                          arguments: m.id,
-                        ),
-                      ),
-                    ))
-                .toList(),
-          );
-        },
+      // Carrusel tipo "selección de personaje": Senka (admin) arranca
+      // seleccionado al centro (detección dinámica, nunca índice fijo) y se
+      // rota miembro por miembro con vuelta infinita. Click al centro →
+      // perfil público con el currículum.
+      contenido = EquipoCarrusel(
+        equipo: _equipo,
+        onVerPerfil: (m) => Navigator.pushNamed(
+          context,
+          AppRoutes.perfilEquipo,
+          arguments: m.id,
+        ),
       );
     }
 

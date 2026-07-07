@@ -13,3 +13,4 @@ export 'miembro_equipo_card.dart';
 export 'galeria_lightbox.dart';
 export 'aparecer_al_scroll.dart';
 export 'proyecto_card.dart';
+export 'equipo_carrusel.dart';
