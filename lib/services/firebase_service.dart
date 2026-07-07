@@ -76,6 +76,27 @@ class FirebaseService {
         );
   }
 
+  /// Para el panel de administración del catálogo (permiso
+  /// 'catalogo3d.administrar'): trae TODAS las piezas, incluidas las no
+  /// disponibles — a diferencia del catálogo público que filtra disponible.
+  Future<List<Impresion3D>> obtenerTodasImpresiones3D() async {
+    final snapshot = await _firestore
+        .collection('impresiones3d')
+        .orderBy('fechaCreacion', descending: true)
+        .get();
+    return snapshot.docs.map((doc) => Impresion3D.fromFirestore(doc)).toList();
+  }
+
+  Future<void> actualizarImpresion3D(String id, Impresion3D impresion) async {
+    await _firestore.collection('impresiones3d').doc(id).update(
+          impresion.toFirestore(),
+        );
+  }
+
+  Future<void> eliminarImpresion3D(String id) async {
+    await _firestore.collection('impresiones3d').doc(id).delete();
+  }
+
   Future<List<String>> obtenerCategoriasImpresion3D() async {
     final snapshot = await _firestore.collection('categorias3d').get();
     return snapshot.docs.map((doc) => doc['nombre'] as String).toList();

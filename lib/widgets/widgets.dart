@@ -14,3 +14,4 @@ export 'galeria_lightbox.dart';
 export 'aparecer_al_scroll.dart';
 export 'proyecto_card.dart';
 export 'equipo_carrusel.dart';
+export 'whatsapp_flotante.dart';

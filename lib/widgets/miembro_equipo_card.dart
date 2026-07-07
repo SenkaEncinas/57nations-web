@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/cloudinary_service.dart';
 import '../models/models.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
@@ -118,7 +119,7 @@ class _MiembroEquipoCardState extends State<MiembroEquipoCard> {
                         curve: Curves.easeOut,
                         scale: _hovered ? 1.05 : 1.0,
                         child: m.fotoUrl != null
-                            ? Image.network(m.fotoUrl!, fit: BoxFit.cover)
+                            ? Image.network(CloudinaryService.optimizar(m.fotoUrl!, ancho: 600), fit: BoxFit.cover)
                             : _PlaceholderFotoMiembro(destacada: widget.destacada),
                       ),
                     ),

@@ -51,6 +51,7 @@ class _SobreNosotrosScreenState extends State<SobreNosotrosScreen> {
     final columnasEquipo = Responsive.valor(context, mobile: 1, tablet: 2, desktop: 3);
 
     return Scaffold(
+      floatingActionButton: const WhatsAppFlotante(),
       body: SingleChildScrollView(
         child: Column(
           children: [

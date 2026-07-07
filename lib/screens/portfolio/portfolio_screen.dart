@@ -55,6 +55,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
     final crossAxisCount = Responsive.valor(context, mobile: 1, tablet: 2, desktop: 3);
 
     return Scaffold(
+      floatingActionButton: const WhatsAppFlotante(),
       body: RefreshIndicator(
         onRefresh: _cargar,
         child: SingleChildScrollView(

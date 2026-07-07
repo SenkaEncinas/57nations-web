@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/cloudinary_service.dart';
 import '../models/models.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
@@ -80,7 +81,7 @@ class _ProyectoCardState extends State<ProyectoCard> {
                 child: proyecto.imagenes.isNotEmpty
                     ? SizedBox(
                         width: double.infinity,
-                        child: Image.network(proyecto.imagenes.first, fit: BoxFit.cover),
+                        child: Image.network(CloudinaryService.optimizar(proyecto.imagenes.first, ancho: 600), fit: BoxFit.cover),
                       )
                     : _PlaceholderFoto(color: _colorCategoria),
               ),

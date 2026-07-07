@@ -194,7 +194,7 @@ class _Thumbnail extends StatelessWidget {
     if (item.bytes != null) {
       imagen = Image.memory(item.bytes!, fit: BoxFit.cover);
     } else if (item.url != null) {
-      imagen = Image.network(item.url!, fit: BoxFit.cover);
+      imagen = Image.network(CloudinaryService.optimizar(item.url!, ancho: 200), fit: BoxFit.cover);
     } else {
       imagen = const Icon(Icons.image_outlined, color: AppColors.textDim);
     }

@@ -68,6 +68,12 @@ plan Blaze y el proyecto vive en Spark. Patrón:
   upload de Cloudinary, devuelve `secure_url`. Cloud name y preset viven SOLO
   en ese archivo (un preset unsigned no expone secretos, pero no repetirlos
   por el código ni documentarlos acá).
+- **Optimización al mostrar**: SIEMPRE envolver la URL con
+  `CloudinaryService.optimizar(url, ancho: N)` en los `Image.network` —
+  inserta `w_N,c_limit,q_auto,f_auto` en la URL y Cloudinary sirve la imagen
+  redimensionada/comprimida. Anchos de referencia: thumbnails 200, cards
+  600, detalle 800-1000, lightbox 1600. Si la URL no es de Cloudinary la
+  devuelve intacta, así que es seguro usarla en todo.
 - `lib/widgets/selector_fotos.dart` (`SelectorFotos`): widget único de subida
   (file_picker con `withData: true` para web). Modo múltiple (default) o
   `unaSola: true` para fotos de perfil. Muestra thumbnails, progreso,
@@ -84,8 +90,11 @@ plan Blaze y el proyecto vive en Spark. Patrón:
   `lib/screens/panel/mi_curriculum_screen.dart` (permiso
   `equipo.editar_propio`; admin.total también lo tiene implícito).
 - `MiembroEquipo` tiene `username` (enlaza con la cuenta de login; para docs
-  nuevos el id del doc = username) y `biografia` (texto libre multilínea,
-  sin límite — cada uno se presenta como quiere).
+  nuevos el id del doc = username), `biografia` (texto libre multilínea,
+  sin límite — cada uno se presenta como quiere) y `experiencia`
+  (List<ExperienciaItem>: título + descripción opcional, items dinámicos
+  sin límite, editables en "Mi Currículum" y mostrados como lista tipo
+  currículum en el perfil público debajo de la biografía).
 - Reglas de Firestore: lectura pública; create/update solo si
   `username` del documento == username del solicitante (o admin);
   delete solo admin. Ver bloque `equipo` en firestore.rules.
@@ -107,6 +116,26 @@ plan Blaze y el proyecto vive en Spark. Patrón:
   SIEMPRE al centro de la fila, calculado como `largo ~/ 2` sobre la lista
   real (nunca un índice hardcodeado); en mobile (1 columna) va primero.
   Su card lleva `destacada: true` (brackets de circuito).
+
+## Panel interno — secciones clave
+
+- **Dashboard** (`lib/screens/panel/dashboard_screen.dart`): SOLO admin.total,
+  primera sección del menú. Calcula en tiempo real desde Firestore: ranking
+  de servicios más cotizados ("qué pide más la gente"), pedidos pendientes,
+  cotizaciones sin responder, facturación estimada del mes (suma de
+  `calculo.precioVenta` de pedidos del mes) y comisión acumulada de Luchin
+  con toggle este mes / histórico.
+- **Catálogo 3D admin** (`lib/screens/panel/catalogo3d_admin_screen.dart`):
+  permiso `catalogo3d.administrar` (Luchin y Admin). CRUD completo de
+  `impresiones3d` con TODAS las piezas (usa `obtenerTodasImpresiones3D()`,
+  sin filtro de disponible). Las reglas de Firestore restringen la escritura
+  de `impresiones3d` a ese permiso (función genérica `tienePermiso()` en
+  firestore.rules).
+- **Botón flotante de WhatsApp** (`lib/widgets/whatsapp_flotante.dart`):
+  presente en TODAS las pantallas públicas vía `floatingActionButton`, nunca
+  en el panel. Es EL punto de contacto genérico — no agregar más botones de
+  "escribinos por WhatsApp" genéricos en pantallas públicas (los específicos
+  como "Cotizar esta pieza" o "Hablar con [nombre]" sí se mantienen).
 
 ## Calculadora de costos 3D
 

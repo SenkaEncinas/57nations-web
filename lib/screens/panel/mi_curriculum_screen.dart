@@ -30,6 +30,9 @@ class _MiCurriculumScreenState extends State<MiCurriculumScreen> {
   final _instagramCtrl = TextEditingController();
   final _linkedinCtrl = TextEditingController();
 
+  /// Controladores de los items de experiencia (lista dinámica, sin límite).
+  final List<_ExperienciaCampos> _experiencias = [];
+
   String? _fotoUrl;
   MiembroEquipo? _existente; // documento actual, si ya existe
   bool _cargando = true;
@@ -50,7 +53,21 @@ class _MiCurriculumScreenState extends State<MiCurriculumScreen> {
     _biografiaCtrl.dispose();
     _instagramCtrl.dispose();
     _linkedinCtrl.dispose();
+    for (final e in _experiencias) {
+      e.dispose();
+    }
     super.dispose();
+  }
+
+  void _agregarExperiencia({ExperienciaItem? desde}) {
+    setState(() => _experiencias.add(_ExperienciaCampos(desde: desde)));
+  }
+
+  void _eliminarExperiencia(_ExperienciaCampos campos) {
+    setState(() => _experiencias.remove(campos));
+    // Se descarta después del frame para que el TextField no use un
+    // controller ya liberado durante esta reconstrucción.
+    WidgetsBinding.instance.addPostFrameCallback((_) => campos.dispose());
   }
 
   Future<void> _cargar() async {
@@ -70,6 +87,13 @@ class _MiCurriculumScreenState extends State<MiCurriculumScreen> {
         _instagramCtrl.text = miembro?.instagramUrl ?? '';
         _linkedinCtrl.text = miembro?.linkedinUrl ?? '';
         _fotoUrl = miembro?.fotoUrl;
+        for (final e in _experiencias) {
+          e.dispose();
+        }
+        _experiencias
+          ..clear()
+          ..addAll((miembro?.experiencia ?? [])
+              .map((item) => _ExperienciaCampos(desde: item)));
         _cargando = false;
       });
     } catch (e) {
@@ -94,6 +118,13 @@ class _MiCurriculumScreenState extends State<MiCurriculumScreen> {
         rol: _rolCtrl.text.trim(),
         especialidad: _especialidadCtrl.text.trim(),
         biografia: _biografiaCtrl.text.trim(),
+        experiencia: _experiencias
+            .where((e) => e.tituloCtrl.text.trim().isNotEmpty)
+            .map((e) => ExperienciaItem(
+                  titulo: e.tituloCtrl.text.trim(),
+                  descripcion: e.descripcionCtrl.text.trim(),
+                ))
+            .toList(),
         fotoUrl: _fotoUrl,
         instagramUrl:
             _instagramCtrl.text.trim().isEmpty ? null : _instagramCtrl.text.trim(),
@@ -171,6 +202,38 @@ class _MiCurriculumScreenState extends State<MiCurriculumScreen> {
                       _biografiaCtrl,
                       lineas: 8,
                     ),
+                    // ===== EXPERIENCIA (lista dinámica) =====
+                    const Text(
+                      'EXPERIENCIA',
+                      style: TextStyle(
+                        color: AppColors.textDim,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    const Text(
+                      'Items puntuales de tu recorrido, tipo "Experiencia en BNB como asesor". '
+                      'Se muestran como lista en tu perfil público.',
+                      style: TextStyle(color: AppColors.textDim, fontSize: 12, height: 1.4),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    ..._experiencias.map((e) => _ExperienciaEditor(
+                          key: ObjectKey(e),
+                          campos: e,
+                          onEliminar: () => _eliminarExperiencia(e),
+                        )),
+                    OutlinedButton.icon(
+                      onPressed: _agregarExperiencia,
+                      icon: const Icon(Icons.add, size: 16),
+                      label: const Text('AGREGAR EXPERIENCIA'),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.lg, vertical: AppSpacing.md),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xl),
                     _campo('Instagram (URL, opcional)', _instagramCtrl),
                     _campo('LinkedIn (URL, opcional)', _linkedinCtrl),
                     const SizedBox(height: AppSpacing.md),
@@ -215,6 +278,84 @@ class _MiCurriculumScreenState extends State<MiCurriculumScreen> {
         ),
         validator:
             requerido ? (v) => (v?.isEmpty ?? true) ? 'Campo requerido' : null : null,
+      ),
+    );
+  }
+}
+
+/// Par de controladores de un item de experiencia en edición.
+class _ExperienciaCampos {
+  final TextEditingController tituloCtrl;
+  final TextEditingController descripcionCtrl;
+
+  _ExperienciaCampos({ExperienciaItem? desde})
+      : tituloCtrl = TextEditingController(text: desde?.titulo ?? ''),
+        descripcionCtrl = TextEditingController(text: desde?.descripcion ?? '');
+
+  void dispose() {
+    tituloCtrl.dispose();
+    descripcionCtrl.dispose();
+  }
+}
+
+/// Editor visual de un item de experiencia: título + descripción opcional
+/// y botón para eliminar ese item puntual.
+class _ExperienciaEditor extends StatelessWidget {
+  final _ExperienciaCampos campos;
+  final VoidCallback onEliminar;
+
+  const _ExperienciaEditor({
+    super.key,
+    required this.campos,
+    required this.onEliminar,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: const ShapeDecoration(
+        color: AppColors.surface,
+        shape: BeveledRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(5)),
+          side: BorderSide(color: AppColors.border),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: TextFormField(
+                  controller: campos.tituloCtrl,
+                  style: const TextStyle(color: AppColors.textLight),
+                  decoration: const InputDecoration(
+                    labelText: 'Título (ej: Experiencia en BNB como asesor)',
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              IconButton(
+                icon: const Icon(Icons.delete_outline, color: AppColors.error, size: 20),
+                tooltip: 'Eliminar esta experiencia',
+                onPressed: onEliminar,
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          TextFormField(
+            controller: campos.descripcionCtrl,
+            maxLines: 2,
+            style: const TextStyle(color: AppColors.textLight),
+            decoration: const InputDecoration(
+              labelText: 'Descripción (opcional)',
+              alignLabelWithHint: true,
+            ),
+          ),
+        ],
       ),
     );
   }

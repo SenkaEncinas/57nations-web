@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/cloudinary_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_theme.dart';
@@ -60,7 +61,7 @@ class _GaleriaLightboxState extends State<GaleriaLightbox> {
               itemBuilder: (context, i) => InteractiveViewer(
                 maxScale: 4,
                 child: Center(
-                  child: Image.network(widget.imagenes[i], fit: BoxFit.contain),
+                  child: Image.network(CloudinaryService.optimizar(widget.imagenes[i], ancho: 1600), fit: BoxFit.contain),
                 ),
               ),
             ),

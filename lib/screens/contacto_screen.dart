@@ -15,6 +15,7 @@ class ContactoScreen extends StatelessWidget {
     final columnas = Responsive.valor(context, mobile: 1, tablet: 3, desktop: 3);
 
     return Scaffold(
+      floatingActionButton: const WhatsAppFlotante(),
       body: SingleChildScrollView(
         child: Column(
           children: [

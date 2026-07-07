@@ -36,6 +36,14 @@ service cloud.firestore {
           .data.permisos.hasAny(['admin.total']);
     }
 
+    // True si el usuario logueado tiene el permiso indicado (admin.total
+    // lo incluye implícitamente, igual que Usuario.tienePermiso en Flutter).
+    function tienePermiso(permiso) {
+      return request.auth != null &&
+        get(/databases/$(database)/documents/usuarios/$(usernameDelSolicitante()))
+          .data.permisos.hasAny([permiso, 'admin.total']);
+    }
+
     // ==================== CATÁLOGO PÚBLICO (sin login) ====================
     // Lectura pública porque son las pantallas públicas de la web
     // (Home, Portfolio, Catálogo 3D, Sobre Nosotros). Escritura solo
@@ -48,9 +56,12 @@ service cloud.firestore {
       allow write: if request.auth != null;
     }
 
+    // Administración del Catálogo 3D: solo Luchin y Admin (permiso
+    // 'catalogo3d.administrar'; admin.total lo incluye). Pantalla:
+    // catalogo3d_admin_screen.dart.
     match /impresiones3d/{id} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if tienePermiso('catalogo3d.administrar');
     }
 
     match /categorias3d/{id} {

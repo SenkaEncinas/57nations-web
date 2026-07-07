@@ -12,6 +12,8 @@ import 'crear_pedido_screen.dart';
 import 'cotizaciones_panel_screen.dart';
 import 'portfolio_admin_screen.dart';
 import 'mi_curriculum_screen.dart';
+import 'dashboard_screen.dart';
+import 'catalogo3d_admin_screen.dart';
 
 /// Contenedor principal del panel interno. Arma el menú dinámicamente según
 /// los permisos de [usuario], para que agregar un socio/servicio nuevo en el
@@ -55,6 +57,16 @@ class _PanelShellState extends State<PanelShell> {
   List<_PanelSeccion> _construirSecciones(Usuario usuario) {
     final secciones = <_PanelSeccion>[];
 
+    // Dashboard del negocio: SOLO admin.total, siempre primero.
+    if (usuario.permisos.contains('admin.total')) {
+      secciones.add(_PanelSeccion(
+        id: 'dashboard',
+        label: 'Dashboard',
+        icon: Icons.insights_outlined,
+        builder: (u) => const DashboardScreen(),
+      ));
+    }
+
     if (usuario.tienePermiso('pedidos.ver_todos')) {
       secciones.add(_PanelSeccion(
         id: 'pedidos',
@@ -97,6 +109,14 @@ class _PanelShellState extends State<PanelShell> {
         label: 'Cotizaciones Web',
         icon: Icons.mail_outline,
         builder: (u) => CotizacionesPanelScreen(usuario: u),
+      ));
+    }
+    if (usuario.tienePermiso('catalogo3d.administrar')) {
+      secciones.add(_PanelSeccion(
+        id: 'catalogo3d',
+        label: 'Catálogo 3D',
+        icon: Icons.view_in_ar_outlined,
+        builder: (u) => Catalogo3dAdminScreen(usuario: u),
       ));
     }
     if (usuario.tienePermiso('equipo.editar_propio')) {

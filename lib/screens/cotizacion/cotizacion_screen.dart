@@ -126,6 +126,7 @@ class _CotizacionScreenState extends State<CotizacionScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: const WhatsAppFlotante(),
       body: SingleChildScrollView(
         child: Column(
           children: [

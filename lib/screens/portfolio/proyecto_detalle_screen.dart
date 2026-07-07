@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/cloudinary_service.dart';
 import '../../models/models.dart';
 import '../../routes/app_routes.dart';
 import '../../services/firebase_service.dart';
@@ -95,6 +96,7 @@ class _ProyectoDetalleScreenState extends State<ProyectoDetalleScreen> {
     }
 
     return Scaffold(
+      floatingActionButton: const WhatsAppFlotante(),
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -305,7 +307,7 @@ class _Galeria extends StatelessWidget {
                 color: AppColors.surface,
                 shape: AppTheme.cutCorner(side: const BorderSide(color: AppColors.border)),
               ),
-              child: Image.network(imagenes[indice], fit: BoxFit.cover),
+              child: Image.network(CloudinaryService.optimizar(imagenes[indice], ancho: 1000), fit: BoxFit.cover),
             ),
           ),
         ),
@@ -338,7 +340,7 @@ class _Galeria extends StatelessWidget {
                               ),
                             ),
                           ),
-                          child: Image.network(imagenes[i], fit: BoxFit.cover),
+                          child: Image.network(CloudinaryService.optimizar(imagenes[i], ancho: 200), fit: BoxFit.cover),
                         ),
                       ),
                     ),

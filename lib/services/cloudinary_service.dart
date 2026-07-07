@@ -12,6 +12,26 @@ class CloudinaryService {
   static const String _cloudName = 'rvl1xuhh';
   static const String _uploadPreset = '57nations_uploads';
 
+  /// Devuelve la URL de Cloudinary con transformación de tamaño/compresión
+  /// (`w_<ancho>,c_limit,q_auto,f_auto`): Cloudinary sirve una versión
+  /// redimensionada y en el mejor formato para el navegador, sin que el
+  /// usuario haga nada. `c_limit` nunca agranda una imagen más chica.
+  ///
+  /// Si la URL no es de Cloudinary (fotos viejas cargadas a mano) o ya trae
+  /// una transformación, se devuelve intacta — nunca rompe una imagen.
+  static String optimizar(String urlOriginal, {required int ancho}) {
+    const marcador = '/image/upload/';
+    if (!urlOriginal.contains('res.cloudinary.com') ||
+        !urlOriginal.contains(marcador)) {
+      return urlOriginal;
+    }
+    final indice = urlOriginal.indexOf(marcador) + marcador.length;
+    final resto = urlOriginal.substring(indice);
+    // Ya transformada (empieza con parámetros tipo "w_..." o "q_...").
+    if (RegExp(r'^[a-z]+_[^/]+/').hasMatch(resto)) return urlOriginal;
+    return '${urlOriginal.substring(0, indice)}w_$ancho,c_limit,q_auto,f_auto/$resto';
+  }
+
   static final Uri _uploadUrl =
       Uri.parse('https://api.cloudinary.com/v1_1/$_cloudName/image/upload');
 

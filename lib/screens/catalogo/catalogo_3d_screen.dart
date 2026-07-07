@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/cloudinary_service.dart';
 import '../../config/app_config.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
@@ -71,6 +72,7 @@ class _Catalogo3dScreenState extends State<Catalogo3dScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: const WhatsAppFlotante(),
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -267,7 +269,7 @@ class _Impresion3DCardState extends State<_Impresion3DCard> {
                 width: double.infinity,
                 color: AppColors.surface,
                 child: impresion.imagenes.isNotEmpty
-                    ? Image.network(impresion.imagenes[0], fit: BoxFit.cover)
+                    ? Image.network(CloudinaryService.optimizar(impresion.imagenes[0], ancho: 600), fit: BoxFit.cover)
                     : const Center(
                         child: Icon(Icons.image_not_supported_outlined,
                             color: AppColors.textDim, size: 32),
@@ -408,7 +410,7 @@ class _DetalleImpresionDialogState extends State<_DetalleImpresionDialog> {
                 shape: AppTheme.cutCorner(side: const BorderSide(color: AppColors.border)),
               ),
               child: imagenes.isNotEmpty
-                  ? Image.network(imagenes[indice], fit: BoxFit.cover)
+                  ? Image.network(CloudinaryService.optimizar(imagenes[indice], ancho: 800), fit: BoxFit.cover)
                   : const Center(
                       child: Icon(Icons.image_not_supported_outlined,
                           color: AppColors.textDim, size: 40),
@@ -445,7 +447,7 @@ class _DetalleImpresionDialogState extends State<_DetalleImpresionDialog> {
                               ),
                             ),
                           ),
-                          child: Image.network(imagenes[i], fit: BoxFit.cover),
+                          child: Image.network(CloudinaryService.optimizar(imagenes[i], ancho: 200), fit: BoxFit.cover),
                         ),
                       ),
                     ),

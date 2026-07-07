@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../config/app_config.dart';
 import '../routes/app_routes.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../utils/responsive.dart';
-import '../utils/whatsapp_helper.dart';
 
 class Footer extends StatelessWidget {
   const Footer({super.key});
@@ -66,17 +64,12 @@ class Footer extends StatelessWidget {
                   if (isMobile) const SizedBox(height: AppSpacing.md),
                   Row(
                     children: [
+                      // El acceso a WhatsApp vive en el botón flotante global
+                      // (WhatsAppFlotante) — acá solo redes y panel.
                       const _SocialIcon(
                         icon: Icons.camera_alt_outlined,
                         tooltip: 'Instagram',
                         url: 'https://www.instagram.com/nations_57_?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==',
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      _SocialIcon(
-                        icon: Icons.chat_bubble_outline,
-                        tooltip: 'WhatsApp',
-                        onTap: () =>
-                            WhatsAppHelper.abrirChat(telefono: AppConfig.whatsappAdminNumero),
                       ),
                       const SizedBox(width: AppSpacing.sm),
                       // Acceso discreto al panel interno
@@ -187,19 +180,14 @@ class _FooterContactColumn extends StatelessWidget {
   Widget build(BuildContext context) {
     const estilo = TextStyle(color: AppColors.textDim, fontSize: 13, height: 1.5);
 
-    return Column(
+    return const Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _FooterTituloColumna('Contacto'),
-        const SizedBox(height: AppSpacing.lg),
-        _FooterLink(
-          label: 'WhatsApp directo',
-          onTap: () => WhatsAppHelper.abrirChat(telefono: AppConfig.whatsappAdminNumero),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        const Text('Lunes a Viernes · 9:00 - 18:00', style: estilo),
-        const SizedBox(height: AppSpacing.xs),
-        const Text('Santa Cruz de la Sierra, Bolivia', style: estilo),
+        _FooterTituloColumna('Contacto'),
+        SizedBox(height: AppSpacing.lg),
+        Text('Lunes a Viernes · 9:00 - 18:00', style: estilo),
+        SizedBox(height: AppSpacing.xs),
+        Text('Santa Cruz de la Sierra, Bolivia', style: estilo),
       ],
     );
   }
@@ -250,14 +238,12 @@ class _FooterLinkState extends State<_FooterLink> {
 class _SocialIcon extends StatefulWidget {
   final IconData icon;
   final String tooltip;
-  final String? url;
-  final VoidCallback? onTap;
+  final String url;
 
   const _SocialIcon({
     required this.icon,
     required this.tooltip,
-    this.url,
-    this.onTap,
+    required this.url,
   });
 
   @override
@@ -268,15 +254,9 @@ class _SocialIconState extends State<_SocialIcon> {
   bool _isHovered = false;
 
   Future<void> _abrir() async {
-    if (widget.onTap != null) {
-      widget.onTap!();
-      return;
-    }
-    if (widget.url != null) {
-      final uri = Uri.parse(widget.url!);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      }
+    final uri = Uri.parse(widget.url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
   }
 

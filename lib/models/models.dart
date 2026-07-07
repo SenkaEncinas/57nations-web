@@ -233,6 +233,8 @@ class Cotizacion {
 ///   - usuarios.administrar         → puede crear/editar otros usuarios internos
 ///   - equipo.editar_propio         → puede editar SU PROPIO currículum público
 ///                                    (documento de `equipo` con username == su login)
+///   - catalogo3d.administrar       → puede crear/editar/eliminar piezas del
+///                                    Catálogo 3D público (Luchin y Admin)
 class Usuario {
   final String id;
   final String username; // usuario de login (no email)
@@ -571,6 +573,31 @@ class Pedido {
   }
 }
 
+// ==================== EXPERIENCIA (ítem de currículum) ====================
+/// Una experiencia puntual del currículum de un miembro del equipo,
+/// tipo "Experiencia en BNB como asesor". Complementa a `biografia`
+/// (texto libre): la biografía es la presentación, esto es la lista dura.
+class ExperienciaItem {
+  final String titulo;
+  final String descripcion; // opcional (puede ser '')
+
+  const ExperienciaItem({required this.titulo, this.descripcion = ''});
+
+  factory ExperienciaItem.fromMap(Map<String, dynamic> data) {
+    return ExperienciaItem(
+      titulo: data['titulo'] ?? '',
+      descripcion: data['descripcion'] ?? '',
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'titulo': titulo,
+      'descripcion': descripcion,
+    };
+  }
+}
+
 // ==================== MIEMBRO EQUIPO ====================
 /// Miembro del equipo interno (Senka, Luchin, Fifi y futuros socios).
 /// Cada uno edita SU PROPIO documento desde el panel ("Mi Currículum",
@@ -585,6 +612,7 @@ class MiembroEquipo {
   final String rol;
   final String especialidad;
   final String biografia;
+  final List<ExperienciaItem> experiencia;
   final String? fotoUrl;
   final String? instagramUrl;
   final String? linkedinUrl;
@@ -596,6 +624,7 @@ class MiembroEquipo {
     required this.rol,
     required this.especialidad,
     this.biografia = '',
+    this.experiencia = const [],
     this.fotoUrl,
     this.instagramUrl,
     this.linkedinUrl,
@@ -610,6 +639,9 @@ class MiembroEquipo {
       rol: data['rol'] ?? '',
       especialidad: data['especialidad'] ?? '',
       biografia: data['biografia'] ?? '',
+      experiencia: (data['experiencia'] as List<dynamic>? ?? [])
+          .map((e) => ExperienciaItem.fromMap(Map<String, dynamic>.from(e)))
+          .toList(),
       fotoUrl: data['fotoUrl'],
       instagramUrl: data['instagramUrl'],
       linkedinUrl: data['linkedinUrl'],
@@ -623,6 +655,7 @@ class MiembroEquipo {
       'rol': rol,
       'especialidad': especialidad,
       'biografia': biografia,
+      'experiencia': experiencia.map((e) => e.toMap()).toList(),
       'fotoUrl': fotoUrl,
       'instagramUrl': instagramUrl,
       'linkedinUrl': linkedinUrl,

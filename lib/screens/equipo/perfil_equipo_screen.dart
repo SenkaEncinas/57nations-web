@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/cloudinary_service.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../config/app_config.dart';
 import '../../models/models.dart';
@@ -104,6 +105,7 @@ class _PerfilEquipoScreenState extends State<PerfilEquipoScreen> {
     }
 
     return Scaffold(
+      floatingActionButton: const WhatsAppFlotante(),
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -128,7 +130,7 @@ class _PerfilEquipoScreenState extends State<PerfilEquipoScreen> {
         shape: AppTheme.cutCorner(side: const BorderSide(color: AppColors.border)),
       ),
       child: m.fotoUrl != null
-          ? Image.network(m.fotoUrl!, fit: BoxFit.cover)
+          ? Image.network(CloudinaryService.optimizar(m.fotoUrl!, ancho: 800), fit: BoxFit.cover)
           : Stack(
               fit: StackFit.expand,
               children: [
@@ -272,6 +274,11 @@ class _PerfilEquipoScreenState extends State<PerfilEquipoScreen> {
                         color: AppColors.textMuted, fontSize: 15, height: 1.8),
                   ),
                 )
+              else if (m.experiencia.isNotEmpty)
+                // Hay experiencia cargada pero no biografía: no mostramos la
+                // card de "está preparando su presentación", la experiencia
+                // de abajo ya cuenta la historia.
+                const SizedBox.shrink()
               else
                 // Biografía todavía no cargada: nada de sección vacía o rota.
                 TechCard(
@@ -301,10 +308,96 @@ class _PerfilEquipoScreenState extends State<PerfilEquipoScreen> {
                     ],
                   ),
                 ),
+              // ===== EXPERIENCIA (lista tipo currículum) =====
+              if (m.experiencia.isNotEmpty) ...[
+                if (m.biografia.trim().isNotEmpty)
+                  const SizedBox(height: AppSpacing.xxl),
+                const Text(
+                  'EXPERIENCIA',
+                  style: TextStyle(
+                    color: AppColors.cianTech,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 2.5,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 760),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: m.experiencia
+                        .map((e) => _ExperienciaFila(item: e))
+                        .toList(),
+                  ),
+                ),
+              ],
             ],
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Item de experiencia en el perfil público: viñeta de circuito (cuadradito
+/// recortado + línea vertical), título y descripción opcional.
+class _ExperienciaFila extends StatelessWidget {
+  final ExperienciaItem item;
+
+  const _ExperienciaFila({required this.item});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 5),
+            child: Container(
+              width: 8,
+              height: 8,
+              decoration: ShapeDecoration(
+                color: AppColors.violetaPrincipal.withValues(alpha: 0.25),
+                shape: AppTheme.cutCorner(
+                  size: 2,
+                  side: const BorderSide(color: AppColors.violetaPrincipal),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item.titulo,
+                  style: const TextStyle(
+                    color: AppColors.textLight,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    height: 1.4,
+                  ),
+                ),
+                if (item.descripcion.isNotEmpty) ...[
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    item.descripcion,
+                    style: const TextStyle(
+                      color: AppColors.textMuted,
+                      fontSize: 13,
+                      height: 1.6,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

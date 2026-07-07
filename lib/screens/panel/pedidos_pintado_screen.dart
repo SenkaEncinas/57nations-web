@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/cloudinary_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_theme.dart';
@@ -171,7 +172,7 @@ class _PiezaPintadoCard extends StatelessWidget {
                 ),
               ),
               child: pedido.fotos.isNotEmpty
-                  ? Image.network(pedido.fotos.first, fit: BoxFit.cover)
+                  ? Image.network(CloudinaryService.optimizar(pedido.fotos.first, ancho: 200), fit: BoxFit.cover)
                   : const Icon(Icons.image_not_supported, color: AppColors.textDim),
             ),
             const SizedBox(width: AppSpacing.lg),
