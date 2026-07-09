@@ -379,6 +379,24 @@ Reglas establecidas; cualquier pantalla nueva debe respetarlas:
 - El logo extraído del PDF del manual de marca tenía fondo negro sólido, no
   transparencia real — se resolvió con croma key (remover negro por color),
   no con máscara alpha del PDF (esa venía vacía/inútil).
+- **Usuarios que ya visitaron el sitio quedaban atascados en versiones
+  viejas** (necesitaban desregistrar el service worker a mano para ver
+  cambios nuevos). Causa raíz: `firebase.json` no tenía `headers`, así que
+  Firebase Hosting cacheaba `index.html`/`flutter_bootstrap.js`/
+  `flutter_service_worker.js` por default. El service worker que genera
+  `flutter build web` sirve esos archivos en modo "cache-first" una vez
+  que ya los tiene guardados — si el navegador nunca vuelve a pedirlos
+  frescos al servidor (porque el CDN los cachea), el service worker viejo
+  nunca se entera de que hay una versión nueva, y sigue sirviendo la app
+  vieja indefinidamente sin ningún error visible. Se resolvió agregando
+  `hosting.headers` en `firebase.json`: `Cache-Control: no-cache` por
+  default en TODO (`**`), con una excepción de cache largo/inmutable solo
+  para `canvaskit/`, `assets/` e `icons/` (esos son seguros de cachear
+  fuerte porque el propio `flutter_service_worker.js` los versiona por
+  hash de contenido y los vuelve a bajar solo si cambiaron). **No sacar
+  este bloque de `headers` ni reemplazarlo por algo más permisivo** — es
+  lo que garantiza que un usuario que ya visitó el sitio reciba la versión
+  nueva en su siguiente recarga, sin acción manual de su parte.
 
 ## Comandos frecuentes
 
