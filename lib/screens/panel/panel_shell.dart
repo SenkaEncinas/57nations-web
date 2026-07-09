@@ -14,6 +14,7 @@ import 'portfolio_admin_screen.dart';
 import 'mi_curriculum_screen.dart';
 import 'dashboard_screen.dart';
 import 'catalogo3d_admin_screen.dart';
+import 'cotizacion_pdf_screen.dart';
 
 /// Contenedor principal del panel interno. Arma el menú dinámicamente según
 /// los permisos de [usuario], para que agregar un socio/servicio nuevo en el
@@ -100,6 +101,17 @@ class _PanelShellState extends State<PanelShell> {
         label: 'Calculadora 3D',
         icon: Icons.calculate_outlined,
         builder: (u) => const Calculadora3DScreen(),
+      ));
+    }
+
+    // Cotizador en PDF: no depende de Firestore, cada quien cotiza su
+    // propio trabajo. Se otorga por permiso individual, no automático.
+    if (usuario.tienePermiso('cotizaciones.generar')) {
+      secciones.add(_PanelSeccion(
+        id: 'cotizacion_pdf',
+        label: 'Generar Cotización',
+        icon: Icons.picture_as_pdf_outlined,
+        builder: (u) => CotizacionPdfScreen(usuario: u),
       ));
     }
 

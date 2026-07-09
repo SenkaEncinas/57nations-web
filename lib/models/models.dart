@@ -235,6 +235,10 @@ class Cotizacion {
 ///                                    (documento de `equipo` con username == su login)
 ///   - catalogo3d.administrar       → puede crear/editar/eliminar piezas del
 ///                                    Catálogo 3D público (Luchin y Admin)
+///   - cotizaciones.generar         → puede generar cotizaciones en PDF
+///                                    (pantalla "Generar Cotización"). No
+///                                    depende de ningún dato en Firestore —
+///                                    el PDF descargado es el único registro.
 class Usuario {
   final String id;
   final String username; // usuario de login (no email)

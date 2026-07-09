@@ -22,7 +22,11 @@ en cada push a `main` — ver `.github/workflows/firebase-hosting-merge.yml`)
   Permisos: `pedidos.ver_todos`, `pedidos.crear`, `calculadora.usar`
 - **Fifi Oyster**: pinta piezas 3D bajo pedido. Solo ve lo esencial de pedidos
   que requieren pintado (pieza, foto, colores, fecha límite — NUNCA cliente/precio).
-  Permiso: `pedidos.ver_pintado`
+  Permiso: `pedidos.ver_pintado`. Excepción explícita y deliberada: SÍ puede
+  tener `cotizaciones.generar` (herramienta de PDF, ver sección "Panel
+  interno") — Senka pidió abrirla a cualquier cuenta interna porque no
+  toca Firestore ni el flujo de pedidos; no es una filtración del dato de
+  pedidos, es una herramienta aparte para que cada quien cotice lo suyo.
 - **Moe**: fue CLIENTA de un proyecto puntual (Cosechá), NO es colaboradora
   interna. No darle acceso al panel, ni cuenta interna, ni documento en `equipo`.
 
@@ -136,6 +140,26 @@ plan Blaze y el proyecto vive en Spark. Patrón:
   en el panel. Es EL punto de contacto genérico — no agregar más botones de
   "escribinos por WhatsApp" genéricos en pantallas públicas (los específicos
   como "Cotizar esta pieza" o "Hablar con [nombre]" sí se mantienen).
+- **Generar Cotización** (`lib/screens/panel/cotizacion_pdf_screen.dart`,
+  permiso `cotizaciones.generar`): arma una cotización profesional en PDF
+  para cualquier trabajo (bots, apps, Arduino, 3D, entrenamiento, pintado).
+  **NO usa Firestore para nada** — es intencional: el PDF descargado ES el
+  registro de la cotización, así el precio que ya vio el cliente no puede
+  cambiar por accidente después (si hace falta corregir algo, se genera un
+  PDF nuevo). Por eso este permiso no depende de `pedidos.crear` ni de
+  ningún otro — es independiente, y se asigna a mano por usuario. Al salir
+  de la sección el formulario se pierde solo (el widget se destruye), no
+  hay que "limpiar" nada.
+  - Tiene una sección embebida "Usar Calculadora 3D" (misma fórmula que
+    `CalculoCostos3D` en `models.dart`) que agrega un ítem precargado con
+    el precio calculado — ese precio queda como texto editable en la tabla
+    de ítems por si hay que ajustarlo antes de descargar.
+  - `lib/services/pdf_cotizacion_service.dart` arma el documento con el
+    paquete `pdf` (fuente Helvetica estándar — soporta tildes/ñ sin
+    depender de bajar una fuente por red al exportar); `lib/screens/panel/
+    cotizacion_pdf_screen.dart` usa `PdfPreview` del paquete `printing`
+    para la vista previa en vivo (se regenera solo al tipear) y para
+    imprimir/descargar. Ambos paquetes funcionan en Flutter Web.
 
 ## Calculadora de costos 3D
 
