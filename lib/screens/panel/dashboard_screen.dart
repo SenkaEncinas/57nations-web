@@ -183,7 +183,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               const SizedBox(height: AppSpacing.xl),
               // ===== QUÉ PIDE MÁS LA GENTE =====
               TechCard(
-                showCornerBrackets: true,
                 padding: const EdgeInsets.all(AppSpacing.xl),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

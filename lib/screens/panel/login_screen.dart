@@ -83,19 +83,14 @@ class _PanelLoginScreenState extends State<PanelLoginScreen> {
       backgroundColor: AppColors.background,
       body: Stack(
         children: [
-          // Fondo con gradiente y grid de circuito sutil, como los heros públicos
-          Positioned.fill(
-            child: Container(
-              decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
-              child: CustomPaint(
-                painter: CircuitGridPainter(
-                  color: AppColors.violetaPrincipal.withValues(alpha: 0.05),
-                ),
-              ),
+          // Fondo con gradiente de marca, liso. El grid de circuito y las
+          // esquinas TechCornerDecoration quedan reservados al Hero del
+          // Home (dirección minimalista, ver CLAUDE.md).
+          const Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(gradient: AppColors.primaryGradient),
             ),
           ),
-          const Positioned(top: 24, left: 24, child: TechCornerDecoration()),
-          const Positioned(top: 24, right: 24, child: TechCornerDecoration(espejado: true)),
           Center(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(AppSpacing.xl),
@@ -121,7 +116,6 @@ class _PanelLoginScreenState extends State<PanelLoginScreen> {
                       ),
                       const SizedBox(height: AppSpacing.xxl),
                       TechCard(
-                        showCornerBrackets: true,
                         padding: const EdgeInsets.all(28),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,

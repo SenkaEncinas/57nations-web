@@ -10,30 +10,34 @@ class FlutterScreen extends StatelessWidget {
     return const ServicioScreenBase(
       titulo: 'Apps Flutter',
       subtitulo:
-          'Desarrollo multiplataforma iOS + Android con interfaces intuitivas: '
-          'una sola app, todos los dispositivos.',
+          'Te armamos una app para el celular que funciona igual de bien en '
+          'iPhone y en Android — un solo desarrollo, fácil de usar desde el '
+          'primer día.',
       colorAcento: AppColors.flutterColor,
       capacidades: [
         CapacidadServicio(
           icon: Icons.devices_outlined,
           titulo: 'iOS + Android + Web',
           descripcion:
-              'Un solo desarrollo que corre en teléfonos, tablets y navegador, '
-              'con la misma calidad en todos.',
+              'La misma app funciona en tu celular, en una tablet y hasta en '
+              'la computadora desde el navegador — no hay que pagar ni '
+              'mantener versiones separadas.',
         ),
         CapacidadServicio(
           icon: Icons.design_services_outlined,
           titulo: 'Interfaces intuitivas',
           descripcion:
-              'Diseño pensado para que cualquier usuario entienda la app sin '
-              'manual: claro, rápido y consistente.',
+              'La diseñamos para que se entienda sola, sin instrucciones ni '
+              'tutorial: botones claros, todo donde uno lo espera encontrar.',
         ),
         CapacidadServicio(
           icon: Icons.cloud_outlined,
-          titulo: 'Backend y datos',
+          titulo: 'Datos en la nube',
           descripcion:
-              'Integración con Firebase y servicios en la nube: login, base de '
-              'datos en tiempo real y notificaciones.',
+              'Todo lo que el usuario guarda —su cuenta, sus datos, sus '
+              'mensajes— queda a salvo en internet y se actualiza al '
+              'instante en todos sus dispositivos. También podemos '
+              'mandarle avisos directo al celular.',
         ),
       ],
     );

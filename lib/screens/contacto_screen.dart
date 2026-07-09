@@ -65,7 +65,6 @@ class ContactoScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: AppSpacing.section),
                   TechCard(
-                    showCornerBrackets: true,
                     padding: const EdgeInsets.all(AppSpacing.xxl),
                     child: Column(
                       children: [

@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../utils/responsive.dart';
-import 'tech_corner_decoration.dart';
 
 /// Encabezado reutilizable para páginas internas (Servicios, Portfolio,
-/// Contacto, Sobre Nosotros): gradiente de marca, grid de circuito sutil,
-/// decoración de esquinas (manual, sección 05), overline + título + subtítulo
-/// y acciones opcionales (botones CTA).
+/// Contacto, Sobre Nosotros): gradiente de marca, overline + título +
+/// subtítulo y acciones opcionales (botones CTA).
+///
+/// Dirección minimalista (ver CLAUDE.md): un solo acento de color por
+/// página ([colorAcento]), sin grid de circuito ni TechCornerDecoration —
+/// esos quedan reservados exclusivamente al Hero del Home. Un glow radial
+/// sutil es la única textura de fondo.
 class PageHero extends StatelessWidget {
   final String titulo;
   final String subtitulo;
@@ -35,17 +38,9 @@ class PageHero extends StatelessWidget {
       decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
       child: Stack(
         children: [
-          // Grid de circuito sutil sobre todo el hero
-          Positioned.fill(
-            child: CustomPaint(
-              painter: CircuitGridPainter(color: acento.withValues(alpha: 0.05)),
-            ),
-          ),
-          if (!isMobile) ...[
-            const Positioned(top: 24, left: 24, child: TechCornerDecoration()),
-            const Positioned(top: 24, right: 24, child: TechCornerDecoration(espejado: true)),
-          ],
-          // Glow radial suave
+          // Único elemento decorativo: un glow radial sutil en el acento
+          // de la página. Nada de grid ni esquinas — eso es exclusivo del
+          // Hero del Home (ver CLAUDE.md, dirección minimalista).
           Positioned(
             top: -100,
             left: isMobile ? -80 : 100,
@@ -55,7 +50,7 @@ class PageHero extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
-                  colors: [acento.withValues(alpha: 0.20), acento.withValues(alpha: 0)],
+                  colors: [acento.withValues(alpha: 0.12), acento.withValues(alpha: 0)],
                 ),
               ),
             ),

@@ -10,30 +10,32 @@ class ArduinoScreen extends StatelessWidget {
     return const ServicioScreenBase(
       titulo: 'Arduino & ESP32',
       subtitulo:
-          'IoT, automatización y control remoto de dispositivos inteligentes: '
-          'electrónica que conecta el mundo físico con tu teléfono.',
+          'Conectamos objetos de tu casa o negocio a internet para que los '
+          'controles y los mires desde el celular, estés donde estés.',
       colorAcento: AppColors.arduinoColor,
       capacidades: [
         CapacidadServicio(
           icon: Icons.sensors_outlined,
-          titulo: 'IoT y sensores',
+          titulo: 'Sensores conectados',
           descripcion:
-              'Medición de temperatura, humedad, movimiento o consumo, con '
-              'datos visibles desde cualquier lugar.',
+              'Medimos temperatura, humedad, movimiento o consumo de luz con '
+              'sensores chicos, y vos ves esos datos en tu celular desde '
+              'donde estés.',
         ),
         CapacidadServicio(
           icon: Icons.settings_remote_outlined,
           titulo: 'Control remoto',
           descripcion:
-              'Encendé, apagá y programá dispositivos desde el celular: luces, '
-              'riego, portones, lo que necesites.',
+              'Prendé, apagá o programá horarios para luces, riego, portones '
+              'o lo que necesites — todo desde una app en tu celular.',
         ),
         CapacidadServicio(
           icon: Icons.precision_manufacturing_outlined,
-          titulo: 'Automatización física',
+          titulo: 'Tareas automáticas',
           descripcion:
-              'Procesos del mundo real automatizados con ESP32 y Arduino, '
-              'integrados con tus sistemas.',
+              'Tareas que hoy hacés a mano —como regar una planta o '
+              'controlar una máquina— las armamos para que pasen solas, en '
+              'el momento justo.',
         ),
       ],
     );

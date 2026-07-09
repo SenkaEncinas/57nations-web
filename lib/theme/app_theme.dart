@@ -1,10 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 
 /// Tema visual 57 NATIONS.
-/// Estética: tech futurista, fondo negro/violeta, tipografía geométrica
-/// limpia, glow violeta suave, bordes con esquinas recortadas.
-/// Ver manual de marca secciones 04 (Tipografía) y 05 (Sistema gráfico).
+/// Estética: tech minimalista, fondo negro/violeta, glow sutil y puntual,
+/// bordes con esquinas recortadas. Ver manual de marca secciones 04
+/// (Tipografía) y 05 (Sistema gráfico), y CLAUDE.md "Dirección visual:
+/// minimalista" para el criterio vigente (agosto 2026).
+///
+/// Tipografía: Inter (vía `google_fonts`) en todo el sitio — geométrica,
+/// muy legible, sin personalidad "gamer"; el manual de marca todavía no
+/// define una fuente oficial con archivo .ttf propio, así que se eligió
+/// Inter como la opción minimalista estándar de la industria mientras
+/// tanto. `GoogleFonts.interTextTheme()` envuelve el `TextTheme` normal
+/// (conserva tamaños/pesos/colores ya definidos, solo cambia la familia).
 ///
 /// Decisión de sistema: TODOS los contenedores interactivos (botones, inputs,
 /// cards, chips, diálogos) usan [BeveledRectangleBorder] — esquina recortada
@@ -48,7 +57,8 @@ class AppTheme {
           fontWeight: FontWeight.bold,
         ),
       ),
-      textTheme: _buildTextTheme(),
+      textTheme: GoogleFonts.interTextTheme(_buildTextTheme()),
+      primaryTextTheme: GoogleFonts.interTextTheme(_buildTextTheme()),
       // Los inputs exigen InputBorder (no acepta BeveledRectangleBorder),
       // así que usamos OutlineInputBorder con radio mínimo: esquina
       // prácticamente recta, coherente con el sistema de marcos del manual.

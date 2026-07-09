@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_spacing.dart';
 import '../theme/app_theme.dart';
 
-/// Tarjeta de servicio del Home. Sigue el sistema de marca: esquinas
-/// recortadas, borde fino, glow sutil del color de categoría al hover y
-/// una leve elevación animada.
+/// Tarjeta de servicio del Home. Dirección minimalista: el color de
+/// categoría queda SOLO como tinte del ícono (identificador funcional,
+/// pequeño); el resto de la card (borde, sombra, hover) usa un único
+/// acento — violeta, el primario del sitio — para que la grilla de 5
+/// tarjetas no muestre cinco colores compitiendo a la vez.
 class ServiceCard extends StatefulWidget {
   final IconData icon;
   final String title;
@@ -39,22 +42,22 @@ class _ServiceCardState extends State<ServiceCard> {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 220),
           curve: Curves.easeOut,
-          transform: Matrix4.translationValues(0, _isHovered ? -4 : 0, 0),
-          padding: const EdgeInsets.all(24),
+          transform: Matrix4.translationValues(0, _isHovered ? -3 : 0, 0),
+          padding: const EdgeInsets.all(AppSpacing.xl),
           decoration: ShapeDecoration(
             color: AppColors.surfaceElevated,
             shape: AppTheme.cutCorner(
               side: BorderSide(
-                color: _isHovered ? widget.color : AppColors.border,
-                width: _isHovered ? 1.4 : 1,
+                color: _isHovered ? AppColors.violetaPrincipal : AppColors.border,
+                width: _isHovered ? 1.2 : 1,
               ),
             ),
             shadows: _isHovered
                 ? [
                     BoxShadow(
-                      color: widget.color.withValues(alpha: 0.22),
-                      blurRadius: 20,
-                      offset: const Offset(0, 8),
+                      color: AppColors.violetaPrincipal.withValues(alpha: 0.14),
+                      blurRadius: 14,
+                      offset: const Offset(0, 6),
                     ),
                   ]
                 : const [],
@@ -62,21 +65,19 @@ class _ServiceCardState extends State<ServiceCard> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // ICONO en marco recortado del color de categoría
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 220),
-                width: 56,
-                height: 56,
-                decoration: ShapeDecoration(
-                  color: widget.color.withValues(alpha: _isHovered ? 0.18 : 0.10),
-                  shape: AppTheme.cutCorner(
-                    size: AppTheme.cutSizeSm,
-                    side: BorderSide(color: widget.color.withValues(alpha: 0.35)),
-                  ),
+              // Único uso del color de categoría: un tinte chico en el
+              // ícono, para poder identificar el servicio de un vistazo
+              // sin que compita con el resto de la tarjeta.
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: widget.color.withValues(alpha: 0.10),
+                  shape: BoxShape.circle,
                 ),
-                child: Icon(widget.icon, color: widget.color, size: 28),
+                child: Icon(widget.icon, color: widget.color, size: 26),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
               Text(
                 widget.title,
                 style: const TextStyle(
@@ -87,7 +88,7 @@ class _ServiceCardState extends State<ServiceCard> {
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: AppSpacing.sm),
               Text(
                 widget.description,
                 style: const TextStyle(
@@ -97,12 +98,14 @@ class _ServiceCardState extends State<ServiceCard> {
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 14),
-              // "Ver más" aparece resaltado al hover
+              const SizedBox(height: AppSpacing.md),
+              // "Ver más" aparece resaltado al hover, siempre en el
+              // acento único de la sección (violeta) — no en el color
+              // de categoría.
               AnimatedDefaultTextStyle(
                 duration: const Duration(milliseconds: 180),
                 style: TextStyle(
-                  color: _isHovered ? widget.color : AppColors.textDim,
+                  color: _isHovered ? AppColors.violetaPrincipal : AppColors.textDim,
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.5,
@@ -110,7 +113,7 @@ class _ServiceCardState extends State<ServiceCard> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text('VER MÁS'),
+                    const Text('Ver más'),
                     const SizedBox(width: 6),
                     AnimatedSlide(
                       duration: const Duration(milliseconds: 180),
@@ -118,7 +121,7 @@ class _ServiceCardState extends State<ServiceCard> {
                       child: Icon(
                         Icons.arrow_forward,
                         size: 14,
-                        color: _isHovered ? widget.color : AppColors.textDim,
+                        color: _isHovered ? AppColors.violetaPrincipal : AppColors.textDim,
                       ),
                     ),
                   ],

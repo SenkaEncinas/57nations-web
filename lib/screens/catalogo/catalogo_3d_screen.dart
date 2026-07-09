@@ -254,8 +254,8 @@ class _Impresion3DCardState extends State<_Impresion3DCard> {
           shadows: _isHovered
               ? [
                   BoxShadow(
-                    color: AppColors.impresion3dColor.withValues(alpha: 0.2),
-                    blurRadius: 20,
+                    color: AppColors.impresion3dColor.withValues(alpha: 0.14),
+                    blurRadius: 14,
                     offset: const Offset(0, 8),
                   ),
                 ]

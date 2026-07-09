@@ -67,8 +67,8 @@ class _ProyectoCardState extends State<ProyectoCard> {
             shadows: _isHovered
                 ? [
                     BoxShadow(
-                      color: AppColors.violetaPrincipal.withValues(alpha: 0.22),
-                      blurRadius: 20,
+                      color: AppColors.violetaPrincipal.withValues(alpha: 0.14),
+                      blurRadius: 14,
                       offset: const Offset(0, 8),
                     ),
                   ]

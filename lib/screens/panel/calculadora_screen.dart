@@ -291,7 +291,6 @@ class _Calculadora3DScreenState extends State<Calculadora3DScreen> {
 
   Widget _buildDesglose() {
     return TechCard(
-      showCornerBrackets: true,
       accentColor: AppColors.impresion3dColor,
       padding: const EdgeInsets.all(AppSpacing.xl),
       child: Column(

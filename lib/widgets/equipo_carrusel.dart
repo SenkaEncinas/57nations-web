@@ -256,7 +256,7 @@ class _FlechaCarruselState extends State<_FlechaCarrusel> {
             shadows: _hovered
                 ? [
                     BoxShadow(
-                      color: AppColors.cianTech.withValues(alpha: 0.2),
+                      color: AppColors.cianTech.withValues(alpha: 0.14),
                       blurRadius: 12,
                     ),
                   ]

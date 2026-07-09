@@ -123,7 +123,6 @@ class ServicioScreenBase extends StatelessWidget {
               alternada: true,
               verticalPadding: AppSpacing.sectionLg,
               child: TechCard(
-                showCornerBrackets: true,
                 accentColor: colorAcento,
                 padding: const EdgeInsets.all(AppSpacing.xxl),
                 child: Column(

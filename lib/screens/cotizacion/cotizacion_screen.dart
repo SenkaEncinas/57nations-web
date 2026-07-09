@@ -154,7 +154,6 @@ class _CotizacionScreenState extends State<CotizacionScreen> {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: AppSpacing.maxFormWidth),
           child: TechCard(
-            showCornerBrackets: true,
             padding: EdgeInsets.all(isMobile ? AppSpacing.xl : AppSpacing.section),
             child: Form(
               key: _formKey,

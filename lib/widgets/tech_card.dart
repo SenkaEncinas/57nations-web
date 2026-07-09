@@ -56,11 +56,13 @@ class _TechCardState extends State<TechCard> {
             width: _hovered && interactiva ? 1.4 : 1,
           ),
         ),
+        // Sombra sutil y puntual (dirección minimalista): solo al hover,
+        // nunca como decoración ambiental constante.
         shadows: _hovered && interactiva
             ? [
                 BoxShadow(
-                  color: acento.withValues(alpha: 0.22),
-                  blurRadius: 20,
+                  color: acento.withValues(alpha: 0.14),
+                  blurRadius: 14,
                   offset: const Offset(0, 6),
                 ),
               ]

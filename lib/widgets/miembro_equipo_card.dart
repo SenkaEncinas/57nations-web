@@ -97,12 +97,14 @@ class _MiembroEquipoCardState extends State<MiembroEquipoCard> {
                     width: _hovered ? 1.4 : 1,
                   ),
                 ),
+                // Sombra más sutil (dirección minimalista) — estructura e
+                // interacción del carrusel/tarjeta NO cambian, solo esto.
                 shadows: _hovered
                     ? [
                         BoxShadow(
-                          color: AppColors.violetaPrincipal.withValues(alpha: 0.22),
-                          blurRadius: 20,
-                          offset: const Offset(0, 8),
+                          color: AppColors.violetaPrincipal.withValues(alpha: 0.14),
+                          blurRadius: 14,
+                          offset: const Offset(0, 6),
                         ),
                       ]
                     : const [],

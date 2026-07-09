@@ -177,6 +177,69 @@ Logos ya extraídos en `assets/logos/`:
 - `logo_57nations.png` — rectangular, para Navbar/Footer
 - `logo_57_cuadrado.png` — cuadrado, para favicon/ícono de app
 
+## Dirección visual: minimalista (agosto 2026 — CRITERIO VIGENTE)
+
+El rediseño de julio 2026 (sección siguiente) quedó demasiado "tech
+maximalista/gamer": muchos badges/chips, glows constantes, varios colores
+de categoría compitiendo a la vez. Se corrigió hacia minimalismo — **la
+paleta de `app_colors.dart` NO cambió**, cambió cuánto y cómo se usa:
+
+- **Un solo acento de color por pantalla/sección**, nunca varios
+  compitiendo. Los colores de categoría (`botColor`, `flutterColor`,
+  `arduinoColor`, `impresion3dColor`, `entrenamientoColor`) se reservan
+  para usos PEQUEÑOS y puntuales (el tinte de un ícono, por ejemplo en
+  `ServiceCard`), nunca para el chrome completo de una card (borde, sombra,
+  fondo) cuando hay varias cards de distinta categoría visibles juntas —
+  ahí todas comparten un único acento (violeta, el primario del sitio).
+  Una página de un solo servicio (`ServicioScreenBase` + `colorAcento`) sí
+  puede usar su color de categoría como acento único de esa página entera,
+  porque ahí no compite con nada más.
+- **`TechCornerDecoration` (las líneas en L de las esquinas) SOLO en el
+  Hero del Home** — en ningún otro lugar del sitio. Antes estaba también en
+  `PageHero` (o sea, en la cabecera de TODAS las páginas internas) y en el
+  banner de cierre del Home; se sacó de los dos.
+- **`TechCard.showCornerBrackets`**: ya no se usa en ningún lado del sitio
+  (se sacó de las 5 páginas de servicio, Contacto, Cotización, Home,
+  Dashboard, Calculadora y Login). El prop sigue existiendo en el widget
+  por compatibilidad, pero no pasar `showCornerBrackets: true` en código
+  nuevo — quedó reservado conceptualmente para nada, es dead code a propósito
+  (más fácil de reactivar que de recrear si algún día hace falta).
+- **Tipografía: Inter** (paquete `google_fonts`, `GoogleFonts.interTextTheme()`
+  envolviendo el `TextTheme` de `AppTheme._buildTextTheme()`). Geométrica,
+  muy legible, sin la personalidad "tech gamer" que tenía la fuente default
+  de Flutter en cuerpos grandes. Se carga desde Google Fonts (no hay .ttf
+  bundleado) — es el mismo patrón que usa cualquier sitio web con Google
+  Fonts, funciona igual en Firebase Hosting. Si el manual de marca define
+  una tipografía oficial más adelante, reemplazar acá.
+- **`PageHero` ya no tiene grid de circuito de fondo** (`CircuitGridPainter`
+  sigue existiendo como clase, pero `PageHero` no la instancia más) — solo
+  un glow radial sutil (alpha 0.12) en el acento de la página.
+- **Botones: un solo estilo primario (violeta sólido, el default del
+  tema) y un solo estilo secundario (outline, el default del tema)** en
+  todo el sitio. Nunca overrides ad hoc de color (ej. el CTA "COTIZAR
+  PROYECTO" del Home tenía un tercer estilo cian-sólido suelto — se sacó,
+  ahora usa el `ElevatedButton` default).
+- **Sombras/glows sutiles y puntuales**, no decoración ambiental constante:
+  blur ~14, alpha ~0.12-0.14 como estándar (antes blur 20, alpha 0.22).
+- **Copy accesible**: las descripciones de servicios (Home y páginas de
+  servicio) están escritas para alguien sin conocimiento técnico — frases
+  cortas, ejemplos cotidianos en vez de jerga. Si hay que nombrar algo
+  técnico, se explica en la misma frase con un ejemplo (ej. Arduino/ESP32:
+  "conectamos objetos a internet para que los controles desde tu celular").
+- **Equipo (`EquipoCarrusel`/`MiembroEquipoCard`) explícitamente excluido**
+  de este cambio — su estructura e interacción (carrusel tipo song-select,
+  card central grande) se mantienen tal cual; solo se le bajó la sombra al
+  mismo estándar sutil del resto.
+- **Estado del rollout**: COMPLETO (agosto 2026) en todo el sitio público y
+  el panel — Home, las 5 páginas de servicio, Portfolio, detalle de
+  proyecto, Catálogo 3D (público y admin), Contacto, Cotización, Sobre
+  Nosotros, perfil de equipo, y el panel entero (Dashboard, Pedidos,
+  Pintado, Cotizaciones, Login, Calculadora, Mi Currículum). Auditado con
+  grep sitewide (sin `showCornerBrackets: true`, sin sombras con alpha
+  >0.14 salvo dos usos puntuales legítimos: el fill de un bullet chico en
+  el perfil de equipo, y el `selectedColor` de los chips del theme, que no
+  son "glow" sino intensidad de relleno de un estado seleccionado).
+
 ## Sistema de diseño UI (rediseño julio 2026 — seguir SIEMPRE)
 
 Rediseño completo del sitio público + panel aplicando el manual de marca.
@@ -198,7 +261,7 @@ Reglas establecidas; cualquier pantalla nueva debe respetarlas:
   Prohibido comparar `MediaQuery...width` contra números sueltos en pantallas.
 - **Widgets compartidos** en `lib/widgets/` (exportados por `widgets.dart`):
   - `TechCard` — card estándar: esquinas recortadas + glow violeta sutil al
-    hover; `showCornerBrackets: true` solo en cards destacadas (no saturar).
+    hover; `showCornerBrackets` en retiro, ver "Dirección visual: minimalista".
   - `SectionHeader` — overline con línea de circuito + título + subtítulo;
     `compacto: true` dentro del panel.
   - `PageSection` — sección pública con fondo alternado (negro/surface),
@@ -206,8 +269,10 @@ Reglas establecidas; cualquier pantalla nueva debe respetarlas:
   - `StatusBadge` + `colorEstadoPedido()` + `FlujoPedidoStepper`
     (`status_badge.dart`) — estados de pedido centralizados; nunca duplicar
     el mapa de colores por pantalla.
-  - `PageHero` — hero de páginas internas: overline, grid de circuito sutil
-    (`CircuitGridPainter`, reutilizable en fondos) y acciones opcionales.
+  - `PageHero` — hero de páginas internas: overline + acciones opcionales;
+    sin grid de fondo (ver "Dirección visual: minimalista").
+    `CircuitGridPainter` sigue existiendo para usos chicos y puntuales
+    (placeholders de foto en `ProyectoCard`/`MiembroEquipoCard`).
   - `ServicioScreenBase` (`lib/screens/servicios/servicio_screen_base.dart`) —
     plantilla única de las 5 páginas de servicio (hero + capacidades + CTA).
 - **Glow siempre sutil y nunca en todo a la vez** (manual): solo en hover de
@@ -267,11 +332,14 @@ Reglas establecidas; cualquier pantalla nueva debe respetarlas:
       `cotizaciones.eliminar`, implícito en admin.total; reglas de Firestore
       también restringen el delete a admin)
 - [ ] Pantalla para que Admin cree usuarios sin ir a Firebase Console
-- [ ] Validar/completar contenido real de las 5 páginas de servicios: ya usan
-      `ServicioScreenBase` con capacidades derivadas de las descripciones del
-      Home, falta que Senka confirme los textos definitivos
+- [x] Dirección visual minimalista aplicada a TODO el sitio (agosto 2026 —
+      ver sección "Dirección visual: minimalista") + tipografía Inter
+- [x] Copy de las 5 páginas de servicio y del Home reescrito en lenguaje
+      simple, sin jerga sin explicar (Bots, Flutter, Arduino/ESP32,
+      Impresión 3D, Entrenamiento) — sigue siendo la redacción de Claude,
+      falta que Senka la lea y confirme que es precisa
 - [ ] Si el manual de marca nombra una tipografía oficial (sección 04),
-      conseguir el .ttf, declararla en pubspec y usarla en AppTheme
+      reemplazar Inter por esa fuente en `AppTheme`
 - [ ] Arreglar `.github/workflows/firebase-hosting-pull-request.yml` (mismo
       fix que se hizo en `firebase-hosting-merge.yml`: agregar pasos de
       Flutter en vez de `npm ci && npm run build`)

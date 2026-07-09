@@ -10,30 +10,34 @@ class BotsScreen extends StatelessWidget {
     return const ServicioScreenBase(
       titulo: 'Bots & Sistemas',
       subtitulo:
-          'Automatización vía WhatsApp, sistemas con base de datos y control '
-          'inteligente para que tu negocio trabaje solo.',
+          'Un asistente que contesta tu WhatsApp, guarda los pedidos y te '
+          'avisa lo importante — para que tu negocio siga funcionando '
+          'aunque no estés mirando el celular.',
       colorAcento: AppColors.botColor,
       capacidades: [
         CapacidadServicio(
           icon: Icons.chat_outlined,
           titulo: 'Bots de WhatsApp',
           descripcion:
-              'Atención automática, respuestas inteligentes y flujos de venta '
-              'directamente en el chat que tus clientes ya usan.',
+              'Tu WhatsApp responde las preguntas frecuentes, toma pedidos y '
+              'hasta vende solo — sin que nadie tenga que estar pendiente '
+              'del celular todo el día.',
         ),
         CapacidadServicio(
           icon: Icons.storage_outlined,
           titulo: 'Sistemas a medida',
           descripcion:
-              'Sistemas con base de datos para inventario, pedidos, clientes o '
-              'lo que tu operación necesite registrar.',
+              'Un lugar único y ordenado para anotar tu inventario, tus '
+              'pedidos o tus clientes — como una planilla, pero hecha a tu '
+              'medida y mucho más fácil de usar.',
         ),
         CapacidadServicio(
           icon: Icons.auto_mode_outlined,
           titulo: 'Automatización',
           descripcion:
-              'Procesos repetitivos convertidos en flujos automáticos: menos '
-              'errores manuales, más tiempo para tu negocio.',
+              'Esas tareas que hacés siempre igual — anotar, avisar, '
+              'ordenar — las armamos para que se hagan solas. Menos '
+              'errores, más tiempo libre para vos.',
         ),
       ],
     );

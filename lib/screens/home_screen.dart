@@ -82,13 +82,9 @@ class _HeroSection extends StatelessWidget {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          Positioned.fill(
-            child: CustomPaint(
-              painter: CircuitGridPainter(
-                color: AppColors.violetaPrincipal.withValues(alpha: 0.06),
-              ),
-            ),
-          ),
+          // Único lugar del sitio con TechCornerDecoration (dirección
+          // minimalista, ver CLAUDE.md): el Hero es la carta de
+          // presentación, todo lo demás quedó despejado.
           if (!isMobile) ...[
             const Positioned(top: 24, left: 24, child: TechCornerDecoration()),
             const Positioned(top: 24, right: 24, child: TechCornerDecoration(espejado: true)),
@@ -103,7 +99,7 @@ class _HeroSection extends StatelessWidget {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    AppColors.violetaPrincipal.withValues(alpha: 0.22),
+                    AppColors.violetaPrincipal.withValues(alpha: 0.14),
                     AppColors.violetaPrincipal.withValues(alpha: 0),
                   ],
                 ),
@@ -168,9 +164,9 @@ class _HeroSection extends StatelessWidget {
                     SizedBox(
                       width: isMobile ? double.infinity : 560,
                       child: Text(
-                        'Transformamos tus ideas en proyectos reales. Bots, apps, '
-                        'electrónica e impresión 3D — de la idea al producto, todo '
-                        'bajo un mismo techo.',
+                        'Contanos qué necesitás — una app, un bot que atienda tu '
+                        'WhatsApp, un dispositivo conectado a internet, una pieza '
+                        'en 3D — y te ayudamos a hacerlo realidad.',
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                               color: Colors.white70,
                               height: 1.7,
@@ -178,6 +174,10 @@ class _HeroSection extends StatelessWidget {
                       ),
                     ),
                     SizedBox(height: isMobile ? AppSpacing.xxl : AppSpacing.section),
+                    // Un solo estilo primario (violeta sólido, default del
+                    // tema) y un solo estilo secundario (outline) en todo
+                    // el sitio — antes este botón tenía un tercer estilo
+                    // ad hoc (cian sólido) que competía con el resto.
                     Wrap(
                       spacing: AppSpacing.lg,
                       runSpacing: AppSpacing.md,
@@ -185,8 +185,6 @@ class _HeroSection extends StatelessWidget {
                         ElevatedButton(
                           onPressed: () => Navigator.pushNamed(context, AppRoutes.cotizacion),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.cianTech,
-                            foregroundColor: AppColors.negroProfundo,
                             padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 18),
                           ),
                           child: const Text('COTIZAR PROYECTO'),
@@ -215,39 +213,46 @@ class _HeroSection extends StatelessWidget {
 class _ServiciosSection extends StatelessWidget {
   const _ServiciosSection();
 
+  // Descripciones en lenguaje simple, sin jerga sin explicar (ver
+  // CLAUDE.md, dirección minimalista + copy accesible).
   static final _servicios = [
     (
       Icons.smart_toy_outlined,
       'BOTS & SISTEMAS',
-      'Automatización vía WhatsApp, sistemas con base de datos, control inteligente',
+      'Armamos un asistente de WhatsApp que responde solo, agenda cosas '
+          'y te avisa lo importante — como tener un empleado que nunca duerme.',
       AppColors.botColor,
       AppRoutes.botsScreen,
     ),
     (
       Icons.phone_android_outlined,
       'APPS FLUTTER',
-      'Desarrollo multiplataforma iOS + Android con interfaces intuitivas',
+      'Te hacemos una app para el celular que funciona igual de bien en '
+          'iPhone y Android — fácil de usar, sin instrucciones raras.',
       AppColors.flutterColor,
       AppRoutes.flutterScreen,
     ),
     (
       Icons.memory_outlined,
       'ARDUINO & ESP32',
-      'IoT, automatización, control remoto de dispositivos inteligentes',
+      'Conectamos objetos a internet para que los controles desde tu '
+          'celular — como prender una luz o una alarma a distancia.',
       AppColors.arduinoColor,
       AppRoutes.arduinoScreen,
     ),
     (
       Icons.view_in_ar_outlined,
       'IMPRESIÓN 3D',
-      'Piezas decorativas y funcionales, diseño custom, acabado profesional',
+      'Imprimimos en 3D la pieza que necesités — desde un adorno hasta '
+          'un repuesto — con el diseño que quieras y buen acabado.',
       AppColors.impresion3dColor,
       AppRoutes.impresion3dScreen,
     ),
     (
       Icons.sports_basketball_outlined,
       'ENTRENAMIENTO',
-      'Coaching profesional de basketball, técnica, táctica y desarrollo',
+      'Entrenamiento personalizado de básquet: mejorás tu técnica y tu '
+          'juego con un entrenador que te sigue de cerca.',
       AppColors.entrenamientoColor,
       AppRoutes.entrenamientoScreen,
     ),
@@ -420,7 +425,6 @@ class _PortfolioVacio extends StatelessWidget {
     final isMobile = Responsive.isMobile(context);
 
     return TechCard(
-      showCornerBrackets: true,
       padding: EdgeInsets.all(isMobile ? AppSpacing.xl : AppSpacing.section),
       onTap: onVerPortfolio,
       child: Flex(
@@ -568,20 +572,9 @@ class _CotizarBanner extends StatelessWidget {
       decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
       child: Stack(
         children: [
-          Positioned.fill(
-            child: CustomPaint(
-              painter: CircuitGridPainter(
-                color: AppColors.cianTech.withValues(alpha: 0.04),
-              ),
-            ),
-          ),
-          // Líneas de circuito en las esquinas, como el Hero: abre y cierra
-          // la página con el mismo lenguaje gráfico.
-          if (!isMobile) ...[
-            const Positioned(top: 24, left: 24, child: TechCornerDecoration()),
-            const Positioned(top: 24, right: 24, child: TechCornerDecoration(espejado: true)),
-          ],
-          // Glow violeta radial centrado detrás del contenido
+          // Sin grid ni esquinas acá — ese lenguaje gráfico queda
+          // reservado al Hero de apertura (dirección minimalista, ver
+          // CLAUDE.md). Solo un glow violeta radial, sutil, centrado.
           Positioned.fill(
             child: Center(
               child: Container(
@@ -590,7 +583,7 @@ class _CotizarBanner extends StatelessWidget {
                 decoration: BoxDecoration(
                   gradient: RadialGradient(
                     colors: [
-                      AppColors.violetaPrincipal.withValues(alpha: 0.18),
+                      AppColors.violetaPrincipal.withValues(alpha: 0.12),
                       AppColors.violetaPrincipal.withValues(alpha: 0),
                     ],
                   ),
@@ -620,12 +613,11 @@ class _CotizarBanner extends StatelessWidget {
                     style: TextStyle(color: Colors.white70, fontSize: 15, height: 1.6),
                   ),
                   const SizedBox(height: AppSpacing.xxl),
-                  // Mismo CTA que el Hero (mismo texto y estilo, cierre coherente)
+                  // Mismo CTA que el Hero: mismo texto y mismo estilo
+                  // primario único del sitio (violeta sólido, default).
                   ElevatedButton(
                     onPressed: () => Navigator.pushNamed(context, AppRoutes.cotizacion),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.cianTech,
-                      foregroundColor: AppColors.negroProfundo,
                       padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 18),
                     ),
                     child: const Text('COTIZAR PROYECTO'),
