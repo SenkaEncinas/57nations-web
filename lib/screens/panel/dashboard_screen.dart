@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../utils/firestore_errors.dart';
 import '../../models/models.dart';
 import '../../services/firebase_service.dart';
 import '../../theme/app_colors.dart';
@@ -51,7 +52,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       });
     } catch (e) {
       setState(() {
-        _error = 'No pudimos cargar los datos del negocio. Revisá tu conexión.';
+        _error = mensajeErrorCarga(e, queCargaba: 'los datos del negocio');
         _cargando = false;
       });
     }

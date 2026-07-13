@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../utils/firestore_errors.dart';
 import '../../services/cloudinary_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
@@ -45,7 +46,7 @@ class _PortfolioAdminScreenState extends State<PortfolioAdminScreen> {
       });
     } catch (e) {
       setState(() {
-        _error = 'No pudimos cargar los proyectos. Revisá tu conexión.';
+        _error = mensajeErrorCarga(e, queCargaba: 'los proyectos');
         _cargando = false;
       });
     }

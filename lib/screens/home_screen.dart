@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import '../utils/firestore_errors.dart';
 import '../models/models.dart';
 import '../routes/app_routes.dart';
 import '../services/firebase_service.dart';
@@ -20,8 +22,10 @@ class HomeScreen extends StatelessWidget {
             NavBar(),
             _HeroSection(),
             // Franjas de gradiente entre secciones: el cambio de fondo deja
-            // de ser un corte seco (punto "ritmo" del balance visual).
-            _TransicionSeccion(desde: Color(0x4026215C), hacia: AppColors.background),
+            // de ser un corte seco (punto "ritmo" del balance visual). El
+            // Hero ahora es negro plano (TechBackground, no gradiente), así
+            // que esta franja arranca y termina en el mismo negro.
+            _TransicionSeccion(desde: AppColors.background, hacia: AppColors.background),
             AparecerAlScroll(id: 'servicios', child: _ServiciosSection()),
             _TransicionSeccion(desde: AppColors.background, hacia: AppColors.surface),
             AparecerAlScroll(id: 'portfolio', child: _PortfolioSection()),
@@ -61,6 +65,13 @@ class _TransicionSeccion extends StatelessWidget {
 }
 
 // ==================== HERO ====================
+/// Hero rediseñado (agosto 2026): la tipografía es la protagonista, no el
+/// logo — ver CLAUDE.md "Dirección visual definitiva del Hero". Fondo
+/// `TechBackground` (grid + watermark "57" + glow + clúster técnico en
+/// desktop), headline de 4 líneas en bloque ("OTROS / DISEÑAN. / NOSOTROS /
+/// CONSTRUIMOS.") y entrada animada UNA sola vez con `flutter_animate`
+/// (nunca en loop — esto es above-the-fold, se anima al cargar, no al
+/// hacer scroll).
 class _HeroSection extends StatelessWidget {
   const _HeroSection();
 
@@ -70,7 +81,11 @@ class _HeroSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isMobile = Responsive.isMobile(context);
+    final isTablet = Responsive.isTablet(context);
     final altoPantalla = MediaQuery.of(context).size.height;
+
+    final tamanoHeadline = isMobile ? 42.0 : (isTablet ? 64.0 : 92.0);
+    final alturaLinea = isMobile ? 1.02 : 0.96;
 
     return Container(
       width: double.infinity,
@@ -78,34 +93,10 @@ class _HeroSection extends StatelessWidget {
       // en pantallas muy bajas crece con el contenido en vez de cortarlo.
       constraints: BoxConstraints(minHeight: altoPantalla - _altoNavbar),
       clipBehavior: Clip.hardEdge,
-      decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
+      decoration: const BoxDecoration(color: AppColors.background),
       child: Stack(
-        alignment: Alignment.center,
         children: [
-          // Único lugar del sitio con TechCornerDecoration (dirección
-          // minimalista, ver CLAUDE.md): el Hero es la carta de
-          // presentación, todo lo demás quedó despejado.
-          if (!isMobile) ...[
-            const Positioned(top: 24, left: 24, child: TechCornerDecoration()),
-            const Positioned(top: 24, right: 24, child: TechCornerDecoration(espejado: true)),
-          ],
-          Positioned(
-            top: -120,
-            right: isMobile ? -100 : 60,
-            child: Container(
-              width: 420,
-              height: 420,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    AppColors.violetaPrincipal.withValues(alpha: 0.14),
-                    AppColors.violetaPrincipal.withValues(alpha: 0),
-                  ],
-                ),
-              ),
-            ),
-          ),
+          const Positioned.fill(child: TechBackground()),
           Padding(
             padding: EdgeInsets.symmetric(
               horizontal: AppSpacing.horizontal(context),
@@ -144,40 +135,51 @@ class _HeroSection extends StatelessWidget {
                           ),
                         ),
                       ],
-                    ),
+                    )
+                        .animate()
+                        .fade(duration: 400.ms, curve: Curves.easeOut)
+                        .slideY(begin: 0.2, end: 0, duration: 400.ms, curve: Curves.easeOut),
                     SizedBox(height: isMobile ? AppSpacing.xl : AppSpacing.xxl),
-                    // Logo protagonista, como en la versión inicial del Home
-                    Image.asset(
-                      'assets/logos/logo_57nations.png',
-                      height: isMobile ? 110 : 170,
-                      fit: BoxFit.contain,
-                    ),
+                    // Headline en bloque, cuatro líneas: "otros" en gris tenue
+                    // (lo esperable) y "nosotros" en blanco pleno (lo que
+                    // ofrece 57 Nations) — el contraste hace el argumento sin
+                    // necesidad de más texto.
+                    RichText(
+                      text: TextSpan(
+                        style: TextStyle(
+                          fontFamily: Theme.of(context).textTheme.displayLarge?.fontFamily,
+                          fontSize: tamanoHeadline,
+                          fontWeight: FontWeight.w800,
+                          height: alturaLinea,
+                          letterSpacing: -1.5,
+                        ),
+                        children: const [
+                          TextSpan(text: 'OTROS\n', style: TextStyle(color: AppColors.textDim)),
+                          TextSpan(text: 'DISEÑAN.\n', style: TextStyle(color: AppColors.textDim)),
+                          TextSpan(text: 'NOSOTROS\n', style: TextStyle(color: AppColors.textLight)),
+                          TextSpan(text: 'CONSTRUIMOS.', style: TextStyle(color: AppColors.textLight)),
+                        ],
+                      ),
+                    )
+                        .animate()
+                        .fade(duration: 500.ms, delay: 120.ms, curve: Curves.easeOut)
+                        .slideY(begin: 0.15, end: 0, duration: 500.ms, delay: 120.ms, curve: Curves.easeOut),
                     SizedBox(height: isMobile ? AppSpacing.xl : AppSpacing.xxl),
-                    Text(
-                      'Software + Hardware + Entrenamiento',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            fontSize: isMobile ? 20 : 30,
-                            color: AppColors.textLight,
-                          ),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
                     SizedBox(
                       width: isMobile ? double.infinity : 560,
-                      child: Text(
-                        'Contanos qué necesitás — una app, un bot que atienda tu '
-                        'WhatsApp, un dispositivo conectado a internet, una pieza '
-                        'en 3D — y te ayudamos a hacerlo realidad.',
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              color: Colors.white70,
-                              height: 1.7,
-                            ),
+                      child: const Text(
+                        'Software, hardware y entrenamiento — convertimos la idea que '
+                        'tenés en algo que funciona de verdad.',
+                        style: TextStyle(color: AppColors.textMuted, fontSize: 16, height: 1.7),
                       ),
-                    ),
+                    )
+                        .animate()
+                        .fade(duration: 500.ms, delay: 260.ms, curve: Curves.easeOut)
+                        .slideY(begin: 0.15, end: 0, duration: 500.ms, delay: 260.ms, curve: Curves.easeOut),
                     SizedBox(height: isMobile ? AppSpacing.xxl : AppSpacing.section),
                     // Un solo estilo primario (violeta sólido, default del
                     // tema) y un solo estilo secundario (outline) en todo
-                    // el sitio — antes este botón tenía un tercer estilo
-                    // ad hoc (cian sólido) que competía con el resto.
+                    // el sitio.
                     Wrap(
                       spacing: AppSpacing.lg,
                       runSpacing: AppSpacing.md,
@@ -197,7 +199,10 @@ class _HeroSection extends StatelessWidget {
                           child: const Text('VER PORTFOLIO'),
                         ),
                       ],
-                    ),
+                    )
+                        .animate()
+                        .fade(duration: 500.ms, delay: 400.ms, curve: Curves.easeOut)
+                        .slideY(begin: 0.15, end: 0, duration: 500.ms, delay: 400.ms, curve: Curves.easeOut),
                   ],
                 ),
               ),
@@ -210,62 +215,49 @@ class _HeroSection extends StatelessWidget {
 }
 
 // ==================== SERVICIOS ====================
+/// Lista numerada minimalista (agosto 2026, sin cards — ver CLAUDE.md):
+/// cada fila es número + título + descripción de una línea, separada por
+/// una regla fina. Reemplaza la grilla de `ServiceCard` (retirado).
 class _ServiciosSection extends StatelessWidget {
   const _ServiciosSection();
 
-  // Descripciones en lenguaje simple, sin jerga sin explicar (ver
-  // CLAUDE.md, dirección minimalista + copy accesible).
-  static final _servicios = [
+  // Descripciones recortadas a una línea (≤ 8 palabras), lenguaje simple
+  // (ver CLAUDE.md, dirección minimalista + copy accesible).
+  static const _servicios = [
     (
-      Icons.smart_toy_outlined,
+      '01',
       'BOTS & SISTEMAS',
-      'Armamos un asistente de WhatsApp que responde solo, agenda cosas '
-          'y te avisa lo importante — como tener un empleado que nunca duerme.',
-      AppColors.botColor,
+      'Un asistente de WhatsApp que responde solo.',
       AppRoutes.botsScreen,
     ),
     (
-      Icons.phone_android_outlined,
+      '02',
       'APPS FLUTTER',
-      'Te hacemos una app para el celular que funciona igual de bien en '
-          'iPhone y Android — fácil de usar, sin instrucciones raras.',
-      AppColors.flutterColor,
+      'Tu app en iPhone y Android, sin líos.',
       AppRoutes.flutterScreen,
     ),
     (
-      Icons.memory_outlined,
+      '03',
       'ARDUINO & ESP32',
-      'Conectamos objetos a internet para que los controles desde tu '
-          'celular — como prender una luz o una alarma a distancia.',
-      AppColors.arduinoColor,
+      'Objetos conectados que controlás desde el celular.',
       AppRoutes.arduinoScreen,
     ),
     (
-      Icons.view_in_ar_outlined,
+      '04',
       'IMPRESIÓN 3D',
-      'Imprimimos en 3D la pieza que necesités — desde un adorno hasta '
-          'un repuesto — con el diseño que quieras y buen acabado.',
-      AppColors.impresion3dColor,
+      'La pieza que necesités, impresa a medida.',
       AppRoutes.impresion3dScreen,
     ),
     (
-      Icons.sports_basketball_outlined,
+      '05',
       'ENTRENAMIENTO',
-      'Entrenamiento personalizado de básquet: mejorás tu técnica y tu '
-          'juego con un entrenador que te sigue de cerca.',
-      AppColors.entrenamientoColor,
+      'Entrenamiento personalizado de básquet.',
       AppRoutes.entrenamientoScreen,
     ),
   ];
 
   @override
   Widget build(BuildContext context) {
-    // 5 servicios: en desktop, 5 en fila quedaban de ~224px a 1200px (muy
-    // apretados). Wrap centrado con ancho fijo → desktop 3+2 centrado,
-    // tablet 2+2+1 centrado, mobile 1 columna.
-    final columnas = Responsive.valor(context, mobile: 1, tablet: 2, desktop: 3);
-    final isMobile = Responsive.isMobile(context);
-
     return PageSection(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -273,39 +265,125 @@ class _ServiciosSection extends StatelessWidget {
           const SectionHeader(
             overline: 'Servicios',
             titulo: 'Lo que hacemos',
-            subtitulo:
-                'Cinco áreas, un mismo estándar: entender el problema, proponer la '
-                'solución justa y entregarla funcionando.',
           ),
           const SizedBox(height: AppSpacing.section),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final anchoCard =
-                  (constraints.maxWidth - AppSpacing.lg * (columnas - 1)) / columnas;
-              return Wrap(
-                alignment: WrapAlignment.center,
-                spacing: AppSpacing.lg,
-                runSpacing: AppSpacing.lg,
-                children: _servicios
-                    .map((s) => SizedBox(
-                          width: anchoCard,
-                          height: isMobile ? null : 248,
-                          child: ServiceCard(
-                            icon: s.$1,
-                            title: s.$2,
-                            description: s.$3,
-                            color: s.$4,
-                            onTap: () => Navigator.pushNamed(context, s.$5),
-                          ),
-                        ))
-                    .toList(),
-              );
-            },
+          Column(
+            children: _servicios
+                .map((s) => _ServicioFila(
+                      numero: s.$1,
+                      titulo: s.$2,
+                      descripcion: s.$3,
+                      onTap: () => Navigator.pushNamed(context, s.$4),
+                    ))
+                .toList(),
           ),
         ],
       ),
     );
   }
+}
+
+class _ServicioFila extends StatefulWidget {
+  final String numero;
+  final String titulo;
+  final String descripcion;
+  final VoidCallback onTap;
+
+  const _ServicioFila({
+    required this.numero,
+    required this.titulo,
+    required this.descripcion,
+    required this.onTap,
+  });
+
+  @override
+  State<_ServicioFila> createState() => _ServicioFilaState();
+}
+
+class _ServicioFilaState extends State<_ServicioFila> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final isMobile = Responsive.isMobile(context);
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: EdgeInsets.symmetric(vertical: isMobile ? AppSpacing.lg : AppSpacing.xl),
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+                color: AppColors.violetaPrincipal.withValues(alpha: 0.18),
+              ),
+            ),
+          ),
+          child: Row(
+            children: [
+              Text(
+                widget.numero,
+                style: TextStyle(
+                  color: _hovered
+                      ? AppColors.violetaPrincipal
+                      : AppColors.violetaPrincipal.withValues(alpha: 0.4),
+                  fontSize: isMobile ? 18 : 24,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              SizedBox(width: isMobile ? AppSpacing.lg : AppSpacing.xxl),
+              Expanded(
+                child: isMobile
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _tituloServicio(context),
+                          const SizedBox(height: AppSpacing.xs),
+                          _descripcionServicio(),
+                        ],
+                      )
+                    : Row(
+                        children: [
+                          Expanded(flex: 2, child: _tituloServicio(context)),
+                          Expanded(flex: 3, child: _descripcionServicio()),
+                        ],
+                      ),
+              ),
+              const SizedBox(width: AppSpacing.lg),
+              AnimatedSlide(
+                duration: const Duration(milliseconds: 180),
+                offset: _hovered ? const Offset(0.15, 0) : Offset.zero,
+                child: Icon(
+                  Icons.arrow_forward,
+                  size: 18,
+                  color: _hovered ? AppColors.violetaPrincipal : AppColors.textDim,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _tituloServicio(BuildContext context) => Text(
+        widget.titulo,
+        style: TextStyle(
+          color: _hovered ? AppColors.violetaPrincipal : AppColors.textLight,
+          fontWeight: FontWeight.w700,
+          fontSize: Responsive.isMobile(context) ? 15 : 18,
+          letterSpacing: 0.5,
+        ),
+      );
+
+  Widget _descripcionServicio() => Text(
+        widget.descripcion,
+        style: const TextStyle(color: AppColors.textMuted, fontSize: 14, height: 1.5),
+      );
 }
 
 // ==================== PORTFOLIO (CTA) ====================
@@ -500,7 +578,7 @@ class _EquipoSectionState extends State<_EquipoSection> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = 'No pudimos cargar el equipo.';
+        _error = mensajeErrorCarga(e, queCargaba: 'el equipo');
         _cargando = false;
       });
     }
@@ -559,6 +637,8 @@ class _EquipoSectionState extends State<_EquipoSection> {
 }
 
 // ==================== BANNER FINAL: COTIZAR ====================
+/// Reutiliza `TechBackground` (a media opacidad) como único lenguaje de
+/// fondo técnico del sitio, junto con el Hero — ver CLAUDE.md.
 class _CotizarBanner extends StatelessWidget {
   const _CotizarBanner();
 
@@ -569,28 +649,10 @@ class _CotizarBanner extends StatelessWidget {
     return Container(
       width: double.infinity,
       clipBehavior: Clip.hardEdge,
-      decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
+      decoration: const BoxDecoration(color: AppColors.background),
       child: Stack(
         children: [
-          // Sin grid ni esquinas acá — ese lenguaje gráfico queda
-          // reservado al Hero de apertura (dirección minimalista, ver
-          // CLAUDE.md). Solo un glow violeta radial, sutil, centrado.
-          Positioned.fill(
-            child: Center(
-              child: Container(
-                width: 480,
-                height: 320,
-                decoration: BoxDecoration(
-                  gradient: RadialGradient(
-                    colors: [
-                      AppColors.violetaPrincipal.withValues(alpha: 0.12),
-                      AppColors.violetaPrincipal.withValues(alpha: 0),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
+          const Positioned.fill(child: TechBackground(opacidad: 0.4)),
           Padding(
             padding: EdgeInsets.symmetric(
               horizontal: AppSpacing.horizontal(context),

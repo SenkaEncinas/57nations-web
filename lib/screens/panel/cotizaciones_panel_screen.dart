@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../utils/firestore_errors.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../models/models.dart';
@@ -44,7 +45,7 @@ class _CotizacionesPanelScreenState extends State<CotizacionesPanelScreen> {
       });
     } catch (e) {
       setState(() {
-        _error = 'No pudimos cargar las cotizaciones. Revisá tu conexión.';
+        _error = mensajeErrorCarga(e, queCargaba: 'las cotizaciones');
         _cargando = false;
       });
     }

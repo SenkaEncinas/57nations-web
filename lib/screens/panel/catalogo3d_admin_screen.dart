@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../utils/firestore_errors.dart';
 import '../../models/models.dart';
 import '../../services/cloudinary_service.dart';
 import '../../services/firebase_service.dart';
@@ -45,7 +46,7 @@ class _Catalogo3dAdminScreenState extends State<Catalogo3dAdminScreen> {
       });
     } catch (e) {
       setState(() {
-        _error = 'No pudimos cargar el catálogo. Revisá tu conexión.';
+        _error = mensajeErrorCarga(e, queCargaba: 'el catálogo');
         _cargando = false;
       });
     }

@@ -14,6 +14,10 @@ dependencies:
   flutter:
     sdk: flutter
 
+  # URLs limpias en Flutter Web (usePathUrlStrategy en main.dart)
+  flutter_web_plugins:
+    sdk: flutter
+
   # Firebase
   firebase_core: any
   cloud_firestore: any

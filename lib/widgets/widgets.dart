@@ -1,7 +1,7 @@
 export 'navbar.dart';
 export 'footer.dart';
-export 'service_card.dart';
 export 'tech_corner_decoration.dart';
+export 'tech_background.dart';
 export 'page_hero.dart';
 export 'estado_lista.dart';
 export 'tech_card.dart';

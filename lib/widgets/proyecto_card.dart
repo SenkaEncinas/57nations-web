@@ -57,11 +57,11 @@ class _ProyectoCardState extends State<ProyectoCard> {
           transform: Matrix4.translationValues(0, _isHovered ? -4 : 0, 0),
           clipBehavior: Clip.hardEdge,
           decoration: ShapeDecoration(
-            color: AppColors.surfaceElevated,
+            color: AppColors.background,
             shape: AppTheme.cutCorner(
               side: BorderSide(
-                color: _isHovered ? AppColors.violetaPrincipal : AppColors.border,
-                width: _isHovered ? 1.4 : 1,
+                color: AppColors.violetaPrincipal.withValues(alpha: _isHovered ? 0.8 : 0.3),
+                width: 1,
               ),
             ),
             shadows: _isHovered
@@ -78,12 +78,20 @@ class _ProyectoCardState extends State<ProyectoCard> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: proyecto.imagenes.isNotEmpty
-                    ? SizedBox(
-                        width: double.infinity,
-                        child: Image.network(CloudinaryService.optimizar(proyecto.imagenes.first, ancho: 600), fit: BoxFit.cover),
-                      )
-                    : _PlaceholderFoto(color: _colorCategoria),
+                flex: 7,
+                child: ClipRect(
+                  child: AnimatedScale(
+                    duration: const Duration(milliseconds: 250),
+                    curve: Curves.easeOut,
+                    scale: _isHovered ? 1.02 : 1.0,
+                    child: proyecto.imagenes.isNotEmpty
+                        ? SizedBox(
+                            width: double.infinity,
+                            child: Image.network(CloudinaryService.optimizar(proyecto.imagenes.first, ancho: 600), fit: BoxFit.cover),
+                          )
+                        : _PlaceholderFoto(color: _colorCategoria),
+                  ),
+                ),
               ),
               Padding(
                 padding: const EdgeInsets.all(AppSpacing.lg),

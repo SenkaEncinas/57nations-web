@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../utils/firestore_errors.dart';
 import '../../services/cloudinary_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
@@ -44,7 +45,7 @@ class _PedidosPintadoScreenState extends State<PedidosPintadoScreen> {
       });
     } catch (e) {
       setState(() {
-        _error = 'No pudimos cargar las piezas. Revisá tu conexión.';
+        _error = mensajeErrorCarga(e, queCargaba: 'las piezas');
         _cargando = false;
       });
     }

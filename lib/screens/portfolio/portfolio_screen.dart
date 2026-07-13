@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../utils/firestore_errors.dart';
 import '../../theme/app_spacing.dart';
 import '../../models/models.dart';
 import '../../services/firebase_service.dart';
@@ -39,7 +40,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
       });
     } catch (e) {
       setState(() {
-        _error = 'No pudimos cargar el portfolio. Revisá tu conexión.';
+        _error = mensajeErrorCarga(e, queCargaba: 'el portfolio');
         _cargando = false;
       });
     }

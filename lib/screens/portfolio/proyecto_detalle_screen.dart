@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../utils/firestore_errors.dart';
 import '../../services/cloudinary_service.dart';
 import '../../models/models.dart';
 import '../../routes/app_routes.dart';
@@ -49,7 +50,7 @@ class _ProyectoDetalleScreenState extends State<ProyectoDetalleScreen> {
       });
     } catch (e) {
       setState(() {
-        _error = 'No pudimos cargar el proyecto. Revisá tu conexión.';
+        _error = mensajeErrorCarga(e, queCargaba: 'el proyecto');
         _cargando = false;
       });
     }

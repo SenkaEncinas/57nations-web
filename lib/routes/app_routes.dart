@@ -12,10 +12,16 @@ import '../screens/catalogo/catalogo_3d_screen.dart';
 import '../screens/cotizacion/cotizacion_screen.dart';
 import '../screens/contacto_screen.dart';
 import '../screens/sobre_nosotros_screen.dart';
+import '../screens/gracias_screen.dart';
 import '../screens/panel/login_screen.dart';
 
 class AppRoutes {
   static const String home = '/';
+  /// Página de agradecimiento post-compra (llaveros NFC y futuros productos
+  /// físicos). Se llega SOLO por link directo — no está en la Navbar a
+  /// propósito, es el destino que se graba en el chip NFC. Ver CLAUDE.md
+  /// sección "Producto: llaveros NFC" para la URL exacta a programar.
+  static const String gracias = '/gracias';
   static const String servicios = '/servicios';
   static const String botsScreen = '/bots';
   static const String flutterScreen = '/flutter';
@@ -43,6 +49,7 @@ class AppRoutes {
     cotizacion: (context) => const CotizacionScreen(),
     contacto: (context) => const ContactoScreen(),
     sobreNosotros: (context) => const SobreNosotrosScreen(),
+    gracias: (context) => const GraciasScreen(),
     panelLogin: (context) => const PanelLoginScreen(),
   };
 

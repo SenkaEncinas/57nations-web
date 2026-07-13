@@ -14,6 +14,14 @@ Proyecto Firebase real: `nations-2b049`
 Hosting: `https://nations-2b049.web.app` (despliegue automático vía GitHub Actions
 en cada push a `main` — ver `.github/workflows/firebase-hosting-merge.yml`)
 
+**URLs limpias, sin `#`** (agosto 2026): `main.dart` llama a `usePathUrlStrategy()`
+(paquete `flutter_web_plugins`, ya en pubspec.yaml). Todas las rutas son del tipo
+`nations-2b049.web.app/catalogo-3d`, NO `nations-2b049.web.app/#/catalogo-3d`.
+Esto es necesario porque hay links que se comparten fuera del sitio (WhatsApp,
+NFC — ver sección "Producto: llaveros NFC"). Depende del rewrite `"**" ->
+"/index.html"` que ya existe en `firebase.json`; si algún día se saca ese
+rewrite, romper hard-refresh en cualquier ruta que no sea `/`.
+
 ## Personas y roles
 
 - **Senka** (Admin): dueño, imprime en 3D él mismo, ve y edita todo (`admin.total`)
@@ -33,6 +41,34 @@ en cada push a `main` — ver `.github/workflows/firebase-hosting-merge.yml`)
 El equipo interno (Senka, Luchin, Fifi y futuros socios) edita su propio
 currículum público desde el panel ("Mi Currículum", permiso
 `equipo.editar_propio`) — ver sección "Equipo / currículums".
+
+## Producto: llaveros NFC (nuevo, agosto 2026)
+
+Senka empezó a vender **llaveros con chip NFC** — un producto físico nuevo,
+por fuera de los 5 servicios "oficiales" del sitio (Bots, Apps, Arduino, 3D,
+Entrenamiento). Al acercar el llavero a un celular, el chip abre un link.
+
+- **URL exacta para programar en cada chip NFC**:
+  `https://nations-2b049.web.app/gracias`
+  (funciona limpia, sin `#`, gracias a `usePathUrlStrategy()` — ver más arriba).
+- Esa URL abre `lib/screens/gracias_screen.dart` (ruta `AppRoutes.gracias`):
+  agradece la compra y empuja tráfico al resto del sitio con 3 CTAs
+  (Catálogo 3D, Portfolio, Cotización) — la idea explícita de Senka es que
+  cada venta física también sume una visita al sitio.
+- **A propósito NO está en la Navbar** — se llega solo por el link directo
+  del chip (mismo criterio que el login del panel, que tampoco está en
+  la Navbar pública).
+- **Lo que NO existe todavía** (por si se pide a futuro, no inventar sin
+  confirmar con Senka primero):
+  - No hay carrito ni registro de venta en Firestore — es una página
+    estática, no sabe quién compró qué ni cuándo.
+  - No hay forma de distinguir "vino de un llavero NFC" vs. "entró directo
+    a /gracias" (no hay query param ni analytics conectado).
+  - Si en el futuro hay más productos físicos con su propio link (otro
+    diseño de llavero, un sticker NFC, etc.), el patrón a repetir es el
+    mismo: nueva ruta + pantalla simple con agradecimiento + CTAs cruzadas
+    a Catálogo/Portfolio/Cotización. No hace falta una tabla de "productos"
+    en Firestore para esto salvo que Senka pida trackear ventas de verdad.
 
 ## Sistema de permisos (escalable)
 
@@ -309,8 +345,10 @@ Reglas establecidas; cualquier pantalla nueva debe respetarlas:
   (Servicios, Portfolio, Equipo, banner de cierre). NUNCA en el Hero ni en
   contenido above-the-fold, y siempre sutil (nada de rebotes ni escalas).
 - **Home**: el Hero cubre TODA la pantalla al entrar (minHeight = alto de
-  viewport menos navbar, contenido centrado verticalmente) con el logo
-  grande como protagonista — pedido explícito de Senka, no reducirlo.
+  viewport menos navbar, contenido centrado verticalmente). Ver sección
+  dedicada "Dirección visual definitiva del Hero (agosto 2026)" más abajo —
+  **la nota vieja de "logo grande como protagonista" quedó superada**, ya
+  no aplica.
   El equipo se muestra con `EquipoCarrusel`
   (`lib/widgets/equipo_carrusel.dart`): carrusel tipo song-select de Pump It
   Up — card central grande y seleccionada, vecinas chicas y atenuadas,
@@ -322,12 +360,13 @@ Reglas establecidas; cualquier pantalla nueva debe respetarlas:
   `ordenarEquipoConAdminAlCentro()`. Las secciones se separan con `_TransicionSeccion`
   (franja de gradiente vertical) para que el cambio de fondo no sea un
   corte seco;
-  la alternancia de fondos es negro → surface → negro → gradiente (nunca
-  dos tonos iguales seguidos). El preview de Portfolio muestra los 3
+  la alternancia de fondos es negro → surface → negro → negro (el Hero y
+  el banner de cierre son negro plano con `TechBackground`, ya no
+  gradiente). El preview de Portfolio muestra los 3
   proyectos más recientes con `ProyectoCard` (widget compartido con la
   página de Portfolio — no duplicar cards de proyecto); sin proyectos cae
-  a un estado vacío elegante con CTA. La grilla de servicios es Wrap
-  centrado: desktop 3+2, tablet 2+2+1, mobile 1 columna.
+  a un estado vacío elegante con CTA. Los servicios ya NO son una grilla de
+  cards — ver sección dedicada abajo.
 - **Nada de emojis como íconos de datos** en el panel: usar `Icons.*_outlined`
   (patrón `_InfoFila` en `pedidos_screen.dart`).
 - **Navegación**: la Navbar resalta la ruta activa (compara
@@ -336,6 +375,68 @@ Reglas establecidas; cualquier pantalla nueva debe respetarlas:
 - **Tipografía**: sigue la default de Flutter (no hay .ttf del manual todavía).
   Jerarquía por peso/tamaño/letter-spacing en `AppTheme._buildTextTheme`.
   Overlines siempre en MAYÚSCULAS con letterSpacing 2+.
+
+## Dirección visual definitiva del Hero (agosto 2026)
+
+Segundo pase sobre el Hero del Home (el primero fue el rediseño de julio
+2026 con el logo grande; ese quedó superado). Concepto aprobado por Senka:
+**la tipografía es la protagonista, no el logo**. Reglas:
+
+- **Copy del Hero (fijo, no placeholder)**: cuatro líneas en bloque,
+  "OTROS" y "DISEÑAN." en gris tenue (`AppColors.textDim`, lo esperable) y
+  "NOSOTROS" y "CONSTRUIMOS." en blanco pleno (`AppColors.textLight`, lo
+  que ofrece 57 Nations) — el contraste de color hace el argumento sin
+  necesitar más texto. Implementado con un solo `RichText`/`TextSpan` en
+  `_HeroSection` (`lib/screens/home_screen.dart`). Tamaño responsive vía
+  `Responsive` (no los breakpoints literales que se hayan mencionado en
+  algún chat — siempre los de `lib/utils/responsive.dart`): mobile 42,
+  tablet 64, desktop 92. El logo YA NO aparece en el Hero.
+- **`TechBackground`** (`lib/widgets/tech_background.dart`, exportado por
+  `widgets.dart`) — widget de fondo técnico reutilizable, `CustomPainter`
+  con capas vectoriales fijas (nada de random/partículas animadas):
+  grid tipo blueprint cada 80px, watermark "57" gigante (~260px, weight
+  900), glow radial violeta y, SOLO cuando el ancho real del canvas es
+  >= 900px, un clúster técnico alineado a la derecha (chip ESP32, cubo
+  isométrico wireframe, arcos de wifi, snippets de código monospace y
+  trazas de PCB conectándolos) — en mobile/tablet angosto ese clúster se
+  omite para no chocar con el texto, queda solo grid + watermark + glow.
+  Recibe un parámetro `opacidad` (1.0 default). Se usa DOS veces: en el
+  Hero (`opacidad` default) y en el banner de cierre `_CotizarBanner`
+  (`opacidad: 0.4`) — es el único lenguaje de fondo técnico del sitio,
+  ya no hay `AppColors.primaryGradient` en ninguno de los dos. Si se
+  necesita en un tercer lugar, reutilizar este widget, no crear otro.
+- **Servicios sin cards**: `_ServiciosSection` ya no es una grilla de
+  `ServiceCard` (ese widget se BORRÓ, `lib/widgets/service_card.dart` no
+  existe más) — es una lista numerada minimalista (`_ServicioFila`, mismo
+  archivo `home_screen.dart`): número (01-05) + título + descripción de
+  una sola línea (≤ 8 palabras) + flecha, separados por una regla fina
+  violeta al 18% de opacidad, con hover que resalta el número/título en
+  violeta y desliza la flecha. Si se agrega un sexto servicio, solo hace
+  falta sumar una tupla a `_ServiciosSection._servicios`.
+- **Ajustes visuales cascada a widgets compartidos** (mismo criterio: un
+  solo acento, sin gradientes de fondo salvo `TechBackground`):
+  - `NavBar` (`lib/widgets/navbar.dart`): fondo negro, separador inferior
+    violeta al 25% de opacidad (antes `AppColors.border`), hover de los
+    links pasa a blanco sin línea animada (antes cian con subrayado), y
+    el botón "CONTACTO" (desktop y el del panel mobile) pasa de
+    `ElevatedButton` sólido a `OutlinedButton` cian — ya no hay un botón
+    violeta sólido en la navbar.
+  - `ProyectoCard` (`lib/widgets/proyecto_card.dart`) y
+    `MiembroEquipoCard` (`lib/widgets/miembro_equipo_card.dart`): fondo
+    `AppColors.background` (negro puro, antes `surfaceElevated`) y borde
+    violeta con opacidad animada 30% → 80% al hover (antes color sólido
+    `border`/`violetaPrincipal`). `ProyectoCard` además: la foto ahora
+    tiene zoom sutil (`AnimatedScale` a 1.02) al hover, igual que ya
+    tenía `MiembroEquipoCard`. Ambos widgets son compartidos — este
+    cambio de color se ve también en la página de Portfolio completa y
+    en Sobre Nosotros (disclosed, no accidental). La estructura y toda
+    la interacción (click, `EquipoCarrusel`, filtros de Portfolio) NO
+    cambiaron.
+- **Animación de entrada del Hero**: `flutter_animate` directo (fade +
+  slideY, delays escalonados 0/120/260/400ms), NO `AparecerAlScroll` — el
+  Hero es above-the-fold y se anima una vez al cargar la página, nunca al
+  hacer scroll (`AparecerAlScroll` sigue siendo solo para las secciones
+  de abajo, sin cambios ahí).
 
 ## Estado actual (qué falta)
 
@@ -367,6 +468,65 @@ Reglas establecidas; cualquier pantalla nueva debe respetarlas:
 - [ ] Arreglar `.github/workflows/firebase-hosting-pull-request.yml` (mismo
       fix que se hizo en `firebase-hosting-merge.yml`: agregar pasos de
       Flutter en vez de `npm ci && npm run build`)
+- [x] Service worker: usuarios que ya visitaron el sitio quedaban
+      atascados en versiones viejas — resuelto con `hosting.headers` en
+      `firebase.json` (ver "Gotchas ya resueltos")
+- [x] Manejo de errores honesto en las 13 pantallas que leen Firestore
+      (`mensajeErrorCarga`, ver sección dedicada) — distingue permisos,
+      índice faltante y red real en vez del genérico "revisá tu conexión"
+- [ ] **Crear los 3 índices compuestos de Firestore** que hacen falta
+      (ver sección "Índices compuestos de Firestore — pendientes de
+      crear" con los links exactos) — sin esto, Catálogo 3D y el panel
+      de Fifi pueden mostrar "Falta configurar un índice"
+- [x] URLs limpias sin `#` (`usePathUrlStrategy()`) + página
+      `/gracias` para el link de los llaveros NFC (ver sección "Producto:
+      llaveros NFC")
+- [x] Segundo rediseño del Hero del Home: tipografía protagonista en vez
+      del logo, `TechBackground` como fondo técnico reutilizable (Hero +
+      banner de cierre), servicios sin cards (lista numerada), NavBar y
+      `ProyectoCard`/`MiembroEquipoCard` recoloreados a juego (agosto
+      2026 — ver sección "Dirección visual definitiva del Hero")
+
+## Manejo de errores de Firestore
+
+`lib/utils/firestore_errors.dart` (`mensajeErrorCarga(error, queCargaba:)`)
+está conectado en las 13 pantallas que leen de Firestore (Catálogo 3D
+público y admin, Portfolio, detalle de proyecto, Sobre Nosotros, Home
+(equipo), perfil de equipo, Dashboard, Pedidos, Pintado, Cotizaciones,
+Portfolio admin, Mi Currículum). Distingue `permission-denied` /
+`failed-precondition` (índice faltante) / red real, en vez del genérico
+"revisá tu conexión" que ocultaba la causa real. En modo debug loguea el
+error completo con `debugPrint` (para `failed-precondition` eso incluye el
+link exacto de Firebase para crear el índice). `login_screen.dart` NO usa
+este helper a propósito — su error es de autenticación, no de lectura.
+
+## Índices compuestos de Firestore — pendientes de crear
+
+Estas queries necesitan un índice compuesto (Firestore lo exige cuando se
+combina un `where` de igualdad con `orderBy` sobre un campo distinto). Sin
+el índice, la pantalla correspondiente muestra "Falta configurar un índice"
+(gracias al manejo de errores de arriba, ya no dice "revisá tu conexión").
+Crear en Firebase Console → Firestore Database → Índices → Composite:
+
+1. **`obtenerImpresiones3D()`** (catálogo público) — colección
+   `impresiones3d`: `disponible` Ascending + `fechaCreacion` Descending.
+   Link directo (ya confirmado, trae los campos precargados):
+   https://console.firebase.google.com/v1/r/project/nations-2b049/firestore/indexes?create_composite=ClNwcm9qZWN0cy9uYXRpb25zLTJiMDQ5L2RhdGFiYXNlcy8oZGVmYXVsdCkvY29sbGVjdGlvbkdyb3Vwcy9pbXByZXNpb25lczNkL2luZGV4ZXMvXxABGg4KCmRpc3BvbmlibGUQARoRCg1mZWNoYUNyZWFjaW9uEAIaDAoIX19uYW1lX18QAg
+2. **`obtenerImpresiones3DPorCategoria()`** — colección `impresiones3d`:
+   `categoria` Ascending + `disponible` Ascending + `fechaCreacion`
+   Descending. Link directo:
+   https://console.firebase.google.com/v1/r/project/nations-2b049/firestore/indexes?create_composite=ClNwcm9qZWN0cy9uYXRpb25zLTJiMDQ5L2RhdGFiYXNlcy8oZGVmYXVsdCkvY29sbGVjdGlvbkdyb3Vwcy9pbXByZXNpb25lczNkL2luZGV4ZXMvXxABGg0KCWNhdGVnb3JpYRABGg4KCmRpc3BvbmlibGUQARoRCg1mZWNoYUNyZWFjaW9uEAIaDAoIX19uYW1lX18QAg
+3. **`obtenerPedidosParaPintado()`** (panel de Fifi) — colección `pedidos`:
+   `requierePintado` Ascending + `estado` Ascending + `fechaCreacion`
+   Descending. Sin link directo probado (esa colección exige login, no se
+   pudo disparar el error sin credenciales) — crear a mano con esos 3
+   campos en ese orden, o esperar a que Fifi entre a "Pendientes de
+   Pintar" y usar el link que Firestore tire ahí en la consola del
+   navegador.
+
+**No confirmado si Senka ya los creó** — si algún día una de estas 3
+pantallas vuelve a fallar, empezar por acá antes de re-investigar desde
+cero.
 
 ## Gotchas ya resueltos (no repetir)
 

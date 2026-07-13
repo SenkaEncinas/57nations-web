@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../utils/firestore_errors.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../models/models.dart';
@@ -53,7 +54,7 @@ class _PedidosScreenState extends State<PedidosScreen> {
       });
     } catch (e) {
       setState(() {
-        _error = 'No pudimos cargar los pedidos. Revisá tu conexión.';
+        _error = mensajeErrorCarga(e, queCargaba: 'los pedidos');
         _cargando = false;
       });
     }

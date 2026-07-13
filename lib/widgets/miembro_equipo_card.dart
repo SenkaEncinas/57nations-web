@@ -41,11 +41,17 @@ class MiembroEquipoCard extends StatefulWidget {
   final VoidCallback onTap;
   final bool destacada;
 
+  /// false = solo nombre + rol (sin la línea de especialidad/bio corta).
+  /// Usado en el carrusel del Home para poder agrandar la foto sin que la
+  /// card crezca en alto — en Sobre Nosotros (grilla) se deja en true.
+  final bool mostrarDescripcion;
+
   const MiembroEquipoCard({
     super.key,
     required this.miembro,
     required this.onTap,
     this.destacada = false,
+    this.mostrarDescripcion = true,
   });
 
   /// Proporción retrato del área de foto (ancho : alto = 3 : 4), igual en
@@ -90,11 +96,11 @@ class _MiembroEquipoCardState extends State<MiembroEquipoCard> {
               transform: Matrix4.translationValues(0, _hovered ? -4 : 0, 0),
               clipBehavior: Clip.hardEdge,
               decoration: ShapeDecoration(
-                color: AppColors.surfaceElevated,
+                color: AppColors.background,
                 shape: AppTheme.cutCorner(
                   side: BorderSide(
-                    color: _hovered ? AppColors.violetaPrincipal : AppColors.border,
-                    width: _hovered ? 1.4 : 1,
+                    color: AppColors.violetaPrincipal.withValues(alpha: _hovered ? 0.8 : 0.3),
+                    width: 1,
                   ),
                 ),
                 // Sombra más sutil (dirección minimalista) — estructura e
@@ -151,19 +157,23 @@ class _MiembroEquipoCardState extends State<MiembroEquipoCard> {
                               fontWeight: FontWeight.w700,
                               letterSpacing: 1,
                             ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ],
-                        const SizedBox(height: AppSpacing.sm),
-                        Text(
-                          _descripcionCorta,
-                          style: const TextStyle(
-                            color: AppColors.textMuted,
-                            fontSize: 13,
-                            height: 1.5,
+                        if (widget.mostrarDescripcion) ...[
+                          const SizedBox(height: AppSpacing.sm),
+                          Text(
+                            _descripcionCorta,
+                            style: const TextStyle(
+                              color: AppColors.textMuted,
+                              fontSize: 13,
+                              height: 1.5,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                        ],
                         const SizedBox(height: AppSpacing.md),
                         AnimatedDefaultTextStyle(
                           duration: const Duration(milliseconds: 180),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../utils/firestore_errors.dart';
 import '../../services/cloudinary_service.dart';
 import '../../config/app_config.dart';
 import '../../theme/app_colors.dart';
@@ -51,7 +52,7 @@ class _Catalogo3dScreenState extends State<Catalogo3dScreen> {
       });
     } catch (e) {
       setState(() {
-        _error = 'No pudimos cargar el catálogo. Revisá tu conexión.';
+        _error = mensajeErrorCarga(e, queCargaba: 'el catálogo');
         _cargando = false;
       });
     }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../utils/firestore_errors.dart';
 import '../../services/cloudinary_service.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../config/app_config.dart';
@@ -50,7 +51,7 @@ class _PerfilEquipoScreenState extends State<PerfilEquipoScreen> {
       });
     } catch (e) {
       setState(() {
-        _error = 'No pudimos cargar el perfil. Revisá tu conexión.';
+        _error = mensajeErrorCarga(e, queCargaba: 'el perfil');
         _cargando = false;
       });
     }

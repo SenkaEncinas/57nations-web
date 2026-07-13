@@ -101,26 +101,43 @@ class _EquipoCarruselState extends State<EquipoCarrusel> {
     if (equipo.length == 1) {
       return Center(
         child: SizedBox(
-          width: 300,
+          width: 320,
           child: MiembroEquipoCard(
             miembro: equipo.first,
             destacada: esMiembroAdmin(equipo.first),
+            mostrarDescripcion: false,
             onTap: () => widget.onVerPerfil(equipo.first),
           ),
         ),
       );
     }
 
-    final fraccion = _fraccionViewport(context);
     final isMobile = Responsive.isMobile(context);
+    final isTablet = Responsive.isTablet(context);
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Alto del carrusel derivado del ancho real de la card central
-        // (foto retrato 3:4 + bloque de texto).
-        final anchoCard = (constraints.maxWidth * fraccion).clamp(220.0, 320.0);
-        final altoCarrusel =
-            anchoCard / MiembroEquipoCard.aspectRatioFoto + 168;
+        // Alto del carrusel FIJO por breakpoint (antes se derivaba del ancho
+        // real de pantalla vía `constraints.maxWidth * fraccion`, lo que en
+        // desktop/mobile anchos producía cards de hasta 320px y una sección
+        // de ~550-600px de alto — no entraba bien en la pantalla, ni en
+        // laptop ni en celular). Ahora se fija un alto objetivo y el ancho
+        // de la card se deriva de ahí (al revés), así la sección nunca crece
+        // más de la cuenta sin importar el ancho de la ventana.
+        final alturaObjetivo = isMobile ? 420.0 : (isTablet ? 460.0 : 500.0);
+        // Espacio del bloque de texto bajo la foto: en el carrusel la card
+        // NO muestra la descripción (mostrarDescripcion: false, solo nombre
+        // + rol) y nombre/rol están limitados a 1 línea (maxLines + ellipsis
+        // en MiembroEquipoCard), así el alto del texto es predecible y no
+        // varía según qué tan largo sea el rol de cada miembro — antes
+        // variaba (ej. "FUNDADOR DE 57 NATIONS" se envolvía a 2 líneas) y
+        // eso hacía que el contenido real se pasara del alto fijo
+        // (overflow "BOTTOM OVERFLOWED BY N PIXELS").
+        const alturaTexto = 110.0;
+        final anchoCard =
+            ((alturaObjetivo - alturaTexto) * MiembroEquipoCard.aspectRatioFoto)
+                .clamp(180.0, 340.0);
+        final altoCarrusel = anchoCard / MiembroEquipoCard.aspectRatioFoto + alturaTexto;
 
         return Column(
           children: [
@@ -152,6 +169,7 @@ class _EquipoCarruselState extends State<EquipoCarrusel> {
                               child: MiembroEquipoCard(
                                 miembro: miembro,
                                 destacada: seleccionada && esMiembroAdmin(miembro),
+                                mostrarDescripcion: false,
                                 // Card central → perfil; vecina → rotar hasta ella.
                                 onTap: seleccionada
                                     ? () => widget.onVerPerfil(miembro)

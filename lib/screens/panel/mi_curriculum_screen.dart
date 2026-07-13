@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../utils/firestore_errors.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../models/models.dart';
@@ -98,7 +99,7 @@ class _MiCurriculumScreenState extends State<MiCurriculumScreen> {
       });
     } catch (e) {
       setState(() {
-        _error = 'No pudimos cargar tu currículum. Revisá tu conexión.';
+        _error = mensajeErrorCarga(e, queCargaba: 'tu currículum');
         _cargando = false;
       });
     }

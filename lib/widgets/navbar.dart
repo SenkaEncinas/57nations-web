@@ -28,10 +28,10 @@ class NavBar extends StatelessWidget {
 
     return Container(
       padding: EdgeInsets.symmetric(horizontal: isMobile ? 16 : 40, vertical: 12),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.background,
         border: Border(
-          bottom: BorderSide(color: AppColors.border, width: 1),
+          bottom: BorderSide(color: AppColors.violetaPrincipal.withValues(alpha: 0.25), width: 1),
         ),
       ),
       child: Row(
@@ -75,9 +75,9 @@ class NavBar extends StatelessWidget {
                   onTap: () => Navigator.pushNamed(context, AppRoutes.sobreNosotros),
                 ),
                 const SizedBox(width: 20),
-                ElevatedButton(
+                OutlinedButton(
                   onPressed: () => Navigator.pushNamed(context, AppRoutes.contacto),
-                  style: ElevatedButton.styleFrom(
+                  style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
                   ),
                   child: const Text('CONTACTO'),
@@ -150,27 +150,15 @@ class _NavItemState extends State<_NavItem> {
         onTap: widget.onTap,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              AnimatedDefaultTextStyle(
-                duration: const Duration(milliseconds: 180),
-                style: TextStyle(
-                  color: resaltado ? AppColors.cianTech : AppColors.textLight,
-                  fontWeight: widget.activo ? FontWeight.w700 : FontWeight.w500,
-                  fontSize: 14,
-                  letterSpacing: 0.3,
-                ),
-                child: Text(widget.label),
-              ),
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                height: 2,
-                width: resaltado ? 26 : 0,
-                color: AppColors.cianTech,
-                margin: const EdgeInsets.only(top: 4),
-              ),
-            ],
+          child: AnimatedDefaultTextStyle(
+            duration: const Duration(milliseconds: 180),
+            style: TextStyle(
+              color: resaltado ? AppColors.textLight : AppColors.textMuted,
+              fontWeight: widget.activo ? FontWeight.w700 : FontWeight.w500,
+              fontSize: 14,
+              letterSpacing: 0.3,
+            ),
+            child: Text(widget.label),
           ),
         ),
       ),
@@ -301,7 +289,7 @@ class _MobileMenuPanel extends StatelessWidget {
               ),
               Padding(
                 padding: const EdgeInsets.all(20),
-                child: ElevatedButton(
+                child: OutlinedButton(
                   onPressed: () => _ir(context, AppRoutes.contacto),
                   child: const Text('CONTACTO'),
                 ),
