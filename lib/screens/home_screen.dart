@@ -183,10 +183,10 @@ class _HeroSection extends StatelessWidget {
                           letterSpacing: -1.5,
                         ),
                         children: const [
-                          TextSpan(text: 'OTROS\n', style: TextStyle(color: AppColors.textDim)),
-                          TextSpan(text: 'DISEÑAN.\n', style: TextStyle(color: AppColors.textDim)),
+                          TextSpan(text: 'MIENTRAS OTROS\n', style: TextStyle(color: AppColors.textDim)),
+                          TextSpan(text: 'DISEÑAN\n', style: TextStyle(color: AppColors.textDim)),
                           TextSpan(text: 'NOSOTROS\n', style: TextStyle(color: AppColors.textLight)),
-                          TextSpan(text: 'CONSTRUIMOS.', style: TextStyle(color: AppColors.textLight)),
+                          TextSpan(text: 'CONSTRUIMOS', style: TextStyle(color: AppColors.textLight)),
                         ],
                       ),
                     )
