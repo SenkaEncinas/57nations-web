@@ -66,9 +66,14 @@ class _TransicionSeccion extends StatelessWidget {
 
 // ==================== HERO ====================
 /// Hero rediseñado (agosto 2026): la tipografía es la protagonista, no el
-/// logo — ver CLAUDE.md "Dirección visual definitiva del Hero". Fondo
-/// `TechBackground` (grid + watermark "57" + glow + clúster técnico en
-/// desktop), headline de 4 líneas en bloque ("OTROS / DISEÑAN. / NOSOTROS /
+/// logo — ver CLAUDE.md "Dirección visual definitiva del Hero". Fondo:
+/// foto real `assets/images/hero_bg.jpg` (placa/chip ESP32 generada por
+/// IA) + degradé oscuro hacia la derecha, donde va el texto (el lado
+/// izquierdo/centro de la foto es el más "ocupado" visualmente — chip,
+/// circuito, watermark "57" — así que el texto se movió a la derecha para
+/// no competir con eso). Si el archivo todavía no existe, cae a
+/// `TechBackground` (el fondo procedural) para no romper la pantalla.
+/// Headline de 4 líneas en bloque ("OTROS / DISEÑAN. / NOSOTROS /
 /// CONSTRUIMOS.") y entrada animada UNA sola vez con `flutter_animate`
 /// (nunca en loop — esto es above-the-fold, se anima al cargar, no al
 /// hacer scroll).
@@ -96,7 +101,30 @@ class _HeroSection extends StatelessWidget {
       decoration: const BoxDecoration(color: AppColors.background),
       child: Stack(
         children: [
-          const Positioned.fill(child: TechBackground()),
+          Positioned.fill(
+            child: Image.asset(
+              'assets/images/hero_bg.jpg',
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => const TechBackground(),
+            ),
+          ),
+          // Degradé oscuro hacia la derecha: ahí va el texto, y el lado
+          // izquierdo de la foto (chip, circuito) queda visible sin tapar.
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  colors: [
+                    AppColors.background.withValues(alpha: 0.05),
+                    AppColors.background.withValues(alpha: isMobile ? 0.75 : 0.82),
+                  ],
+                  stops: const [0.0, 0.65],
+                ),
+              ),
+            ),
+          ),
           Padding(
             padding: EdgeInsets.symmetric(
               horizontal: AppSpacing.horizontal(context),
@@ -107,7 +135,7 @@ class _HeroSection extends StatelessWidget {
                 constraints: const BoxConstraints(maxWidth: AppSpacing.maxContentWidth),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Row(
                       children: [
@@ -145,6 +173,7 @@ class _HeroSection extends StatelessWidget {
                     // ofrece 57 Nations) — el contraste hace el argumento sin
                     // necesidad de más texto.
                     RichText(
+                      textAlign: TextAlign.right,
                       text: TextSpan(
                         style: TextStyle(
                           fontFamily: Theme.of(context).textTheme.displayLarge?.fontFamily,
@@ -170,6 +199,7 @@ class _HeroSection extends StatelessWidget {
                       child: const Text(
                         'Software, hardware y entrenamiento — convertimos la idea que '
                         'tenés en algo que funciona de verdad.',
+                        textAlign: TextAlign.right,
                         style: TextStyle(color: AppColors.textMuted, fontSize: 16, height: 1.7),
                       ),
                     )
@@ -181,6 +211,7 @@ class _HeroSection extends StatelessWidget {
                     // tema) y un solo estilo secundario (outline) en todo
                     // el sitio.
                     Wrap(
+                      alignment: WrapAlignment.end,
                       spacing: AppSpacing.lg,
                       runSpacing: AppSpacing.md,
                       children: [

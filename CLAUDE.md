@@ -391,6 +391,22 @@ Segundo pase sobre el Hero del Home (el primero fue el rediseño de julio
   `Responsive` (no los breakpoints literales que se hayan mencionado en
   algún chat — siempre los de `lib/utils/responsive.dart`): mobile 42,
   tablet 64, desktop 92. El logo YA NO aparece en el Hero.
+- **Fondo del Hero = foto real, no `TechBackground`** (agosto 2026, v3):
+  `assets/images/hero_bg.jpg` (imagen generada por IA: placa/chip ESP32,
+  cubo isométrico wireframe, código — Senka la trajo hecha). La carpeta
+  `assets/images/` ya está declarada en `pubspec.yaml` (glob de carpeta),
+  así que un archivo nuevo ahí no necesita ningún cambio de config, con
+  ESE nombre exacto. Si el archivo no existe, `Image.asset` cae a
+  `errorBuilder` y muestra `TechBackground` en su lugar — la pantalla
+  nunca se rompe por la ausencia del archivo.
+  Encima de la foto va un degradé horizontal (`AppColors.background`,
+  transparente a la izquierda → alpha ~0.8 a la derecha) porque el texto
+  del Hero se movió al lado DERECHO (`crossAxisAlignment.end` +
+  `textAlign.right` en todo el bloque) — el lado izquierdo/centro de la
+  foto es el más "ocupado" visualmente (chip, circuito, watermark "57")
+  y no debía competir con el texto. `TechBackground` YA NO se usa en el
+  Hero, solo sigue en el banner de cierre (`_CotizarBanner`,
+  `opacidad: 0.4`) porque para ese no hay foto.
 - **`TechBackground`** (`lib/widgets/tech_background.dart`, exportado por
   `widgets.dart`) — widget de fondo técnico reutilizable, `CustomPainter`
   con capas vectoriales fijas (nada de random/partículas animadas):
