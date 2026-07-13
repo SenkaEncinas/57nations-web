@@ -92,7 +92,6 @@ class Impresion3D {
   final DateTime fechaCreacion;
   final String? archivo3d; // URL al archivo 3D
   final int tiempoImpresion; // en minutos
-  final List<String> coloresDisponibles;
 
   Impresion3D({
     required this.id,
@@ -107,7 +106,6 @@ class Impresion3D {
     required this.fechaCreacion,
     this.archivo3d,
     required this.tiempoImpresion,
-    required this.coloresDisponibles,
   });
 
   factory Impresion3D.fromFirestore(DocumentSnapshot doc) {
@@ -125,7 +123,6 @@ class Impresion3D {
       fechaCreacion: (data['fechaCreacion'] as Timestamp?)?.toDate() ?? DateTime.now(),
       archivo3d: data['archivo3d'],
       tiempoImpresion: data['tiempoImpresion'] ?? 0,
-      coloresDisponibles: List<String>.from(data['coloresDisponibles'] ?? []),
     );
   }
 
@@ -142,7 +139,89 @@ class Impresion3D {
       'fechaCreacion': Timestamp.fromDate(fechaCreacion),
       'archivo3d': archivo3d,
       'tiempoImpresion': tiempoImpresion,
-      'coloresDisponibles': coloresDisponibles,
+    };
+  }
+}
+
+// ==================== CARRITO DEL CATÁLOGO 3D ====================
+/// Un ítem dentro de un pedido de carrito ya enviado (registro histórico,
+/// no editable). Guarda nombre/precio "congelados" al momento del pedido,
+/// no una referencia viva a `Impresion3D` — si la pieza cambia de precio o
+/// se borra después, el registro histórico no debe cambiar con ella.
+class ItemPedidoCarrito3D {
+  final String piezaId;
+  final String piezaNombre;
+  final String color;
+  final int cantidad;
+  final double precioUnitario;
+
+  ItemPedidoCarrito3D({
+    required this.piezaId,
+    required this.piezaNombre,
+    required this.color,
+    required this.cantidad,
+    required this.precioUnitario,
+  });
+
+  double get subtotal => precioUnitario * cantidad;
+
+  factory ItemPedidoCarrito3D.fromMap(Map<String, dynamic> data) {
+    return ItemPedidoCarrito3D(
+      piezaId: data['piezaId'] ?? '',
+      piezaNombre: data['piezaNombre'] ?? '',
+      color: data['color'] ?? '',
+      cantidad: (data['cantidad'] ?? 0) as int,
+      precioUnitario: (data['precioUnitario'] ?? 0).toDouble(),
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'piezaId': piezaId,
+      'piezaNombre': piezaNombre,
+      'color': color,
+      'cantidad': cantidad,
+      'precioUnitario': precioUnitario,
+    };
+  }
+}
+
+/// Registro de un checkout del carrito del Catálogo 3D: qué piezas, colores
+/// y cantidades pidió el cliente, y el monto total. Se crea al mandar la
+/// cotización por WhatsApp (`pedidosCarrito3d` en Firestore) — es SOLO
+/// registro para el Dashboard ("qué pide más la gente"), no reemplaza al
+/// pedido real que Admin/Luchin cargan a mano después de hablar con el
+/// cliente (ver `Pedido` / flujo de impresión 3D en CLAUDE.md).
+class PedidoCarrito3D {
+  final String id;
+  final List<ItemPedidoCarrito3D> items;
+  final double montoTotal;
+  final DateTime fechaCreacion;
+
+  PedidoCarrito3D({
+    required this.id,
+    required this.items,
+    required this.montoTotal,
+    required this.fechaCreacion,
+  });
+
+  factory PedidoCarrito3D.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return PedidoCarrito3D(
+      id: doc.id,
+      items: (data['items'] as List<dynamic>? ?? [])
+          .map((e) => ItemPedidoCarrito3D.fromMap(e as Map<String, dynamic>))
+          .toList(),
+      montoTotal: (data['montoTotal'] ?? 0).toDouble(),
+      fechaCreacion: (data['fechaCreacion'] as Timestamp?)?.toDate() ?? DateTime.now(),
+    );
+  }
+
+  Map<String, dynamic> toFirestore() {
+    return {
+      'items': items.map((i) => i.toMap()).toList(),
+      'montoTotal': montoTotal,
+      'fechaCreacion': Timestamp.fromDate(fechaCreacion),
     };
   }
 }

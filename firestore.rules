@@ -101,16 +101,30 @@ service cloud.firestore {
       allow delete: if esAdmin();
     }
 
+    // Checkout del carrito del Catálogo 3D público (catalogo_3d_screen.dart):
+    // cualquiera puede crear un registro al mandar la cotización por
+    // WhatsApp — es solo un log para el ranking "piezas más pedidas" del
+    // Dashboard, nunca se edita después de creado.
+    match /pedidosCarrito3d/{id} {
+      allow create: if true;
+      allow read: if request.auth != null;
+      allow update: if false;
+      allow delete: if esAdmin();
+    }
+
     // ==================== SOLO USUARIOS INTERNOS AUTENTICADOS ====================
     match /pedidos/{id} {
       allow read, write: if request.auth != null;
     }
 
-    // No hay `.collection('configuracion')` en el código todavía
-    // (CLAUDE.md la menciona como pendiente para el % default de comisión
-    // de Luchin). Bloque listo para cuando se implemente.
+    // Config global del negocio (hoy: `configuracion/colores3d`, la lista
+    // única de colores de filamento que se ofrece en TODAS las piezas del
+    // catálogo 3D — ver CLAUDE.md). Lectura pública porque el catálogo
+    // público (sin login) necesita mostrarla; escritura solo desde el
+    // panel del catálogo 3D.
     match /configuracion/{id} {
-      allow read, write: if request.auth != null;
+      allow read: if true;
+      allow write: if tienePermiso('catalogo3d.administrar');
     }
 
     // No existe en el código actual. Bloque preparado por si se agrega

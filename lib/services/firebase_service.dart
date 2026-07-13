@@ -224,6 +224,39 @@ class FirebaseService {
     await _firestore.collection('usuarios').doc(username).update({'permisos': permisos});
   }
 
+  // ==================== CARRITO CATÁLOGO 3D ====================
+  /// Registro de un checkout del carrito — ver `PedidoCarrito3D` en
+  /// models.dart. Alimenta el ranking "piezas más pedidas" del Dashboard.
+  Future<void> crearPedidoCarrito3D(PedidoCarrito3D pedido) async {
+    await _firestore.collection('pedidosCarrito3d').doc(pedido.id).set(
+          pedido.toFirestore(),
+        );
+  }
+
+  Future<List<PedidoCarrito3D>> obtenerPedidosCarrito3D() async {
+    final snapshot = await _firestore
+        .collection('pedidosCarrito3d')
+        .orderBy('fechaCreacion', descending: true)
+        .get();
+    return snapshot.docs.map((doc) => PedidoCarrito3D.fromFirestore(doc)).toList();
+  }
+
+  // ==================== CONFIGURACIÓN GLOBAL ====================
+  /// Lista única de colores de filamento, compartida por TODAS las piezas
+  /// del catálogo (antes se cargaba a mano, repetida, en cada pieza — ver
+  /// CLAUDE.md). Documento fijo `configuracion/colores3d`.
+  Future<List<String>> obtenerColoresDisponibles3D() async {
+    final doc = await _firestore.collection('configuracion').doc('colores3d').get();
+    if (!doc.exists) return [];
+    return List<String>.from(doc.data()?['lista'] ?? []);
+  }
+
+  /// `set` en vez de `update`: funciona igual la primera vez que el
+  /// documento todavía no existe.
+  Future<void> actualizarColoresDisponibles3D(List<String> colores) async {
+    await _firestore.collection('configuracion').doc('colores3d').set({'lista': colores});
+  }
+
   // ==================== BÚSQUEDA ====================
   Future<List<Impresion3D>> buscarImpresiones3D(String query) async {
     final snapshot = await _firestore

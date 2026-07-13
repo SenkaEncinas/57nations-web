@@ -25,6 +25,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   List<Pedido> _pedidos = [];
   List<Cotizacion> _cotizaciones = [];
+  List<PedidoCarrito3D> _pedidosCarrito3d = [];
   bool _cargando = true;
   String? _error;
   bool _comisionSoloEsteMes = true;
@@ -44,10 +45,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final resultados = await Future.wait([
         _firebaseService.obtenerPedidos(),
         _firebaseService.obtenerCotizaciones(),
+        _firebaseService.obtenerPedidosCarrito3D(),
       ]);
       setState(() {
         _pedidos = resultados[0] as List<Pedido>;
         _cotizaciones = resultados[1] as List<Cotizacion>;
+        _pedidosCarrito3d = resultados[2] as List<PedidoCarrito3D>;
         _cargando = false;
       });
     } catch (e) {
@@ -88,6 +91,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
     for (final c in _cotizaciones) {
       final servicio = c.servicio.isEmpty ? 'Sin especificar' : c.servicio;
       cuentas[servicio] = (cuentas[servicio] ?? 0) + 1;
+    }
+    final ranking = cuentas.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    return ranking;
+  }
+
+  /// Ranking de piezas del Catálogo 3D por cantidad total pedida (suma de
+  /// unidades a través de todos los checkouts del carrito, no cantidad de
+  /// pedidos) — es lo que mejor responde "qué pide más la gente".
+  List<MapEntry<String, int>> get _rankingPiezas {
+    final cuentas = <String, int>{};
+    for (final pedido in _pedidosCarrito3d) {
+      for (final item in pedido.items) {
+        cuentas[item.piezaNombre] = (cuentas[item.piezaNombre] ?? 0) + item.cantidad;
+      }
     }
     final ranking = cuentas.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
@@ -221,6 +239,51 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             cantidad: e.value,
                             maximo: _rankingServicios.first.value,
                             color: _colorServicio(e.key),
+                          )),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xl),
+              // ===== PIEZAS DEL CATÁLOGO 3D MÁS PEDIDAS =====
+              TechCard(
+                accentColor: AppColors.impresion3dColor,
+                padding: const EdgeInsets.all(AppSpacing.xl),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Row(
+                      children: [
+                        Icon(Icons.view_in_ar_outlined,
+                            size: 16, color: AppColors.impresion3dColor),
+                        SizedBox(width: AppSpacing.sm),
+                        Text(
+                          'PIEZAS DEL CATÁLOGO 3D MÁS PEDIDAS',
+                          style: TextStyle(
+                            color: AppColors.textDim,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      'Según ${_pedidosCarrito3d.length} pedidos armados desde el carrito del catálogo público.',
+                      style: const TextStyle(color: AppColors.textDim, fontSize: 12),
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    if (_rankingPiezas.isEmpty)
+                      const Text(
+                        'Todavía no llegó ningún pedido por el carrito del catálogo 3D.',
+                        style: TextStyle(color: AppColors.textMuted),
+                      )
+                    else
+                      ..._rankingPiezas.map((e) => _FilaRanking(
+                            servicio: e.key,
+                            cantidad: e.value,
+                            maximo: _rankingPiezas.first.value,
+                            color: AppColors.impresion3dColor,
                           )),
                   ],
                 ),

@@ -221,6 +221,37 @@ Los modelos vienen de 3 fuentes (campo interno `origenModelo`, el cliente no
 lo ve): diseño propio de Luchin, comprado en otra página, o archivo que quedó
 de un pedido anterior.
 
+## Carrito del Catálogo 3D (agosto 2026)
+
+El cliente puede agregar varias piezas al carrito (color + cantidad cada
+una) y mandar todo junto por WhatsApp, en vez de cotizar pieza por pieza.
+Todo vive en `lib/screens/catalogo/catalogo_3d_screen.dart`:
+
+- **Carrito en memoria** (`_ItemCarrito`, dentro de `_Catalogo3dScreenState`):
+  no se guarda entre visitas — mismo criterio "sin cuentas" del resto del
+  sitio. Botón flotante con badge de cantidad, arriba del de WhatsApp
+  (`Scaffold.floatingActionButton` es un `Column` con los dos).
+- **Colores: lista GLOBAL, no por pieza** (cambio respecto a versiones
+  anteriores — antes `Impresion3D.coloresDisponibles` se cargaba a mano,
+  repetida, en cada pieza). Ahora vive en Firestore
+  `configuracion/colores3d` (campo `lista: string[]`), editable desde una
+  sección nueva arriba del listado en `catalogo3d_admin_screen.dart`
+  (`_ColoresGlobalesSection`, permiso `catalogo3d.administrar`). Lectura
+  pública (el catálogo sin login la necesita), escritura solo admin del
+  catálogo — ver bloque `configuracion` en `firestore.rules`.
+- **Checkout** (`_CarritoDialog`): al mandar el pedido, (1) se guarda un
+  registro en `pedidosCarrito3d` (Firestore, `create: if true`, es
+  inmutable — solo un log, nunca se edita) y (2) se abre WhatsApp con el
+  pedido itemizado (pieza, color, cantidad, subtotal, total), directo al
+  número de Admin — mismo patrón que `WhatsAppHelper` ya usaba para
+  cotizaciones. El registro de Firestore es lo único que alimenta el
+  Dashboard; NO reemplaza al `Pedido` real que Admin/Luchin cargan a mano
+  después de hablar con el cliente.
+- **Dashboard**: sección "Piezas del catálogo 3D más pedidas"
+  (`dashboard_screen.dart`, `_rankingPiezas`) — suma cantidades de
+  `pedidosCarrito3d.items` agrupadas por nombre de pieza, mismo widget
+  visual (`_FilaRanking`) que el ranking de servicios cotizados.
+
 ## Manual de marca (seguir estrictamente)
 
 Colores oficiales (`lib/theme/app_colors.dart`):
@@ -502,6 +533,13 @@ Segundo pase sobre el Hero del Home (el primero fue el rediseño de julio
       banner de cierre), servicios sin cards (lista numerada), NavBar y
       `ProyectoCard`/`MiembroEquipoCard` recoloreados a juego (agosto
       2026 — ver sección "Dirección visual definitiva del Hero")
+- [x] Foto real de fondo del Hero (`assets/images/hero_bg.jpg`) en vez de
+      `TechBackground`, texto movido al lado derecho — ver sección
+      "Dirección visual definitiva del Hero"
+- [x] Carrito del Catálogo 3D (agregar varias piezas, color + cantidad,
+      un solo WhatsApp con todo) + colores globales editables desde el
+      panel + ranking "piezas más pedidas" en el Dashboard — ver sección
+      "Carrito del Catálogo 3D"
 
 ## Manejo de errores de Firestore
 

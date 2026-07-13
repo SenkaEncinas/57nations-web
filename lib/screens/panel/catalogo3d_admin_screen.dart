@@ -24,6 +24,7 @@ class Catalogo3dAdminScreen extends StatefulWidget {
 class _Catalogo3dAdminScreenState extends State<Catalogo3dAdminScreen> {
   final _firebaseService = FirebaseService();
   List<Impresion3D> _impresiones = [];
+  List<String> _coloresGlobales = [];
   bool _cargando = true;
   String? _error;
 
@@ -39,9 +40,13 @@ class _Catalogo3dAdminScreenState extends State<Catalogo3dAdminScreen> {
       _error = null;
     });
     try {
-      final impresiones = await _firebaseService.obtenerTodasImpresiones3D();
+      final resultados = await Future.wait([
+        _firebaseService.obtenerTodasImpresiones3D(),
+        _firebaseService.obtenerColoresDisponibles3D(),
+      ]);
       setState(() {
-        _impresiones = impresiones;
+        _impresiones = resultados[0] as List<Impresion3D>;
+        _coloresGlobales = resultados[1] as List<String>;
         _cargando = false;
       });
     } catch (e) {
@@ -49,6 +54,21 @@ class _Catalogo3dAdminScreenState extends State<Catalogo3dAdminScreen> {
         _error = mensajeErrorCarga(e, queCargaba: 'el catálogo');
         _cargando = false;
       });
+    }
+  }
+
+  Future<void> _guardarColoresGlobales(List<String> colores) async {
+    final anteriores = _coloresGlobales;
+    setState(() => _coloresGlobales = colores);
+    try {
+      await _firebaseService.actualizarColoresDisponibles3D(colores);
+    } catch (e) {
+      if (mounted) {
+        setState(() => _coloresGlobales = anteriores);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('No se pudo guardar: $e'), backgroundColor: AppColors.error),
+        );
+      }
     }
   }
 
@@ -132,6 +152,13 @@ class _Catalogo3dAdminScreenState extends State<Catalogo3dAdminScreen> {
               ],
             ),
             const SizedBox(height: AppSpacing.xl),
+            if (!_cargando && _error == null) ...[
+              _ColoresGlobalesSection(
+                colores: _coloresGlobales,
+                onChanged: _guardarColoresGlobales,
+              ),
+              const SizedBox(height: AppSpacing.xl),
+            ],
             if (_cargando)
               const EstadoCargando(mensaje: 'Cargando catálogo...')
             else if (_error != null)
@@ -277,7 +304,6 @@ class _FormularioImpresionDialogState extends State<_FormularioImpresionDialog> 
   late TextEditingController _materialCtrl;
   late TextEditingController _pesoCtrl;
   late TextEditingController _tiempoCtrl;
-  late TextEditingController _coloresCtrl;
 
   late List<String> _imagenes;
   String _categoria = _categorias.first;
@@ -297,7 +323,6 @@ class _FormularioImpresionDialogState extends State<_FormularioImpresionDialog> 
     _pesoCtrl = TextEditingController(text: i != null ? i.peso.toString() : '');
     _tiempoCtrl =
         TextEditingController(text: i != null ? i.tiempoImpresion.toString() : '');
-    _coloresCtrl = TextEditingController(text: i?.coloresDisponibles.join(', ') ?? '');
     _imagenes = List<String>.from(i?.imagenes ?? []);
     _categoria = _categorias.contains(i?.categoria) ? i!.categoria : _categorias.first;
     _disponible = i?.disponible ?? true;
@@ -311,7 +336,6 @@ class _FormularioImpresionDialogState extends State<_FormularioImpresionDialog> 
     _materialCtrl.dispose();
     _pesoCtrl.dispose();
     _tiempoCtrl.dispose();
-    _coloresCtrl.dispose();
     super.dispose();
   }
 
@@ -333,11 +357,6 @@ class _FormularioImpresionDialogState extends State<_FormularioImpresionDialog> 
         fechaCreacion: widget.existente?.fechaCreacion ?? DateTime.now(),
         archivo3d: widget.existente?.archivo3d,
         tiempoImpresion: int.tryParse(_tiempoCtrl.text) ?? 0,
-        coloresDisponibles: _coloresCtrl.text
-            .split(',')
-            .map((e) => e.trim())
-            .where((e) => e.isNotEmpty)
-            .toList(),
       );
 
       if (_esEdicion) {
@@ -423,7 +442,6 @@ class _FormularioImpresionDialogState extends State<_FormularioImpresionDialog> 
                     Expanded(
                         child: _campoNumero('Tiempo impresión (min)', _tiempoCtrl)),
                   ]),
-                  _campo('Colores disponibles (separados por coma)', _coloresCtrl),
                   SwitchListTile(
                     value: _disponible,
                     onChanged: (v) => setState(() => _disponible = v),
@@ -494,6 +512,100 @@ class _FormularioImpresionDialogState extends State<_FormularioImpresionDialog> 
         validator: requerido
             ? (v) => (double.tryParse(v ?? '') == null) ? 'Número inválido' : null
             : null,
+      ),
+    );
+  }
+}
+
+/// Lista global de colores de filamento — se ofrecen igual en TODAS las
+/// piezas del catálogo (antes se repetía a mano en cada pieza, ver
+/// CLAUDE.md). Un solo lugar para agregar/sacar un color; cada cambio se
+/// guarda al toque, sin botón "Guardar" aparte.
+class _ColoresGlobalesSection extends StatefulWidget {
+  final List<String> colores;
+  final ValueChanged<List<String>> onChanged;
+
+  const _ColoresGlobalesSection({required this.colores, required this.onChanged});
+
+  @override
+  State<_ColoresGlobalesSection> createState() => _ColoresGlobalesSectionState();
+}
+
+class _ColoresGlobalesSectionState extends State<_ColoresGlobalesSection> {
+  final _nuevoColorCtrl = TextEditingController();
+
+  @override
+  void dispose() {
+    _nuevoColorCtrl.dispose();
+    super.dispose();
+  }
+
+  void _agregar() {
+    final color = _nuevoColorCtrl.text.trim();
+    if (color.isEmpty || widget.colores.contains(color)) return;
+    widget.onChanged([...widget.colores, color]);
+    _nuevoColorCtrl.clear();
+  }
+
+  void _quitar(String color) {
+    widget.onChanged(widget.colores.where((c) => c != color).toList());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TechCard(
+      accentColor: AppColors.impresion3dColor,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Colores disponibles',
+            style: TextStyle(
+                color: AppColors.textLight, fontWeight: FontWeight.w700, fontSize: 15),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Se ofrecen igual en todas las piezas del catálogo — un solo lugar para todas.',
+            style: TextStyle(color: AppColors.textMuted, fontSize: 12),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          if (widget.colores.isEmpty)
+            const Text(
+              'Todavía no cargaste ningún color.',
+              style: TextStyle(color: AppColors.textDim, fontSize: 13),
+            )
+          else
+            Wrap(
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.sm,
+              children: widget.colores
+                  .map((c) => Chip(
+                        label: Text(c),
+                        onDeleted: () => _quitar(c),
+                      ))
+                  .toList(),
+            ),
+          const SizedBox(height: AppSpacing.md),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _nuevoColorCtrl,
+                  style: const TextStyle(color: AppColors.textLight),
+                  decoration: const InputDecoration(hintText: 'Ej: Negro, Blanco, Rojo...'),
+                  onSubmitted: (_) => _agregar(),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              IconButton.filled(
+                onPressed: _agregar,
+                icon: const Icon(Icons.add),
+                tooltip: 'Agregar color',
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
