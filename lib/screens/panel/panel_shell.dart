@@ -15,6 +15,8 @@ import 'mi_curriculum_screen.dart';
 import 'dashboard_screen.dart';
 import 'catalogo3d_admin_screen.dart';
 import 'cotizacion_pdf_screen.dart';
+import 'mi_perfil_entrenador_screen.dart';
+import 'entrenadores_dashboard_screen.dart';
 
 /// Contenedor principal del panel interno. Arma el menú dinámicamente según
 /// los permisos de [usuario], para que agregar un socio/servicio nuevo en el
@@ -65,6 +67,12 @@ class _PanelShellState extends State<PanelShell> {
         label: 'Dashboard',
         icon: Icons.insights_outlined,
         builder: (u) => const DashboardScreen(),
+      ));
+      secciones.add(_PanelSeccion(
+        id: 'entrenadores_dashboard',
+        label: 'Entrenadores',
+        icon: Icons.sports_basketball_outlined,
+        builder: (u) => const EntrenadoresDashboardScreen(),
       ));
     }
 
@@ -137,6 +145,14 @@ class _PanelShellState extends State<PanelShell> {
         label: 'Mi Currículum',
         icon: Icons.badge_outlined,
         builder: (u) => MiCurriculumScreen(usuario: u),
+      ));
+    }
+    if (usuario.tienePermiso('entrenadores.editar_propio')) {
+      secciones.add(_PanelSeccion(
+        id: 'mi_perfil_entrenador',
+        label: 'Mi Perfil de Entrenador',
+        icon: Icons.sports_basketball_outlined,
+        builder: (u) => MiPerfilEntrenadorScreen(usuario: u),
       ));
     }
     if (usuario.tienePermiso('portfolio.administrar')) {

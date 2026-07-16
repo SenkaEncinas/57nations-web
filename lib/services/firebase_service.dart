@@ -257,6 +257,101 @@ class FirebaseService {
     await _firestore.collection('configuracion').doc('colores3d').set({'lista': colores});
   }
 
+  // ==================== ENTRENADORES ====================
+  /// Catálogo público: solo entrenadores activos (pagan publicidad este mes).
+  /// Requiere índice compuesto (`activo` + `fechaCreacion`) — ver CLAUDE.md.
+  Future<List<Entrenador>> obtenerEntrenadores() async {
+    final snapshot = await _firestore
+        .collection('entrenadores')
+        .where('activo', isEqualTo: true)
+        .orderBy('fechaCreacion', descending: true)
+        .get();
+    return snapshot.docs.map((doc) => Entrenador.fromFirestore(doc)).toList();
+  }
+
+  /// Para el panel de estadísticas de Admin: TODOS los entrenadores,
+  /// activos e inactivos.
+  Future<List<Entrenador>> obtenerTodosEntrenadores() async {
+    final snapshot = await _firestore
+        .collection('entrenadores')
+        .orderBy('fechaCreacion', descending: true)
+        .get();
+    return snapshot.docs.map((doc) => Entrenador.fromFirestore(doc)).toList();
+  }
+
+  Future<Entrenador?> obtenerEntrenador(String id) async {
+    final doc = await _firestore.collection('entrenadores').doc(id).get();
+    if (doc.exists) {
+      return Entrenador.fromFirestore(doc);
+    }
+    return null;
+  }
+
+  /// Documento del entrenador logueado ("Mi Perfil de Entrenador"), buscado
+  /// por `username` (no por id de documento) — mismo criterio que
+  /// `obtenerMiembroEquipoPorUsername`.
+  Future<Entrenador?> obtenerEntrenadorPorUsername(String username) async {
+    final snapshot = await _firestore
+        .collection('entrenadores')
+        .where('username', isEqualTo: username)
+        .limit(1)
+        .get();
+    if (snapshot.docs.isEmpty) return null;
+    return Entrenador.fromFirestore(snapshot.docs.first);
+  }
+
+  /// Crea o pisa el documento del entrenador. Las reglas de Firestore solo
+  /// permiten esto si `entrenador.username` coincide con el login de quien
+  /// escribe (o si es admin.total).
+  Future<void> crearOActualizarEntrenador(Entrenador entrenador) async {
+    await _firestore.collection('entrenadores').doc(entrenador.id).set(
+          entrenador.toFirestore(),
+        );
+  }
+
+  /// Prender/apagar la publicidad de un entrenador sin tocar el resto de su
+  /// perfil — usado desde el panel de Admin (ej: dejó de pagar).
+  Future<void> actualizarActivoEntrenador(String id, bool activo) async {
+    await _firestore.collection('entrenadores').doc(id).update({'activo': activo});
+  }
+
+  // ==================== CLICS DE CONTACTO (ENTRENADORES) ====================
+  /// Un registro por cada vez que alguien toca "Contactar" en un perfil
+  /// público — es lo que Senka usa para cobrar la publicidad mensual.
+  Future<void> registrarClickContactoEntrenador(
+      String entrenadorId, String entrenadorNombre) async {
+    final click = ClickContactoEntrenador(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      entrenadorId: entrenadorId,
+      entrenadorNombre: entrenadorNombre,
+      fecha: DateTime.now(),
+    );
+    await _firestore
+        .collection('clicksEntrenador')
+        .doc(click.id)
+        .set(click.toFirestore());
+  }
+
+  /// Clics de UN entrenador (para que vea sus propias estadísticas en "Mi
+  /// Perfil"). Sin `orderBy` a propósito — combinarlo con el `where` de acá
+  /// pediría un índice compuesto que no hace falta: el mes/histórico se
+  /// calcula en el cliente, igual que ya hace `dashboard_screen.dart` con
+  /// pedidos y cotizaciones.
+  Future<List<ClickContactoEntrenador>> obtenerClicksEntrenador(String entrenadorId) async {
+    final snapshot = await _firestore
+        .collection('clicksEntrenador')
+        .where('entrenadorId', isEqualTo: entrenadorId)
+        .get();
+    return snapshot.docs.map((doc) => ClickContactoEntrenador.fromFirestore(doc)).toList();
+  }
+
+  /// TODOS los clics de TODOS los entrenadores, para el panel de
+  /// estadísticas de Admin (agrupa y filtra por mes en el cliente).
+  Future<List<ClickContactoEntrenador>> obtenerTodosLosClicksEntrenadores() async {
+    final snapshot = await _firestore.collection('clicksEntrenador').get();
+    return snapshot.docs.map((doc) => ClickContactoEntrenador.fromFirestore(doc)).toList();
+  }
+
   // ==================== BÚSQUEDA ====================
   Future<List<Impresion3D>> buscarImpresiones3D(String query) async {
     final snapshot = await _firestore

@@ -9,6 +9,8 @@ import '../screens/portfolio/portfolio_screen.dart';
 import '../screens/portfolio/proyecto_detalle_screen.dart';
 import '../screens/equipo/perfil_equipo_screen.dart';
 import '../screens/catalogo/catalogo_3d_screen.dart';
+import '../screens/catalogo/catalogo_entrenadores_screen.dart';
+import '../screens/entrenadores/perfil_entrenador_screen.dart';
 import '../screens/cotizacion/cotizacion_screen.dart';
 import '../screens/contacto_screen.dart';
 import '../screens/sobre_nosotros_screen.dart';
@@ -32,6 +34,8 @@ class AppRoutes {
   static const String proyectoDetalle = '/proyecto-detalle';
   static const String perfilEquipo = '/equipo-perfil';
   static const String catalogo3d = '/catalogo-3d';
+  static const String catalogoEntrenadores = '/catalogo-entrenadores';
+  static const String perfilEntrenador = '/entrenador-perfil';
   static const String cotizacion = '/cotizacion';
   static const String contacto = '/contacto';
   static const String sobreNosotros = '/sobre-nosotros';
@@ -46,6 +50,7 @@ class AppRoutes {
     entrenamientoScreen: (context) => const EntrenamientoScreen(),
     portfolio: (context) => const PortfolioScreen(),
     catalogo3d: (context) => const Catalogo3dScreen(),
+    catalogoEntrenadores: (context) => const CatalogoEntrenadoresScreen(),
     cotizacion: (context) => const CotizacionScreen(),
     contacto: (context) => const ContactoScreen(),
     sobreNosotros: (context) => const SobreNosotrosScreen(),
@@ -64,6 +69,11 @@ class AppRoutes {
         final miembroId = settings.arguments as String?;
         return MaterialPageRoute(
           builder: (context) => PerfilEquipoScreen(miembroId: miembroId ?? ''),
+        );
+      case perfilEntrenador:
+        final entrenadorId = settings.arguments as String?;
+        return MaterialPageRoute(
+          builder: (context) => PerfilEntrenadorScreen(entrenadorId: entrenadorId ?? ''),
         );
       default:
         return MaterialPageRoute(

@@ -252,6 +252,66 @@ Todo vive en `lib/screens/catalogo/catalogo_3d_screen.dart`:
   `pedidosCarrito3d.items` agrupadas por nombre de pieza, mismo widget
   visual (`_FilaRanking`) que el ranking de servicios cotizados.
 
+## Catálogo de Entrenadores (agosto 2026)
+
+Nuevo modelo de negocio dentro de "Entrenamiento": entrenadores EXTERNOS
+(no son socios ni equipo interno) pagan a Senka publicidad MENSUAL por
+aparecer en un catálogo público. Senka cobra según cuántos clics en
+"Contactar" tuvo cada uno — por eso el clic se registra, no es solo un
+botón de WhatsApp suelto.
+
+- **Colección separada (`entrenadores`), NO `equipo`** — a propósito. Son
+  relaciones de negocio distintas (equipo = socios internos con
+  currículum en Home/Sobre Nosotros; entrenadores = clientes que pagan
+  publicidad). Mezclarlos habría hecho aparecer entrenadores externos en
+  el carrusel de equipo del Home, que es exactamente lo que NO debe pasar.
+  Modelo `Entrenador` en `models.dart`: nombre, especialidad, biografía,
+  experiencia (reutiliza `ExperienciaItem`), certificaciones (lista de
+  texto), ubicación, teléfono propio, tarifa aproximada, foto, Instagram,
+  `activo`.
+- **Cuentas: Senka las sigue creando a mano en Firebase Console** (pedido
+  explícito, plan Spark/gratuito — no hay self-signup). El permiso nuevo
+  es `entrenadores.editar_propio` (ver enum en `models.dart`), mismo
+  patrón que `equipo.editar_propio`: el id del documento = username, y
+  las reglas de Firestore solo dejan editar el propio documento (o admin).
+- **"Mi Perfil de Entrenador"** (`mi_perfil_entrenador_screen.dart`,
+  panel): cada entrenador carga su propia info — TODO lo que quiera poner
+  (bio larga, certificaciones y experiencia sin límite, tarifa, ubicación,
+  redes). Arriba del formulario tiene una cajita de solo lectura con sus
+  propias estadísticas: "Contactos este mes" / "Contactos en total" —
+  para que el entrenador también pueda seguir su propio rendimiento, no
+  solo Senka. Incluye un switch `activo`: si lo apaga, desaparece del
+  catálogo público sin borrar nada (Senka también puede apagarlo desde su
+  panel si alguien deja de pagar).
+- **Catálogo público** (`catalogo_entrenadores_screen.dart`, ruta
+  `/catalogo-entrenadores`) y **perfil público**
+  (`perfil_entrenador_screen.dart`, ruta `/entrenador-perfil`) — mismo
+  patrón visual que el Catálogo 3D y el perfil de equipo. Se llega desde
+  un botón "VER ENTRENADORES" en la página de Entrenamiento
+  (`accionSecundaria` de `ServicioScreenBase`, mismo patrón que "VER
+  CATÁLOGO 3D" en la página de Impresión 3D).
+- **El botón "Contactar" NO va al WhatsApp de 57 Nations** — va DIRECTO
+  al WhatsApp propio del entrenador (`Entrenador.telefono`), porque son
+  externos y el cliente negocia directo con ellos. Antes de abrir
+  WhatsApp, se registra un documento en `clicksEntrenador` (colección
+  nueva, un doc por clic — no un contador simple, para poder filtrar por
+  mes de forma confiable). El registro es "fire and forget": si falla,
+  igual se abre WhatsApp (la telemetría nunca debe bloquear el contacto
+  real).
+- **Panel "Entrenadores"** (`entrenadores_dashboard_screen.dart`, SOLO
+  admin.total — es "el nuevo dashboard" para facturar) — lista TODOS los
+  entrenadores (activos e inactivos) ordenados por cantidad de contactos,
+  con toggle "Este mes" / "Histórico" (mismo patrón que la comisión de
+  Luchin en el Dashboard principal) y un switch para activar/desactivar
+  cada uno sin borrar su perfil. Esto es lo que Senka mira para cobrar la
+  publicidad mensual de cada entrenador.
+- **Índice compuesto nuevo requerido** — ver sección "Índices compuestos
+  de Firestore" más abajo (`entrenadores`: `activo` + `fechaCreacion`).
+  Las queries de clics (`clicksEntrenador`) NO necesitan índice compuesto
+  a propósito: se diseñaron sin combinar `where` + `orderBy` en campos
+  distintos (el filtro de mes se calcula en el cliente, igual que ya hace
+  `dashboard_screen.dart` con pedidos y comisión de Luchin).
+
 ## Manual de marca (seguir estrictamente)
 
 Colores oficiales (`lib/theme/app_colors.dart`):
@@ -540,6 +600,14 @@ Segundo pase sobre el Hero del Home (el primero fue el rediseño de julio
       un solo WhatsApp con todo) + colores globales editables desde el
       panel + ranking "piezas más pedidas" en el Dashboard — ver sección
       "Carrito del Catálogo 3D"
+- [x] Catálogo de Entrenadores: colección `entrenadores` separada de
+      `equipo`, catálogo + perfil público, "Mi Perfil de Entrenador",
+      contacto directo con registro de clic (`clicksEntrenador`) y panel
+      "Entrenadores" para que Senka cobre publicidad mensual — ver
+      sección "Catálogo de Entrenadores". Falta crear el índice compuesto
+      nuevo (`entrenadores`: activo + fechaCreacion) y que Senka cargue
+      la primera cuenta de entrenador desde Firebase Console para probar
+      el flujo end-to-end.
 
 ## Manejo de errores de Firestore
 
@@ -577,8 +645,15 @@ Crear en Firebase Console → Firestore Database → Índices → Composite:
    campos en ese orden, o esperar a que Fifi entre a "Pendientes de
    Pintar" y usar el link que Firestore tire ahí en la consola del
    navegador.
+4. **`obtenerEntrenadores()`** (catálogo público de entrenadores, agosto
+   2026) — colección `entrenadores`: `activo` Ascending + `fechaCreacion`
+   Descending. Mismo patrón que el índice 1. Sin este índice, el catálogo
+   de entrenadores (`/catalogo-entrenadores`) muestra "Falta configurar un
+   índice". Sin link directo probado — crear a mano con esos 2 campos, o
+   entrar a la ruta y usar el link que Firestore tire en la consola del
+   navegador (mismo truco que con el índice 3).
 
-**No confirmado si Senka ya los creó** — si algún día una de estas 3
+**No confirmado si Senka ya los creó** — si algún día una de estas
 pantallas vuelve a fallar, empezar por acá antes de re-investigar desde
 cero.
 

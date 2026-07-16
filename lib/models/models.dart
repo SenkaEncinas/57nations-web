@@ -318,6 +318,12 @@ class Cotizacion {
 ///                                    (pantalla "Generar Cotización"). No
 ///                                    depende de ningún dato en Firestore —
 ///                                    el PDF descargado es el único registro.
+///   - entrenadores.editar_propio   → puede editar SU PROPIO perfil de
+///                                    entrenador (documento de `entrenadores`
+///                                    con username == su login). Entrenadores
+///                                    externos que pagan publicidad mensual —
+///                                    NO son socios/equipo interno, ver
+///                                    CLAUDE.md "Catálogo de Entrenadores".
 class Usuario {
   final String id;
   final String username; // usuario de login (no email)
@@ -742,6 +748,129 @@ class MiembroEquipo {
       'fotoUrl': fotoUrl,
       'instagramUrl': instagramUrl,
       'linkedinUrl': linkedinUrl,
+    };
+  }
+}
+
+// ==================== CATÁLOGO DE ENTRENADORES ====================
+/// Entrenador EXTERNO que paga publicidad mensual por aparecer en el
+/// catálogo público — NO es parte del equipo interno (`MiembroEquipo`),
+/// por eso es una colección separada (`entrenadores`, no `equipo`): no debe
+/// mezclarse con el carrusel de Home/Sobre Nosotros ni con el permiso
+/// `equipo.editar_propio`. Cada entrenador edita SU PROPIO documento desde
+/// el panel ("Mi Perfil de Entrenador", permiso `entrenadores.editar_propio`).
+/// [username] enlaza con la cuenta de login (Senka la crea a mano en Firebase
+/// Console — ver CLAUDE.md); para documentos nuevos, el id del doc también
+/// es el username. [activo] controla si aparece en el catálogo público —
+/// Senka lo apaga si un entrenador deja de pagar, sin borrar su perfil ni
+/// su historial de clics.
+class Entrenador {
+  final String id;
+  final String username;
+  final String nombre;
+  final String especialidad; // ej: Básquet, Funcional, Boxeo
+  final String biografia;
+  final List<ExperienciaItem> experiencia;
+  final List<String> certificaciones;
+  final String ubicacion;
+  final String telefono; // WhatsApp propio del entrenador (contacto directo)
+  final String tarifaAprox; // texto libre, ej: "Bs 100/hora"
+  final String? fotoUrl;
+  final String? instagramUrl;
+  final bool activo;
+  final DateTime fechaCreacion;
+
+  Entrenador({
+    required this.id,
+    this.username = '',
+    required this.nombre,
+    this.especialidad = '',
+    this.biografia = '',
+    this.experiencia = const [],
+    this.certificaciones = const [],
+    this.ubicacion = '',
+    this.telefono = '',
+    this.tarifaAprox = '',
+    this.fotoUrl,
+    this.instagramUrl,
+    this.activo = true,
+    required this.fechaCreacion,
+  });
+
+  factory Entrenador.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return Entrenador(
+      id: doc.id,
+      username: data['username'] ?? '',
+      nombre: data['nombre'] ?? '',
+      especialidad: data['especialidad'] ?? '',
+      biografia: data['biografia'] ?? '',
+      experiencia: (data['experiencia'] as List<dynamic>? ?? [])
+          .map((e) => ExperienciaItem.fromMap(Map<String, dynamic>.from(e)))
+          .toList(),
+      certificaciones: List<String>.from(data['certificaciones'] ?? []),
+      ubicacion: data['ubicacion'] ?? '',
+      telefono: data['telefono'] ?? '',
+      tarifaAprox: data['tarifaAprox'] ?? '',
+      fotoUrl: data['fotoUrl'],
+      instagramUrl: data['instagramUrl'],
+      activo: data['activo'] ?? true,
+      fechaCreacion: (data['fechaCreacion'] as Timestamp?)?.toDate() ?? DateTime.now(),
+    );
+  }
+
+  Map<String, dynamic> toFirestore() {
+    return {
+      'username': username,
+      'nombre': nombre,
+      'especialidad': especialidad,
+      'biografia': biografia,
+      'experiencia': experiencia.map((e) => e.toMap()).toList(),
+      'certificaciones': certificaciones,
+      'ubicacion': ubicacion,
+      'telefono': telefono,
+      'tarifaAprox': tarifaAprox,
+      'fotoUrl': fotoUrl,
+      'instagramUrl': instagramUrl,
+      'activo': activo,
+      'fechaCreacion': Timestamp.fromDate(fechaCreacion),
+    };
+  }
+}
+
+/// Registro de un clic en "Contactar" desde el perfil público de un
+/// entrenador — es la base de facturación mensual de Senka (cuánta
+/// publicidad/exposición tuvo cada entrenador). Log inmutable, uno por
+/// clic (no un contador simple): permite filtrar por mes de forma
+/// confiable y da un historial defendible si hay dudas al cobrar.
+class ClickContactoEntrenador {
+  final String id;
+  final String entrenadorId;
+  final String entrenadorNombre;
+  final DateTime fecha;
+
+  ClickContactoEntrenador({
+    required this.id,
+    required this.entrenadorId,
+    required this.entrenadorNombre,
+    required this.fecha,
+  });
+
+  factory ClickContactoEntrenador.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return ClickContactoEntrenador(
+      id: doc.id,
+      entrenadorId: data['entrenadorId'] ?? '',
+      entrenadorNombre: data['entrenadorNombre'] ?? '',
+      fecha: (data['fecha'] as Timestamp?)?.toDate() ?? DateTime.now(),
+    );
+  }
+
+  Map<String, dynamic> toFirestore() {
+    return {
+      'entrenadorId': entrenadorId,
+      'entrenadorNombre': entrenadorNombre,
+      'fecha': Timestamp.fromDate(fecha),
     };
   }
 }

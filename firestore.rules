@@ -87,6 +87,36 @@ service cloud.firestore {
       allow delete: if esAdmin();
     }
 
+    // Entrenadores EXTERNOS que pagan publicidad mensual — NO son equipo
+    // interno, colección separada a propósito (ver CLAUDE.md "Catálogo de
+    // Entrenadores"). Mismo criterio de escritura que `equipo`: cada uno
+    // edita solo su propio documento, o Admin edita cualquiera (ej. para
+    // pausar `activo` si alguien deja de pagar).
+    match /entrenadores/{id} {
+      allow read: if true;
+      allow create: if esAdmin() ||
+        (request.auth != null &&
+         request.resource.data.username == usernameDelSolicitante());
+      allow update: if esAdmin() ||
+        (request.auth != null &&
+         resource.data.username == usernameDelSolicitante() &&
+         request.resource.data.username == usernameDelSolicitante());
+      allow delete: if esAdmin();
+    }
+
+    // Clics en "Contactar" desde el perfil público de un entrenador — base
+    // de la facturación mensual. Cualquiera puede crear uno (sin login);
+    // leer está restringido: Admin ve todos, un entrenador logueado solo
+    // ve los suyos (el propio documento de `entrenadores` tiene id ==
+    // username, por eso comparamos `entrenadorId` directo contra el
+    // username del solicitante). Inmutable: nadie edita ni borra un clic.
+    match /clicksEntrenador/{id} {
+      allow create: if true;
+      allow read: if request.auth != null &&
+        (esAdmin() || resource.data.entrenadorId == usernameDelSolicitante());
+      allow update, delete: if false;
+    }
+
     // ==================== COTIZACIONES ====================
     // Cualquiera (sin login) puede CREAR una cotización desde el
     // formulario público — nunca leer, editar ni borrar las de otros.

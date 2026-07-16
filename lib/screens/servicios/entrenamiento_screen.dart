@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../routes/app_routes.dart';
 import '../../theme/app_colors.dart';
 import 'servicio_screen_base.dart';
 
@@ -7,13 +8,17 @@ class EntrenamientoScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const ServicioScreenBase(
+    return ServicioScreenBase(
       titulo: 'Entrenamiento',
       subtitulo:
           'Entrenamiento personalizado de básquet, uno a uno: trabajamos tu '
           'técnica y tu forma de jugar para que subas de nivel de verdad.',
       colorAcento: AppColors.entrenamientoColor,
-      capacidades: [
+      accionSecundaria: OutlinedButton(
+        onPressed: () => Navigator.pushNamed(context, AppRoutes.catalogoEntrenadores),
+        child: const Text('VER ENTRENADORES'),
+      ),
+      capacidades: const [
         CapacidadServicio(
           icon: Icons.sports_basketball_outlined,
           titulo: 'Técnica individual',
