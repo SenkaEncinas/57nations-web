@@ -31,6 +31,17 @@ class ServicioScreenBase extends StatelessWidget {
   /// Acción secundaria opcional en el hero (ej.: "Ver catálogo" en 3D).
   final Widget? accionSecundaria;
 
+  /// Sección extra opcional entre "Capacidades" y el CTA final — ej. la
+  /// vidriera de entrenadores en la página de Entrenamiento. `null` no
+  /// agrega nada (las otras 4 páginas de servicio quedan igual que siempre).
+  final Widget? contenidoExtra;
+
+  /// Textos del CTA final, sobreescribibles por si "tu proyecto" no encaja
+  /// bien con el servicio (ej. Entrenamiento).
+  final String tituloCta;
+  final String subtituloCta;
+  final String textoBotonCta;
+
   const ServicioScreenBase({
     super.key,
     required this.titulo,
@@ -38,6 +49,11 @@ class ServicioScreenBase extends StatelessWidget {
     required this.colorAcento,
     required this.capacidades,
     this.accionSecundaria,
+    this.contenidoExtra,
+    this.tituloCta = 'Contanos tu proyecto',
+    this.subtituloCta = 'Cada proyecto se cotiza a medida. Escribinos y te '
+        'respondemos directamente por WhatsApp, sin costo ni compromiso.',
+    this.textoBotonCta = 'COTIZAR AHORA',
   });
 
   @override
@@ -119,6 +135,7 @@ class ServicioScreenBase extends StatelessWidget {
                 ],
               ),
             ),
+            if (contenidoExtra != null) contenidoExtra!,
             PageSection(
               alternada: true,
               verticalPadding: AppSpacing.sectionLg,
@@ -129,19 +146,18 @@ class ServicioScreenBase extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Contanos tu proyecto',
+                      tituloCta,
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     const SizedBox(height: AppSpacing.sm),
-                    const Text(
-                      'Cada proyecto se cotiza a medida. Escribinos y te respondemos '
-                      'directamente por WhatsApp, sin costo ni compromiso.',
-                      style: TextStyle(color: AppColors.textMuted, height: 1.6),
+                    Text(
+                      subtituloCta,
+                      style: const TextStyle(color: AppColors.textMuted, height: 1.6),
                     ),
                     const SizedBox(height: AppSpacing.xl),
                     ElevatedButton(
                       onPressed: () => Navigator.pushNamed(context, AppRoutes.cotizacion),
-                      child: const Text('COTIZAR AHORA'),
+                      child: Text(textoBotonCta),
                     ),
                   ],
                 ),

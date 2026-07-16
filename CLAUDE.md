@@ -319,13 +319,18 @@ botón de WhatsApp suelto.
   mes de forma confiable). El registro es "fire and forget": si falla,
   igual se abre WhatsApp (la telemetría nunca debe bloquear el contacto
   real).
-- **Panel "Entrenadores"** (`entrenadores_dashboard_screen.dart`, SOLO
-  admin.total — es "el nuevo dashboard" para facturar) — lista TODOS los
-  entrenadores (activos e inactivos) ordenados por cantidad de contactos,
-  con toggle "Este mes" / "Histórico" (mismo patrón que la comisión de
-  Luchin en el Dashboard principal) y un switch para activar/desactivar
-  cada uno sin borrar su perfil. Esto es lo que Senka mira para cobrar la
-  publicidad mensual de cada entrenador.
+- **Panel "Entrenadores"** (`entrenadores_dashboard_screen.dart`, permiso
+  `entrenadores.administrar` — Senka vía admin.total, o Jalir directo — es
+  "el nuevo dashboard" para facturar) — lista TODOS los entrenadores
+  (activos e inactivos) ordenados por cantidad de contactos, con toggle
+  "Este mes" / "Histórico" (mismo patrón que la comisión de Luchin en el
+  Dashboard principal), un switch para activar/desactivar cada uno sin
+  borrar su perfil, y una card + medalla explícita de "Más popular" (no
+  queda implícito solo en el orden de la lista). Esto es lo que se mira
+  para cobrar la publicidad mensual de cada entrenador. Deliberadamente
+  NO incluye datos del Dashboard principal (facturación general, comisión
+  de Luchin) — Senka confirmó que Jalir solo necesita esta sección, no el
+  Dashboard completo.
 - **Admin también puede editar el perfil de CUALQUIER entrenador**, no
   solo activar/desactivarlo — botón de lápiz en cada fila del panel de
   arriba, abre `MiPerfilEntrenadorScreen` en un `Dialog` con el parámetro

@@ -85,6 +85,16 @@ class _EntrenadoresDashboardScreenState extends State<EntrenadoresDashboardScree
     return lista;
   }
 
+  /// El de más contactos en el período elegido (este mes / histórico) — o
+  /// null si nadie tuvo ningún clic todavía. Explícito acá para no dejar
+  /// que "quién es el más popular" quede implícito solo en el orden de la
+  /// lista de abajo.
+  Entrenador? get _masPopular {
+    if (_entrenadoresOrdenados.isEmpty) return null;
+    final top = _entrenadoresOrdenados.first;
+    return _clicksDe(top.id) > 0 ? top : null;
+  }
+
   Future<void> _toggleActivo(Entrenador e, bool activo) async {
     setState(() {
       final i = _entrenadores.indexWhere((x) => x.id == e.id);
@@ -178,7 +188,7 @@ class _EntrenadoresDashboardScreenState extends State<EntrenadoresDashboardScree
             else ...[
               LayoutBuilder(
                 builder: (context, constraints) {
-                  final columnas = Responsive.valor(context, mobile: 1, tablet: 2, desktop: 2);
+                  final columnas = Responsive.valor(context, mobile: 1, tablet: 2, desktop: 3);
                   final ancho =
                       (constraints.maxWidth - AppSpacing.lg * (columnas - 1)) / columnas;
                   return Wrap(
@@ -201,6 +211,18 @@ class _EntrenadoresDashboardScreenState extends State<EntrenadoresDashboardScree
                           label: 'Contactos este mes (todos)',
                           valor: '$_clicksEsteMesTotal',
                           nota: 'Suma de clics en "Contactar" de todo el catálogo',
+                        ),
+                      ),
+                      SizedBox(
+                        width: ancho,
+                        child: _StatCard(
+                          icon: Icons.emoji_events_outlined,
+                          label: 'Más popular (${_soloEsteMes ? "este mes" : "histórico"})',
+                          valor: _masPopular?.nombre ?? '—',
+                          valorFontSize: 18,
+                          nota: _masPopular == null
+                              ? 'Todavía nadie tuvo contactos en este período'
+                              : '${_clicksDe(_masPopular!.id)} contactos',
                         ),
                       ),
                     ],
@@ -227,6 +249,7 @@ class _EntrenadoresDashboardScreenState extends State<EntrenadoresDashboardScree
               ..._entrenadoresOrdenados.map((e) => _FilaEntrenador(
                     entrenador: e,
                     clicks: _clicksDe(e.id),
+                    esMasPopular: _masPopular?.id == e.id,
                     onActivoCambiado: (v) => _toggleActivo(e, v),
                     onEditar: () => _editarEntrenador(e),
                   )),
@@ -243,12 +266,14 @@ class _StatCard extends StatelessWidget {
   final String label;
   final String valor;
   final String nota;
+  final double valorFontSize;
 
   const _StatCard({
     required this.icon,
     required this.label,
     required this.valor,
     required this.nota,
+    this.valorFontSize = 30,
   });
 
   @override
@@ -279,9 +304,11 @@ class _StatCard extends StatelessWidget {
           const SizedBox(height: AppSpacing.md),
           Text(
             valor,
-            style: const TextStyle(
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
               color: AppColors.entrenamientoColor,
-              fontSize: 30,
+              fontSize: valorFontSize,
               fontWeight: FontWeight.w800,
             ),
           ),
@@ -296,12 +323,14 @@ class _StatCard extends StatelessWidget {
 class _FilaEntrenador extends StatelessWidget {
   final Entrenador entrenador;
   final int clicks;
+  final bool esMasPopular;
   final ValueChanged<bool> onActivoCambiado;
   final VoidCallback onEditar;
 
   const _FilaEntrenador({
     required this.entrenador,
     required this.clicks,
+    required this.esMasPopular,
     required this.onActivoCambiado,
     required this.onEditar,
   });
@@ -351,6 +380,8 @@ class _FilaEntrenador extends StatelessWidget {
                     spacing: AppSpacing.sm,
                     runSpacing: AppSpacing.xs,
                     children: [
+                      if (esMasPopular)
+                        const StatusBadge(texto: '★ Más popular', color: AppColors.cianTech),
                       if (e.especialidad.isNotEmpty)
                         StatusBadge(texto: e.especialidad, color: AppColors.entrenamientoColor),
                       StatusBadge(
