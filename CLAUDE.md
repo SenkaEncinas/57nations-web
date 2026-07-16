@@ -7,8 +7,9 @@ Resume todas las decisiones tomadas hasta ahora para no perder contexto.
 
 Sitio web de **57 Nations**, empresa de Senka en Santa Cruz, Bolivia. Ofrece 5
 servicios: Bots de WhatsApp/sistemas, Apps Flutter, Arduino/ESP32, Impresión 3D,
-Entrenamiento de basketball. Construido en **Flutter Web + Firebase** (Firestore +
-Auth), 100% en el plan gratuito (Spark).
+Entrenamiento deportivo (multi-deporte desde agosto 2026, ya no solo
+basketball — ver sección "Catálogo de Entrenadores"). Construido en
+**Flutter Web + Firebase** (Firestore + Auth), 100% en el plan gratuito (Spark).
 
 Proyecto Firebase real: `nations-2b049`
 Hosting: `https://nations-2b049.web.app` (despliegue automático vía GitHub Actions
@@ -305,6 +306,14 @@ botón de WhatsApp suelto.
   Luchin en el Dashboard principal) y un switch para activar/desactivar
   cada uno sin borrar su perfil. Esto es lo que Senka mira para cobrar la
   publicidad mensual de cada entrenador.
+- **Admin también puede editar el perfil de CUALQUIER entrenador**, no
+  solo activar/desactivarlo — botón de lápiz en cada fila del panel de
+  arriba, abre `MiPerfilEntrenadorScreen` en un `Dialog` con el parámetro
+  `entrenadorAEditar` (mismo formulario que usa el entrenador para
+  autoeditarse, cero duplicación de campos). Útil para completar o
+  corregir el perfil de alguien poco técnico. Las reglas de Firestore ya
+  lo permitían (`esAdmin()` en el `update` de `entrenadores`); esto solo
+  agrega la UI.
 - **Índice compuesto nuevo requerido** — ver sección "Índices compuestos
   de Firestore" más abajo (`entrenadores`: `activo` + `fechaCreacion`).
   Las queries de clics (`clicksEntrenador`) NO necesitan índice compuesto

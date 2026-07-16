@@ -14,10 +14,24 @@ import '../../widgets/widgets.dart';
 /// clics de "Contactar" (este mes / histórico), de solo lectura — es lo que
 /// Senka usa para cobrar la publicidad mensual, así el entrenador también
 /// puede seguir su propio rendimiento.
+///
+/// Reutilizado también para que Admin edite el perfil de CUALQUIER
+/// entrenador desde `entrenadores_dashboard_screen.dart`: si se pasa
+/// [entrenadorAEditar], el formulario carga y guarda ESE documento en vez
+/// de buscar por `usuario.username` — mismo widget, cero duplicación de
+/// los campos (foto, experiencia, certificaciones, etc). En ese caso
+/// [onGuardado] cierra el diálogo desde el que se abrió.
 class MiPerfilEntrenadorScreen extends StatefulWidget {
   final Usuario usuario;
+  final Entrenador? entrenadorAEditar;
+  final VoidCallback? onGuardado;
 
-  const MiPerfilEntrenadorScreen({super.key, required this.usuario});
+  const MiPerfilEntrenadorScreen({
+    super.key,
+    required this.usuario,
+    this.entrenadorAEditar,
+    this.onGuardado,
+  });
 
   @override
   State<MiPerfilEntrenadorScreen> createState() => _MiPerfilEntrenadorScreenState();
@@ -101,7 +115,9 @@ class _MiPerfilEntrenadorScreenState extends State<MiPerfilEntrenadorScreen> {
       _error = null;
     });
     try {
-      final entrenador =
+      // Modo Admin (edita a otro entrenador): usa el que ya se pasó, no
+      // busca por el username del admin logueado.
+      final entrenador = widget.entrenadorAEditar ??
           await _firebaseService.obtenerEntrenadorPorUsername(widget.usuario.username);
 
       List<ClickContactoEntrenador> clicks = [];
@@ -154,8 +170,11 @@ class _MiPerfilEntrenadorScreenState extends State<MiPerfilEntrenadorScreen> {
     setState(() => _guardando = true);
     try {
       final entrenador = Entrenador(
+        // Si ya existía un doc (propio o el que edita Admin), se respeta su
+        // id/username; recién en la primera vez que un entrenador crea el
+        // suyo se usa el username de quien está logueado.
         id: _existente?.id ?? widget.usuario.username,
-        username: widget.usuario.username,
+        username: _existente?.username ?? widget.usuario.username,
         nombre: _nombreCtrl.text.trim(),
         especialidad: _especialidadCtrl.text.trim(),
         biografia: _biografiaCtrl.text.trim(),
@@ -183,12 +202,19 @@ class _MiPerfilEntrenadorScreenState extends State<MiPerfilEntrenadorScreen> {
 
       if (mounted) {
         setState(() => _existente = entrenador);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Perfil guardado. Ya se ve en el catálogo público.'),
-            backgroundColor: AppColors.success,
-          ),
-        );
+        if (widget.entrenadorAEditar != null) {
+          // Modo Admin: este formulario vive dentro de un diálogo — se
+          // cierra solo y le avisa a la lista que recargue.
+          widget.onGuardado?.call();
+          Navigator.pop(context);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Perfil guardado. Ya se ve en el catálogo público.'),
+              backgroundColor: AppColors.success,
+            ),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -201,10 +227,12 @@ class _MiPerfilEntrenadorScreenState extends State<MiPerfilEntrenadorScreen> {
     }
   }
 
+  bool get _esModoAdmin => widget.entrenadorAEditar != null;
+
   @override
   Widget build(BuildContext context) {
     if (_cargando) {
-      return const EstadoCargando(mensaje: 'Cargando tu perfil...');
+      return EstadoCargando(mensaje: _esModoAdmin ? 'Cargando perfil...' : 'Cargando tu perfil...');
     }
     if (_error != null) {
       return EstadoError(mensaje: _error!, onReintentar: _cargar);
@@ -217,12 +245,15 @@ class _MiPerfilEntrenadorScreenState extends State<MiPerfilEntrenadorScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SectionHeader(
+            SectionHeader(
               overline: 'Panel',
-              titulo: 'Mi Perfil de Entrenador',
-              subtitulo:
-                  'Esto es lo que se muestra de vos en el catálogo público de '
-                  'entrenadores. Editalo cuando quieras.',
+              titulo: _esModoAdmin
+                  ? 'Editando a ${_nombreCtrl.text.isEmpty ? "entrenador" : _nombreCtrl.text}'
+                  : 'Mi Perfil de Entrenador',
+              subtitulo: _esModoAdmin
+                  ? 'Estás editando el perfil público de este entrenador como Admin.'
+                  : 'Esto es lo que se muestra de vos en el catálogo público de '
+                      'entrenadores. Editalo cuando quieras.',
               compacto: true,
             ),
             const SizedBox(height: AppSpacing.xl),

@@ -8,14 +8,19 @@ import '../../theme/app_spacing.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/responsive.dart';
 import '../../widgets/widgets.dart';
+import 'mi_perfil_entrenador_screen.dart';
 
 /// Panel de estadísticas de entrenadores — SOLO Admin. Es la base con la que
 /// Senka cobra la publicidad mensual de cada entrenador: cuántos clics en
-/// "Contactar" tuvo cada uno (este mes / histórico), y un switch para
-/// pausar la visibilidad de quien deje de pagar sin borrar su perfil ni su
-/// historial. Ver CLAUDE.md "Catálogo de Entrenadores".
+/// "Contactar" tuvo cada uno (este mes / histórico), un switch para pausar
+/// la visibilidad de quien deje de pagar (sin borrar su perfil ni su
+/// historial), y un botón para editar el perfil de CUALQUIER entrenador
+/// (reutiliza `MiPerfilEntrenadorScreen` en modo Admin — ver su doc). Ver
+/// CLAUDE.md "Catálogo de Entrenadores".
 class EntrenadoresDashboardScreen extends StatefulWidget {
-  const EntrenadoresDashboardScreen({super.key});
+  final Usuario usuario;
+
+  const EntrenadoresDashboardScreen({super.key, required this.usuario});
 
   @override
   State<EntrenadoresDashboardScreen> createState() => _EntrenadoresDashboardScreenState();
@@ -114,6 +119,31 @@ class _EntrenadoresDashboardScreenState extends State<EntrenadoresDashboardScree
     }
   }
 
+  /// Abre el mismo formulario de "Mi Perfil de Entrenador" pero apuntando
+  /// al entrenador [e] en vez de al usuario logueado — así Admin puede
+  /// completar o corregir el perfil de cualquiera (útil si un entrenador
+  /// no es muy técnico y necesita ayuda para cargar su info).
+  void _editarEntrenador(Entrenador e) {
+    showDialog(
+      context: context,
+      barrierColor: AppColors.overlayDark,
+      builder: (context) => Dialog(
+        insetPadding: EdgeInsets.symmetric(
+          horizontal: Responsive.isMobile(context) ? AppSpacing.lg : 80,
+          vertical: AppSpacing.xl,
+        ),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 640, maxHeight: 760),
+          child: MiPerfilEntrenadorScreen(
+            usuario: widget.usuario,
+            entrenadorAEditar: e,
+            onGuardado: _cargar,
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return RefreshIndicator(
@@ -140,7 +170,7 @@ class _EntrenadoresDashboardScreenState extends State<EntrenadoresDashboardScree
               EstadoError(mensaje: _error!, onReintentar: _cargar)
             else if (_entrenadores.isEmpty)
               const EstadoVacio(
-                icon: Icons.sports_basketball_outlined,
+                icon: Icons.sports_outlined,
                 mensaje:
                     'Todavía no hay entrenadores cargados. Creá la cuenta desde Firebase '
                     'Console y pedile que complete su perfil en "Mi Perfil de Entrenador".',
@@ -198,6 +228,7 @@ class _EntrenadoresDashboardScreenState extends State<EntrenadoresDashboardScree
                     entrenador: e,
                     clicks: _clicksDe(e.id),
                     onActivoCambiado: (v) => _toggleActivo(e, v),
+                    onEditar: () => _editarEntrenador(e),
                   )),
             ],
           ],
@@ -266,11 +297,13 @@ class _FilaEntrenador extends StatelessWidget {
   final Entrenador entrenador;
   final int clicks;
   final ValueChanged<bool> onActivoCambiado;
+  final VoidCallback onEditar;
 
   const _FilaEntrenador({
     required this.entrenador,
     required this.clicks,
     required this.onActivoCambiado,
+    required this.onEditar,
   });
 
   @override
@@ -347,7 +380,11 @@ class _FilaEntrenador extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(width: AppSpacing.md),
+            IconButton(
+              icon: const Icon(Icons.edit_outlined, color: AppColors.cianTech, size: 20),
+              tooltip: 'Editar perfil',
+              onPressed: onEditar,
+            ),
             Switch(
               value: e.activo,
               onChanged: onActivoCambiado,

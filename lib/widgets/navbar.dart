@@ -15,7 +15,7 @@ class NavBar extends StatelessWidget {
     ('Apps Flutter', AppRoutes.flutterScreen, Icons.phone_android_outlined),
     ('Arduino & ESP32', AppRoutes.arduinoScreen, Icons.memory_outlined),
     ('Impresión 3D', AppRoutes.impresion3dScreen, Icons.view_in_ar_outlined),
-    ('Entrenamiento', AppRoutes.entrenamientoScreen, Icons.sports_basketball_outlined),
+    ('Entrenamiento', AppRoutes.entrenamientoScreen, Icons.sports_outlined),
   ];
 
   static bool _esRutaServicio(String? ruta) =>

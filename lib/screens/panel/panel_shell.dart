@@ -34,12 +34,14 @@ class _PanelSeccion {
   final String id;
   final String label;
   final IconData icon;
+  final String grupo;
   final Widget Function(Usuario) builder;
 
   _PanelSeccion({
     required this.id,
     required this.label,
     required this.icon,
+    required this.grupo,
     required this.builder,
   });
 }
@@ -60,19 +62,30 @@ class _PanelShellState extends State<PanelShell> {
   List<_PanelSeccion> _construirSecciones(Usuario usuario) {
     final secciones = <_PanelSeccion>[];
 
+    // Grupos, en el orden en que se deben ver en el sidebar (agosto 2026 —
+    // antes era una lista plana; con 12 secciones posibles para admin.total
+    // se volvió difícil de escanear, así que se agrupan por tema).
+    const gGeneral = 'General';
+    const gPedidos3d = 'Pedidos & Impresión 3D';
+    const gCotizaciones = 'Cotizaciones';
+    const gMiPerfil = 'Mi Perfil';
+    const gSitio = 'Contenido del Sitio';
+
     // Dashboard del negocio: SOLO admin.total, siempre primero.
     if (usuario.permisos.contains('admin.total')) {
       secciones.add(_PanelSeccion(
         id: 'dashboard',
         label: 'Dashboard',
         icon: Icons.insights_outlined,
+        grupo: gGeneral,
         builder: (u) => const DashboardScreen(),
       ));
       secciones.add(_PanelSeccion(
         id: 'entrenadores_dashboard',
         label: 'Entrenadores',
-        icon: Icons.sports_basketball_outlined,
-        builder: (u) => const EntrenadoresDashboardScreen(),
+        icon: Icons.sports_outlined,
+        grupo: gGeneral,
+        builder: (u) => EntrenadoresDashboardScreen(usuario: u),
       ));
     }
 
@@ -81,6 +94,7 @@ class _PanelShellState extends State<PanelShell> {
         id: 'pedidos',
         label: 'Pedidos',
         icon: Icons.inventory_2_outlined,
+        grupo: gPedidos3d,
         builder: (u) => PedidosScreen(usuario: u),
       ));
     }
@@ -90,6 +104,7 @@ class _PanelShellState extends State<PanelShell> {
         id: 'pintado',
         label: 'Pendientes de Pintar',
         icon: Icons.brush_outlined,
+        grupo: gPedidos3d,
         builder: (u) => PedidosPintadoScreen(usuario: u),
       ));
     }
@@ -99,6 +114,7 @@ class _PanelShellState extends State<PanelShell> {
         id: 'crear_pedido',
         label: 'Nuevo Pedido',
         icon: Icons.add_circle_outline,
+        grupo: gPedidos3d,
         builder: (u) => CrearPedidoScreen(usuario: u),
       ));
     }
@@ -108,7 +124,18 @@ class _PanelShellState extends State<PanelShell> {
         id: 'calculadora',
         label: 'Calculadora 3D',
         icon: Icons.calculate_outlined,
+        grupo: gPedidos3d,
         builder: (u) => const Calculadora3DScreen(),
+      ));
+    }
+
+    if (usuario.tienePermiso('catalogo3d.administrar')) {
+      secciones.add(_PanelSeccion(
+        id: 'catalogo3d',
+        label: 'Catálogo 3D',
+        icon: Icons.view_in_ar_outlined,
+        grupo: gPedidos3d,
+        builder: (u) => Catalogo3dAdminScreen(usuario: u),
       ));
     }
 
@@ -119,6 +146,7 @@ class _PanelShellState extends State<PanelShell> {
         id: 'cotizacion_pdf',
         label: 'Generar Cotización',
         icon: Icons.picture_as_pdf_outlined,
+        grupo: gCotizaciones,
         builder: (u) => CotizacionPdfScreen(usuario: u),
       ));
     }
@@ -128,15 +156,8 @@ class _PanelShellState extends State<PanelShell> {
         id: 'cotizaciones',
         label: 'Cotizaciones Web',
         icon: Icons.mail_outline,
+        grupo: gCotizaciones,
         builder: (u) => CotizacionesPanelScreen(usuario: u),
-      ));
-    }
-    if (usuario.tienePermiso('catalogo3d.administrar')) {
-      secciones.add(_PanelSeccion(
-        id: 'catalogo3d',
-        label: 'Catálogo 3D',
-        icon: Icons.view_in_ar_outlined,
-        builder: (u) => Catalogo3dAdminScreen(usuario: u),
       ));
     }
     if (usuario.tienePermiso('equipo.editar_propio')) {
@@ -144,6 +165,7 @@ class _PanelShellState extends State<PanelShell> {
         id: 'mi_curriculum',
         label: 'Mi Currículum',
         icon: Icons.badge_outlined,
+        grupo: gMiPerfil,
         builder: (u) => MiCurriculumScreen(usuario: u),
       ));
     }
@@ -151,7 +173,8 @@ class _PanelShellState extends State<PanelShell> {
       secciones.add(_PanelSeccion(
         id: 'mi_perfil_entrenador',
         label: 'Mi Perfil de Entrenador',
-        icon: Icons.sports_basketball_outlined,
+        icon: Icons.sports_outlined,
+        grupo: gMiPerfil,
         builder: (u) => MiPerfilEntrenadorScreen(usuario: u),
       ));
     }
@@ -160,6 +183,7 @@ class _PanelShellState extends State<PanelShell> {
         id: 'portfolio',
         label: 'Administrar Portfolio',
         icon: Icons.collections_bookmark_outlined,
+        grupo: gSitio,
         builder: (u) => PortfolioAdminScreen(usuario: u),
       ));
     }
@@ -185,6 +209,7 @@ class _PanelShellState extends State<PanelShell> {
         id: '',
         label: 'Sin acceso',
         icon: Icons.block,
+        grupo: '',
         builder: (u) => const _SinPermisosView(),
       ),
     );
@@ -246,7 +271,7 @@ class _PanelShellState extends State<PanelShell> {
           Expanded(
             child: ListView(
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-              children: _secciones.map((s) => _buildNavItem(s)).toList(),
+              children: _buildNavList(),
             ),
           ),
           Padding(
@@ -292,13 +317,49 @@ class _PanelShellState extends State<PanelShell> {
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-                children: _secciones.map((s) => _buildNavItem(s)).toList(),
+                children: _buildNavList(),
               ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  /// Agrupa `_secciones` por `grupo` (respetando el orden en que aparece
+  /// cada grupo por primera vez) y arma la lista de la sidebar/drawer con
+  /// un título chico antes de cada grupo — con 12 secciones posibles para
+  /// admin.total, una lista plana se volvía difícil de escanear.
+  List<Widget> _buildNavList() {
+    final grupos = <String>[];
+    final porGrupo = <String, List<_PanelSeccion>>{};
+    for (final s in _secciones) {
+      if (!porGrupo.containsKey(s.grupo)) {
+        grupos.add(s.grupo);
+        porGrupo[s.grupo] = [];
+      }
+      porGrupo[s.grupo]!.add(s);
+    }
+
+    final items = <Widget>[];
+    for (var i = 0; i < grupos.length; i++) {
+      final grupo = grupos[i];
+      items.add(Padding(
+        padding: EdgeInsets.fromLTRB(AppSpacing.xl, i == 0 ? AppSpacing.sm : AppSpacing.lg,
+            AppSpacing.xl, AppSpacing.sm),
+        child: Text(
+          grupo.toUpperCase(),
+          style: const TextStyle(
+            color: AppColors.textDim,
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 1.5,
+          ),
+        ),
+      ));
+      items.addAll(porGrupo[grupo]!.map(_buildNavItem));
+    }
+    return items;
   }
 
   Widget _buildNavItem(_PanelSeccion s) {

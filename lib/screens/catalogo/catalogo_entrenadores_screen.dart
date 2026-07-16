@@ -28,6 +28,7 @@ class _CatalogoEntrenadoresScreenState extends State<CatalogoEntrenadoresScreen>
   List<Entrenador> _entrenadores = [];
   bool _cargando = true;
   String? _error;
+  String _filtroEspecialidad = 'Todas';
 
   @override
   void initState() {
@@ -60,14 +61,33 @@ class _CatalogoEntrenadoresScreenState extends State<CatalogoEntrenadoresScreen>
     }
   }
 
+  /// Deportes/especialidades presentes en el catálogo, para armar los
+  /// chips de filtro dinámicamente — no hay una lista fija de deportes,
+  /// cada entrenador escribe la suya libremente en su perfil.
+  List<String> get _especialidadesDisponibles {
+    final set = _entrenadores
+        .map((e) => e.especialidad.trim())
+        .where((e) => e.isNotEmpty)
+        .toSet()
+        .toList()
+      ..sort();
+    return ['Todas', ...set];
+  }
+
   List<Entrenador> get _entrenadoresFiltrados {
+    var lista = _entrenadores;
+    if (_filtroEspecialidad != 'Todas') {
+      lista = lista.where((e) => e.especialidad == _filtroEspecialidad).toList();
+    }
     final busqueda = _searchController.text.trim().toLowerCase();
-    if (busqueda.isEmpty) return _entrenadores;
-    return _entrenadores
-        .where((e) =>
-            e.nombre.toLowerCase().contains(busqueda) ||
-            e.especialidad.toLowerCase().contains(busqueda))
-        .toList();
+    if (busqueda.isNotEmpty) {
+      lista = lista
+          .where((e) =>
+              e.nombre.toLowerCase().contains(busqueda) ||
+              e.especialidad.toLowerCase().contains(busqueda))
+          .toList();
+    }
+    return lista;
   }
 
   @override
@@ -88,20 +108,44 @@ class _CatalogoEntrenadoresScreenState extends State<CatalogoEntrenadoresScreen>
             ),
             PageSection(
               verticalPadding: AppSpacing.xxl,
-              child: TextField(
-                controller: _searchController,
-                style: const TextStyle(color: AppColors.textLight),
-                decoration: InputDecoration(
-                  hintText: 'Buscar por nombre o especialidad...',
-                  prefixIcon: const Icon(Icons.search, color: AppColors.textMuted),
-                  suffixIcon: _searchController.text.isNotEmpty
-                      ? IconButton(
-                          icon: const Icon(Icons.clear, color: AppColors.textMuted),
-                          onPressed: () => setState(() => _searchController.clear()),
-                        )
-                      : null,
-                ),
-                onChanged: (_) => setState(() {}),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextField(
+                    controller: _searchController,
+                    style: const TextStyle(color: AppColors.textLight),
+                    decoration: InputDecoration(
+                      hintText: 'Buscar por nombre o deporte...',
+                      prefixIcon: const Icon(Icons.search, color: AppColors.textMuted),
+                      suffixIcon: _searchController.text.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear, color: AppColors.textMuted),
+                              onPressed: () => setState(() => _searchController.clear()),
+                            )
+                          : null,
+                    ),
+                    onChanged: (_) => setState(() {}),
+                  ),
+                  if (_especialidadesDisponibles.length > 1) ...[
+                    const SizedBox(height: AppSpacing.lg),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: _especialidadesDisponibles
+                            .map((esp) => Padding(
+                                  padding: const EdgeInsets.only(right: AppSpacing.sm),
+                                  child: _FilterChip(
+                                    label: esp,
+                                    selected: _filtroEspecialidad == esp,
+                                    onSelected: () =>
+                                        setState(() => _filtroEspecialidad = esp),
+                                  ),
+                                ))
+                            .toList(),
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
             _buildGrid(context),
@@ -122,7 +166,7 @@ class _CatalogoEntrenadoresScreenState extends State<CatalogoEntrenadoresScreen>
       contenido = EstadoError(mensaje: _error!, onReintentar: _cargar);
     } else if (_entrenadoresFiltrados.isEmpty) {
       contenido = EstadoVacio(
-        icon: Icons.sports_basketball_outlined,
+        icon: Icons.sports_outlined,
         mensaje: _entrenadores.isEmpty
             ? 'Todavía no hay entrenadores cargados en el catálogo.'
             : 'No encontramos entrenadores con esa búsqueda.',
@@ -153,6 +197,36 @@ class _CatalogoEntrenadoresScreenState extends State<CatalogoEntrenadoresScreen>
       alternada: true,
       verticalPadding: AppSpacing.section,
       child: contenido,
+    );
+  }
+}
+
+class _FilterChip extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onSelected;
+
+  const _FilterChip({
+    required this.label,
+    required this.selected,
+    required this.onSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return FilterChip(
+      label: Text(label),
+      selected: selected,
+      onSelected: (_) => onSelected(),
+      backgroundColor: AppColors.surfaceElevated,
+      selectedColor: AppColors.entrenamientoColor.withValues(alpha: 0.18),
+      labelStyle: TextStyle(
+        color: selected ? AppColors.entrenamientoColor : AppColors.textMuted,
+        fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
+      ),
+      side: BorderSide(
+        color: selected ? AppColors.entrenamientoColor : AppColors.border,
+      ),
     );
   }
 }
@@ -238,6 +312,17 @@ class _EntrenadorCardState extends State<_EntrenadorCard> {
                     if (e.especialidad.isNotEmpty) ...[
                       const SizedBox(height: AppSpacing.sm),
                       StatusBadge(texto: e.especialidad, color: AppColors.entrenamientoColor),
+                    ],
+                    if (e.tarifaAprox.isNotEmpty) ...[
+                      const SizedBox(height: AppSpacing.sm),
+                      Text(
+                        e.tarifaAprox,
+                        style: const TextStyle(
+                          color: AppColors.entrenamientoColor,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                        ),
+                      ),
                     ],
                     if (e.ubicacion.isNotEmpty) ...[
                       const SizedBox(height: AppSpacing.sm),

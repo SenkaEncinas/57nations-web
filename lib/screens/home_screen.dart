@@ -282,7 +282,7 @@ class _ServiciosSection extends StatelessWidget {
     (
       '05',
       'ENTRENAMIENTO',
-      'Entrenamiento personalizado de básquet.',
+      'Entrenamiento personalizado, en tu deporte.',
       AppRoutes.entrenamientoScreen,
     ),
   ];

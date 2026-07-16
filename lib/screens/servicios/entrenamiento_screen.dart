@@ -11,8 +11,9 @@ class EntrenamientoScreen extends StatelessWidget {
     return ServicioScreenBase(
       titulo: 'Entrenamiento',
       subtitulo:
-          'Entrenamiento personalizado de básquet, uno a uno: trabajamos tu '
-          'técnica y tu forma de jugar para que subas de nivel de verdad.',
+          'Entrenamiento personalizado, uno a uno, en el deporte que practiques: '
+          'básquet, fútbol, funcional, boxeo y más. Elegís entrenador y trabajás '
+          'tu nivel a tu ritmo.',
       colorAcento: AppColors.entrenamientoColor,
       accionSecundaria: OutlinedButton(
         onPressed: () => Navigator.pushNamed(context, AppRoutes.catalogoEntrenadores),
@@ -20,19 +21,18 @@ class EntrenamientoScreen extends StatelessWidget {
       ),
       capacidades: const [
         CapacidadServicio(
-          icon: Icons.sports_basketball_outlined,
-          titulo: 'Técnica individual',
+          icon: Icons.sports_outlined,
+          titulo: 'Cualquier deporte',
           descripcion:
-              'Trabajamos lo básico —tiro, manejo de balón, movimientos— '
-              'corrigiendo tu técnica uno a uno, a tu ritmo.',
+              'Básquet, fútbol, funcional, boxeo y más — mirá el catálogo y '
+              'elegí al entrenador que se adapte a lo que buscás.',
         ),
         CapacidadServicio(
           icon: Icons.psychology_outlined,
-          titulo: 'Táctica y lectura de juego',
+          titulo: 'Técnica y táctica',
           descripcion:
-              'Te ayudamos a entender el juego: cuándo pasar, cuándo tirar, '
-              'dónde ubicarte — para que rindas mejor en la cancha, no solo '
-              'en los ejercicios.',
+              'Trabajamos tu técnica individual y tu lectura del juego, uno a '
+              'uno, corrigiendo lo que hace falta a tu ritmo.',
         ),
         CapacidadServicio(
           icon: Icons.trending_up_outlined,
