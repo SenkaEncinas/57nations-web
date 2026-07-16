@@ -94,10 +94,10 @@ service cloud.firestore {
     // pausar `activo` si alguien deja de pagar).
     match /entrenadores/{id} {
       allow read: if true;
-      allow create: if esAdmin() ||
+      allow create: if esAdmin() || tienePermiso('entrenadores.administrar') ||
         (request.auth != null &&
          request.resource.data.username == usernameDelSolicitante());
-      allow update: if esAdmin() ||
+      allow update: if esAdmin() || tienePermiso('entrenadores.administrar') ||
         (request.auth != null &&
          resource.data.username == usernameDelSolicitante() &&
          request.resource.data.username == usernameDelSolicitante());
@@ -106,14 +106,17 @@ service cloud.firestore {
 
     // Clics en "Contactar" desde el perfil público de un entrenador — base
     // de la facturación mensual. Cualquiera puede crear uno (sin login);
-    // leer está restringido: Admin ve todos, un entrenador logueado solo
-    // ve los suyos (el propio documento de `entrenadores` tiene id ==
-    // username, por eso comparamos `entrenadorId` directo contra el
-    // username del solicitante). Inmutable: nadie edita ni borra un clic.
+    // leer está restringido: Admin y quien tenga 'entrenadores.administrar'
+    // (el socio a cargo de la sección de deportes) ven todos, un entrenador
+    // logueado normal solo ve los suyos (el propio documento de
+    // `entrenadores` tiene id == username, por eso comparamos
+    // `entrenadorId` directo contra el username del solicitante).
+    // Inmutable: nadie edita ni borra un clic.
     match /clicksEntrenador/{id} {
       allow create: if true;
       allow read: if request.auth != null &&
-        (esAdmin() || resource.data.entrenadorId == usernameDelSolicitante());
+        (esAdmin() || tienePermiso('entrenadores.administrar') ||
+         resource.data.entrenadorId == usernameDelSolicitante());
       allow update, delete: if false;
     }
 

@@ -324,6 +324,16 @@ class Cotizacion {
 ///                                    externos que pagan publicidad mensual —
 ///                                    NO son socios/equipo interno, ver
 ///                                    CLAUDE.md "Catálogo de Entrenadores".
+///   - entrenadores.administrar     → ve y gestiona TODOS los entrenadores:
+///                                    estadísticas de contactos, activar/
+///                                    desactivar publicidad, editar el
+///                                    perfil de cualquiera (panel
+///                                    "Entrenadores"). Para el socio a
+///                                    cargo de la sección de deportes (ej.
+///                                    Jalir) — no incluye el resto del
+///                                    Dashboard ni de admin.total. Un
+///                                    encargado que además entrena necesita
+///                                    los DOS permisos: este + editar_propio.
 class Usuario {
   final String id;
   final String username; // usuario de login (no email)

@@ -80,6 +80,13 @@ class _PanelShellState extends State<PanelShell> {
         grupo: gGeneral,
         builder: (u) => const DashboardScreen(),
       ));
+    }
+
+    // Estadísticas y gestión de TODOS los entrenadores: admin.total (vía
+    // tienePermiso) O el socio a cargo de la sección de deportes (permiso
+    // 'entrenadores.administrar', ej. Jalir) — separado del Dashboard
+    // general a propósito, así alguien sin admin.total igual lo ve.
+    if (usuario.tienePermiso('entrenadores.administrar')) {
       secciones.add(_PanelSeccion(
         id: 'entrenadores_dashboard',
         label: 'Entrenadores',

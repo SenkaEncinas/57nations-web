@@ -38,9 +38,21 @@ rewrite, romper hard-refresh en cualquier ruta que no sea `/`.
   pedidos, es una herramienta aparte para que cada quien cotice lo suyo.
 - **Moe**: fue CLIENTA de un proyecto puntual (Cosechá), NO es colaboradora
   interna. No darle acceso al panel, ni cuenta interna, ni documento en `equipo`.
+- **Jalir Lema** (nuevo socio, agosto 2026): a cargo de TODA la sección de
+  deportes/entrenamiento. Rol doble — (1) él mismo es entrenador (tiene su
+  propio perfil en el catálogo público de entrenadores) y (2) administra a
+  TODOS los entrenadores (activar/desactivar publicidad, ver estadísticas
+  de contactos de cualquiera, editar cualquier perfil). Permisos:
+  `entrenadores.editar_propio` (su propio perfil) +
+  `entrenadores.administrar` (gestión de todos, panel "Entrenadores") — ver
+  sección "Catálogo de Entrenadores". Como es socio, sigue el mismo criterio
+  que Luchin/Fifi: también puede tener `equipo.editar_propio` para
+  aparecer en el carrusel de equipo del Home/Sobre Nosotros con su
+  currículum — no es automático, es indistinto del rol de entrenador,
+  agregarlo si Senka lo confirma.
 
-El equipo interno (Senka, Luchin, Fifi y futuros socios) edita su propio
-currículum público desde el panel ("Mi Currículum", permiso
+El equipo interno (Senka, Luchin, Fifi, Jalir y futuros socios) edita su
+propio currículum público desde el panel ("Mi Currículum", permiso
 `equipo.editar_propio`) — ver sección "Equipo / currículums".
 
 ## Producto: llaveros NFC (nuevo, agosto 2026)
@@ -271,10 +283,18 @@ botón de WhatsApp suelto.
   texto), ubicación, teléfono propio, tarifa aproximada, foto, Instagram,
   `activo`.
 - **Cuentas: Senka las sigue creando a mano en Firebase Console** (pedido
-  explícito, plan Spark/gratuito — no hay self-signup). El permiso nuevo
+  explícito, plan Spark/gratuito — no hay self-signup). El permiso base
   es `entrenadores.editar_propio` (ver enum en `models.dart`), mismo
   patrón que `equipo.editar_propio`: el id del documento = username, y
   las reglas de Firestore solo dejan editar el propio documento (o admin).
+- **`entrenadores.administrar`** (agosto 2026, permiso separado de
+  `editar_propio`): ve y gestiona TODOS los entrenadores — panel
+  "Entrenadores" (antes solo admin.total), reglas de Firestore de
+  `entrenadores`/`clicksEntrenador` también lo aceptan. Es para el socio a
+  cargo de la sección de deportes (Jalir Lema, ver "Personas y roles") sin
+  darle el resto de admin.total (Dashboard general, Pedidos, Cotizaciones,
+  Portfolio). Si esa persona ADEMÁS es entrenador, necesita los DOS
+  permisos juntos en su array `permisos`.
 - **"Mi Perfil de Entrenador"** (`mi_perfil_entrenador_screen.dart`,
   panel): cada entrenador carga su propia info — TODO lo que quiera poner
   (bio larga, certificaciones y experiencia sin límite, tarifa, ubicación,
